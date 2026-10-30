@@ -1,0 +1,500 @@
+{
+  "caller_fallback_environment": "0",
+  "cases": [
+    {
+      "atol": 1e-12,
+      "clip": null,
+      "device": "cpu",
+      "dtype": "torch.float64",
+      "eps": 1e-08,
+      "max_absolute_errors": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "max_error_over_reference_maxnorm": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "per_parameter_counts_match": true,
+      "previews_preserve_sources_and_rng": true,
+      "rtol": 1e-10,
+      "steps": 4
+    },
+    {
+      "atol": 1e-12,
+      "clip": null,
+      "device": "cpu",
+      "dtype": "torch.float64",
+      "eps": 0.2,
+      "max_absolute_errors": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "max_error_over_reference_maxnorm": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "per_parameter_counts_match": true,
+      "previews_preserve_sources_and_rng": true,
+      "rtol": 1e-10,
+      "steps": 4
+    },
+    {
+      "atol": 1e-12,
+      "clip": 0.5,
+      "device": "cpu",
+      "dtype": "torch.float64",
+      "eps": 1e-08,
+      "max_absolute_errors": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "max_error_over_reference_maxnorm": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "per_parameter_counts_match": true,
+      "previews_preserve_sources_and_rng": true,
+      "rtol": 1e-10,
+      "steps": 4
+    },
+    {
+      "atol": 1e-12,
+      "clip": 0.5,
+      "device": "cpu",
+      "dtype": "torch.float64",
+      "eps": 0.2,
+      "max_absolute_errors": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "max_error_over_reference_maxnorm": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "per_parameter_counts_match": true,
+      "previews_preserve_sources_and_rng": true,
+      "rtol": 1e-10,
+      "steps": 4
+    },
+    {
+      "atol": 1e-12,
+      "clip": 0.0,
+      "device": "cpu",
+      "dtype": "torch.float64",
+      "eps": 1e-08,
+      "max_absolute_errors": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "max_error_over_reference_maxnorm": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "per_parameter_counts_match": true,
+      "previews_preserve_sources_and_rng": true,
+      "rtol": 1e-10,
+      "steps": 4
+    },
+    {
+      "atol": 1e-12,
+      "clip": 0.0,
+      "device": "cpu",
+      "dtype": "torch.float64",
+      "eps": 0.2,
+      "max_absolute_errors": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "max_error_over_reference_maxnorm": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "per_parameter_counts_match": true,
+      "previews_preserve_sources_and_rng": true,
+      "rtol": 1e-10,
+      "steps": 4
+    },
+    {
+      "atol": 2e-07,
+      "clip": null,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "eps": 1e-08,
+      "max_absolute_errors": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "max_error_over_reference_maxnorm": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "per_parameter_counts_match": true,
+      "previews_preserve_sources_and_rng": true,
+      "rtol": 2e-06,
+      "steps": 4
+    },
+    {
+      "atol": 2e-07,
+      "clip": null,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "eps": 0.2,
+      "max_absolute_errors": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "max_error_over_reference_maxnorm": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "per_parameter_counts_match": true,
+      "previews_preserve_sources_and_rng": true,
+      "rtol": 2e-06,
+      "steps": 4
+    },
+    {
+      "atol": 2e-07,
+      "clip": 0.5,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "eps": 1e-08,
+      "max_absolute_errors": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "max_error_over_reference_maxnorm": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "per_parameter_counts_match": true,
+      "previews_preserve_sources_and_rng": true,
+      "rtol": 2e-06,
+      "steps": 4
+    },
+    {
+      "atol": 2e-07,
+      "clip": 0.5,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "eps": 0.2,
+      "max_absolute_errors": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "max_error_over_reference_maxnorm": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "per_parameter_counts_match": true,
+      "previews_preserve_sources_and_rng": true,
+      "rtol": 2e-06,
+      "steps": 4
+    },
+    {
+      "atol": 2e-07,
+      "clip": 0.0,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "eps": 1e-08,
+      "max_absolute_errors": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "max_error_over_reference_maxnorm": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "per_parameter_counts_match": true,
+      "previews_preserve_sources_and_rng": true,
+      "rtol": 2e-06,
+      "steps": 4
+    },
+    {
+      "atol": 2e-07,
+      "clip": 0.0,
+      "device": "cpu",
+      "dtype": "torch.float32",
+      "eps": 0.2,
+      "max_absolute_errors": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "max_error_over_reference_maxnorm": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "per_parameter_counts_match": true,
+      "previews_preserve_sources_and_rng": true,
+      "rtol": 2e-06,
+      "steps": 4
+    },
+    {
+      "atol": 2e-07,
+      "clip": null,
+      "device": "mps",
+      "dtype": "torch.float32",
+      "eps": 1e-08,
+      "max_absolute_errors": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "max_error_over_reference_maxnorm": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "per_parameter_counts_match": true,
+      "previews_preserve_sources_and_rng": true,
+      "rtol": 2e-06,
+      "steps": 4
+    },
+    {
+      "atol": 2e-07,
+      "clip": null,
+      "device": "mps",
+      "dtype": "torch.float32",
+      "eps": 0.2,
+      "max_absolute_errors": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "max_error_over_reference_maxnorm": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "per_parameter_counts_match": true,
+      "previews_preserve_sources_and_rng": true,
+      "rtol": 2e-06,
+      "steps": 4
+    },
+    {
+      "atol": 2e-07,
+      "clip": 0.5,
+      "device": "mps",
+      "dtype": "torch.float32",
+      "eps": 1e-08,
+      "max_absolute_errors": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "max_error_over_reference_maxnorm": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "per_parameter_counts_match": true,
+      "previews_preserve_sources_and_rng": true,
+      "rtol": 2e-06,
+      "steps": 4
+    },
+    {
+      "atol": 2e-07,
+      "clip": 0.5,
+      "device": "mps",
+      "dtype": "torch.float32",
+      "eps": 0.2,
+      "max_absolute_errors": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "max_error_over_reference_maxnorm": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "per_parameter_counts_match": true,
+      "previews_preserve_sources_and_rng": true,
+      "rtol": 2e-06,
+      "steps": 4
+    },
+    {
+      "atol": 2e-07,
+      "clip": 0.0,
+      "device": "mps",
+      "dtype": "torch.float32",
+      "eps": 1e-08,
+      "max_absolute_errors": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "max_error_over_reference_maxnorm": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "per_parameter_counts_match": true,
+      "previews_preserve_sources_and_rng": true,
+      "rtol": 2e-06,
+      "steps": 4
+    },
+    {
+      "atol": 2e-07,
+      "clip": 0.0,
+      "device": "mps",
+      "dtype": "torch.float32",
+      "eps": 0.2,
+      "max_absolute_errors": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "max_error_over_reference_maxnorm": {
+        "displacements": 0.0,
+        "first_moments": 0.0,
+        "parameters": 0.0,
+        "raw_alignment": 0.0,
+        "second_moments": 0.0
+      },
+      "per_parameter_counts_match": true,
+      "previews_preserve_sources_and_rng": true,
+      "rtol": 2e-06,
+      "steps": 4
+    }
+  ],
+  "command": "PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python analysis/collect_optimizer_correctness.py",
+  "counterexamples": [
+    {
+      "approximate_alignment": 0.01958482103198386,
+      "committed_counter": 99,
+      "cosine": 0.9992003198720515,
+      "displacement": [
+        0.00030872027706014356,
+        -0.9638050377461856
+      ],
+      "orthogonal_projection": false,
+      "projection_residual_dot": null,
+      "true_alignment": -0.01896738047786357,
+      "updated_counter": 100
+    },
+    {
+      "approximate_alignment": 0.0195685369461542,
+      "committed_counter": 99,
+      "cosine": 0.9992003198720514,
+      "displacement": [
+        0.0003084733996141666,
+        -0.9637862320267275
+      ],
+      "orthogonal_projection": true,
+      "projection_residual_dot": -1.9949319973733282e-16,
+      "true_alignment": -0.018967251240920382,
+      "updated_counter": 100
+    }
+  ],
+  "retained_fp32_storage": {
+    "excludes": "activations, workspaces, clipping copies, denominators, CPU FP64 reduction temporaries; not peak memory",
+    "live_plus_pending_bytes_per_parameter": 32.0,
+    "parameters": 16,
+    "pending_bytes_per_parameter": 16.0,
+    "pending_payload_bytes": 256
+  },
+  "schema_version": 1,
+  "scope": "tiny native single-tensor AdamW correctness; no trainer/replay/performance qualification",
+  "source_sha256": {
+    "analysis/collect_optimizer_correctness.py": "acae516d3300760f4097ea9c3a55a12f98f7df0e53c18c3918ff944f6bbda93a",
+    "src/oar/optimizer_preview.py": "a0f965d69874e71d3b0e91663713293884e1270d08442fe07531f4b057a45888",
+    "src/oar/records.py": "2f06d6ee5ce7debbc3bfad99fd160fe79a125335a15fdd69f46242a9924bd300",
+    "tests/test_optimizer_preview.py": "9e77fa8756b159ad7bcb2c300f64551460f97a827cfd8bf33c9d2229b58c1c79"
+  },
+  "torch_version": "2.15.0"
+}

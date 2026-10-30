@@ -223,3 +223,72 @@ for Task 5** (functional optimizer preview/commit). Shape-specific numerical
 calibration remains Tasks 6/14. No WP01 pass, training, performance or online
 learning claim was written. Detailed TDD commands/output, interfaces and
 self-review: `.superpowers/sdd/2026-10-30-oar-implementation/task-4-report.md`.
+
+## 2026-10-30 — Task 5: native-equivalent transactional AdamW
+
+Implemented eager, scalar-hyperparameter, non-AMSGrad/non-differentiable,
+non-fused/non-foreach AdamW preview for dense FP32/FP64 tensors. Detached copies
+receive native L2 global clipping, including its `1e-6` stabilizer. The native
+operation order applies decoupled decay before the adaptive update. Missing and
+`None` gradients skip decay, initialization and counters; zero gradients
+participate. `AdamWParamState.step` is the committed pre-preview count; pending
+state contains the native updated count, including native default scalar-counter
+rounding at the FP32 `2**24` boundary. Custom persisted counter dtypes are outside
+the integer-only transport contract.
+
+`PendingUpdate` owns candidate parameters, actual stored `theta - candidate`
+displacements and pending moments. `raw_alignment` reduces original unclipped
+gradients against those displacements explicitly on CPU FP64; transfers and
+synchronization belong in active time. Preview preserves live parameters,
+`.grad`, raw gradient tensors, moments, counters and RNG streams. Commit checks
+both logical versions, exact source ownership and ordinary tensor mutation
+versions before any writes; it consumes the update once and transfers pending
+moment ownership to live state. A transported/checkpoint-decoded pending record
+has no process-local authority and must be previewed again. Callers must serialize
+commits, advance returned versions and avoid `.data`/raw-storage mutation;
+concurrent mutation or device failure during writes is not rollback-protected.
+Aliased parameter storage is rejected in favor of one canonical parameter.
+
+TDD observed the expected missing-module error, then independent regressions for
+native counter precision and ambiguous aliased parameter storage. Tests compare
+four-step trajectories with independent `torch.optim.AdamW` instances, mixed
+groups, missing/initialized moments, epsilon, decay, clipping, zero/None values,
+version failures, foreign owners, modified sources/candidates and double commits.
+The blueprint Appendix's bias-correction `t=100` is an updated count, so native
+pre-step state 99 reproduces its displacement; committed count 100 correctly
+advances to 101. Both conventions are tested without altering optimizer rules.
+
+The original Adam counterexample gives cosine **0.999200319872**, true alignment
+**-0.018967380478**, and approximate alignment **0.019584821032**. An actual
+orthogonal projection onto normalized `(1,-.02)` gives the same high cosine,
+true alignment **-0.018967251241** and approximate alignment **0.019568536946**.
+These constructed states refute raw-cosine descent inference without claiming
+frequency in training.
+
+Final fresh-process verification with `PYTORCH_ENABLE_MPS_FALLBACK=0` passed
+**254 tests in 6.92s** on actual CPU/MPS; the focused actual-device run passed
+**39 tests in 1.88s** before the final four counter/alias/missing-gradient cases
+were added and included in the full run. The reproducible
+[collector](../analysis/collect_optimizer_correctness.py) command is
+`PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python analysis/collect_optimizer_correctness.py`.
+Its [numerical evidence](../analysis/optimizer_correctness.json) retains 18
+four-step CPU FP64/CPU FP32/MPS FP32 reference cases with zero observed maximum
+absolute discrepancy in parameters, moments, displacements and raw alignment.
+Declared tolerances are FP64 `rtol=1e-10, atol=1e-12` and FP32
+`rtol=2e-6, atol=2e-7`; these tiny checks do not calibrate production audit error.
+
+A full-participation FP32 tensor payload count measures **16P bytes of pending
+storage** above the dense **16P**, hence **32P retained bytes**, exceeding the
+blueprint's approximate 28P because both candidates and actual displacements
+are retained. This excludes activations, clipping copies, denominators, CPU FP64
+reduction temporaries and other workspaces, and is not a measured peak/RSS or
+performance result. No lazy storage optimization was introduced.
+
+**Scientific status:** WP01 passes for the tested Tasks 3–5 numerical,
+mathematical and optimizer-transaction scope, with hashes in the append-only
+gate ledger. This permits the next WP02 headroom work. Shape-specific numerical
+policy remains unresolved; online acceptance, full trainer/replay/checkpoint
+integration, training, learning and speedup claims remain unqualified. Existing
+asset/license blocks still apply. Detailed exact commands, red/green evidence,
+interfaces and self-review are in
+`.superpowers/sdd/2026-10-30-oar-implementation/task-5-report.md`.

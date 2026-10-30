@@ -142,13 +142,24 @@ class AdamWGroup:
 
 @dataclass
 class PendingUpdate:
+    """Owned candidate tensors; consumed moment tensors transfer to live state.
+
+    Runtime source bindings are intentionally absent from checkpoint payloads.
+    A decoded pending record must be previewed again before it can commit.
+    """
+
     parameter_version: int
     state_version: int
     candidate_parameters: dict[ParameterId, Tensor]
     displacements: dict[ParameterId, Tensor]
     optimizer_state: dict[ParameterId, AdamWParamState]
     consumed: bool = False
+    raw_alignment: float = 0.
     schema_version: int = field(default=1, init=False)
+
+    def __post_init__(self):
+        # Process-local identity/version binding, never a serializable authority.
+        self._ownership = None
 
 
 @dataclass(frozen=True)
