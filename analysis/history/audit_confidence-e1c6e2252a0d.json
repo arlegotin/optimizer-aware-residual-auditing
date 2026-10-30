@@ -1,0 +1,277 @@
+{
+  "cancellation_stress": [
+    {
+      "absolute_error": 9.99999993922529e-09,
+      "device": "cpu",
+      "dtype": "float32",
+      "probe_count": 1,
+      "rank": 0,
+      "residual_computed": 0.0,
+      "residual_cpu_fp64_of_stored_values": 9.99999993922529e-09,
+      "scale": 1e-08,
+      "x_shape": [
+        3,
+        1
+      ]
+    },
+    {
+      "absolute_error": 1.0,
+      "device": "cpu",
+      "dtype": "float32",
+      "probe_count": 1,
+      "rank": 0,
+      "residual_computed": 0.0,
+      "residual_cpu_fp64_of_stored_values": 1.0,
+      "scale": 1.0,
+      "x_shape": [
+        3,
+        1
+      ]
+    },
+    {
+      "absolute_error": 100000000.0,
+      "device": "cpu",
+      "dtype": "float32",
+      "probe_count": 1,
+      "rank": 0,
+      "residual_computed": 0.0,
+      "residual_cpu_fp64_of_stored_values": 100000000.0,
+      "scale": 100000000.0,
+      "x_shape": [
+        3,
+        1
+      ]
+    },
+    {
+      "absolute_error": 9.99999993922529e-09,
+      "device": "mps",
+      "dtype": "float32",
+      "probe_count": 1,
+      "rank": 0,
+      "residual_computed": 0.0,
+      "residual_cpu_fp64_of_stored_values": 9.99999993922529e-09,
+      "scale": 1e-08,
+      "x_shape": [
+        3,
+        1
+      ]
+    },
+    {
+      "absolute_error": 1.0,
+      "device": "mps",
+      "dtype": "float32",
+      "probe_count": 1,
+      "rank": 0,
+      "residual_computed": 0.0,
+      "residual_cpu_fp64_of_stored_values": 1.0,
+      "scale": 1.0,
+      "x_shape": [
+        3,
+        1
+      ]
+    },
+    {
+      "absolute_error": 100000000.0,
+      "device": "mps",
+      "dtype": "float32",
+      "probe_count": 1,
+      "rank": 0,
+      "residual_computed": 0.0,
+      "residual_cpu_fp64_of_stored_values": 100000000.0,
+      "scale": 100000000.0,
+      "x_shape": [
+        3,
+        1
+      ]
+    }
+  ],
+  "captured_at_utc": "2026-10-30T21:47:46.077281+00:00",
+  "confidence_interpretation": "Conditional real-arithmetic Gaussian bound; 20,000 replicates at delta=.1 do not establish tiny run-wide risk. Wilson intervals describe Monte Carlo sampling uncertainty, not theorem validity.",
+  "gaussian_confidence": [
+    {
+      "delta": 0.1,
+      "failures": 485,
+      "fraction": 0.02425,
+      "generator": "numpy.default_rng/PCG64",
+      "mean_squared_estimate": 0.9994002446149228,
+      "q": 8,
+      "replicates": 20000,
+      "seed": 8401,
+      "singular_values": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "spectrum_name": "rank_one",
+      "true_squared_norm": 1.0,
+      "wilson_95": [
+        0.022207751063328954,
+        0.026474971244054592
+      ]
+    },
+    {
+      "delta": 0.1,
+      "failures": 0,
+      "fraction": 0.0,
+      "generator": "numpy.default_rng/PCG64",
+      "mean_squared_estimate": 3.9965760463711764,
+      "q": 8,
+      "replicates": 20000,
+      "seed": 8401,
+      "singular_values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "spectrum_name": "flat",
+      "true_squared_norm": 4.0,
+      "wilson_95": [
+        0.0,
+        0.00019203605610462553
+      ]
+    },
+    {
+      "delta": 0.1,
+      "failures": 48,
+      "fraction": 0.0024,
+      "generator": "numpy.default_rng/PCG64",
+      "mean_squared_estimate": 1.3271820925615965,
+      "q": 8,
+      "replicates": 20000,
+      "seed": 8401,
+      "singular_values": [
+        1.0,
+        0.5,
+        0.25,
+        0.125
+      ],
+      "spectrum_name": "decaying",
+      "true_squared_norm": 1.328125,
+      "wilson_95": [
+        0.0018107859576445631,
+        0.00318032832539076
+      ]
+    }
+  ],
+  "numerical_policy": {
+    "measured_u_margin": null,
+    "reason": "Actual shape/backend/dtype/scale-specific residual, orthogonality and reduction calibration remains Tasks6/14. No coefficient inferred here.",
+    "status": "unresolved"
+  },
+  "provenance": {
+    "base_commit": "63932093ff614bbf5a9ebaa8c55345d926ac76d2",
+    "fallback_environment_before_import": "0",
+    "machine": "arm64",
+    "mps_available": true,
+    "numpy": "2.5.4",
+    "python": "3.13.5",
+    "source_sha256": {
+      "src/oar/audit.py": "7d386972050adacb66c01e66c0e66e93f3e8c0aac682db83dd5cd47880a1dd35",
+      "src/oar/audit_journal.py": "8043cfae563d80e720fba0d935fb8c951c3cc03bd4f48b89923e82463e697a75",
+      "src/oar/records.py": "a01ed49e132618fbdb991874248e90ad6b494760b99b596b2d7b93386135bed6",
+      "tests/test_audit_decision.py": "3435eca89bf8fc154f1157b02ae7956d35c03eaed8beb0ac051795683bf9f346",
+      "tests/test_audit_journal.py": "92439ec67a4039e9a4b9daf3d948d4ddc7a944e1d03efc16d14b9b09171401d2",
+      "tests/test_confidence.py": "7f6f16f8bac0ec4cdec5dfec10ca6b122a9ce5702d8f2dc0cb2b18be4c2ca690"
+    },
+    "torch": "2.15.0"
+  },
+  "scalar_roots": [
+    {
+      "delta": 0.01,
+      "equation_residual_decimal80": 5.967139612016204e-16,
+      "lower_fraction": 0.13286410477634522,
+      "norm_multiplier": 2.7434444264256133,
+      "q": 8
+    },
+    {
+      "delta": 1e-06,
+      "equation_residual_decimal80": 8.578457099872228e-16,
+      "lower_fraction": 0.011771116254682737,
+      "norm_multiplier": 9.217033703005262,
+      "q": 8
+    },
+    {
+      "delta": 0.01,
+      "equation_residual_decimal80": 2.3739062196349115e-16,
+      "lower_fraction": 0.2713684366553122,
+      "norm_multiplier": 1.9196423992390437,
+      "q": 16
+    },
+    {
+      "delta": 1e-06,
+      "equation_residual_decimal80": 4.132462916457026e-16,
+      "lower_fraction": 0.07017494996176354,
+      "norm_multiplier": 3.7749303601629918,
+      "q": 16
+    },
+    {
+      "delta": 0.01,
+      "equation_residual_decimal80": 1.5935256701230826e-16,
+      "lower_fraction": 0.4197665275344625,
+      "norm_multiplier": 1.5434625545033929,
+      "q": 32
+    },
+    {
+      "delta": 1e-06,
+      "equation_residual_decimal80": 1.8382774914602864e-16,
+      "lower_fraction": 0.18704077566617439,
+      "norm_multiplier": 2.3122343707482447,
+      "q": 32
+    },
+    {
+      "delta": 1e-300,
+      "equation_residual_decimal80": 2.2721458721895004e-14,
+      "lower_fraction": 3.6787944117143397e-76,
+      "norm_multiplier": 5.213714442179498e+37,
+      "q": 8
+    },
+    {
+      "delta": 0.9999999999999999,
+      "equation_residual_decimal80": 1.7232929091150335e-26,
+      "lower_fraction": 0.9999999962747097,
+      "norm_multiplier": 1.0000000018626451,
+      "q": 32
+    }
+  ],
+  "scalar_underflow": {
+    "delta": 5e-324,
+    "expected": "ValueError: unrepresentable positive root",
+    "q": 1
+  },
+  "schema_version": 1,
+  "scope": "Tiny confidence/numerical diagnostics, not shape-specific empirical calibration, timing, training or formal machine certification",
+  "seed_high_bits": {
+    "chosen_audit_stream": "oar.audit.pcg64.gaussian.v1",
+    "cpu_torch_normal_streams_equal": true,
+    "interpretation": "Actual Torch CPU high-bit seed collision motivates PCG64; stored NumPy version is checked on journal resume.",
+    "numpy_pcg64_normal_streams_equal": false,
+    "seeds": [
+      123,
+      4294967419
+    ],
+    "vector_length": 16
+  },
+  "task3_operator_envelopes": {
+    "cases": [
+      {
+        "cases": 6,
+        "device": "cpu",
+        "dtype": "torch.float64",
+        "max_abs_error": 9.036744127970084e-15,
+        "residual_max_abs_error": 9.036744127970084e-15
+      },
+      {
+        "cases": 6,
+        "device": "mps",
+        "dtype": "torch.float32",
+        "max_abs_error": 2.384185792636847e-06,
+        "residual_max_abs_error": 2.384185792636847e-06
+      }
+    ],
+    "interpretation": "Tiny Task3 fixtures only. Raw residual/gradient errors cannot be copied as an inner-product margin allowance.",
+    "sha256": "d25265d9d4ff55f9a5a957f2ddd92a21b2ea96263466dfcb4eede3ef72f621fe",
+    "source": "analysis/operator_correctness.json"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "captured_at_utc": "2026-10-30T22:25:13.826135+00:00",
+  "observations": [
+    {
+      "command": [
+        "sysctl",
+        "-n",
+        "kern.memorystatus_vm_pressure_level"
+      ],
+      "exit_code": 0,
+      "facts": {
+        "raw_pressure_level": 2
+      }
+    },
+    {
+      "command": [
+        "memory_pressure",
+        "-Q"
+      ],
+      "exit_code": 0,
+      "facts": {
+        "system_wide_memory_free_percent": 34
+      }
+    },
+    {
+      "command": [
+        "vm_stat"
+      ],
+      "exit_code": 0,
+      "facts": {
+        "Pages active": 393902,
+        "Pages free": 3734,
+        "Pages inactive": 396033,
+        "Pages occupied by compressor": 1100144,
+        "Pages stored in compressor": 2902384,
+        "Pages wired down": 402896,
+        "Swapins": 3856093,
+        "Swapouts": 11708022,
+        "page_size_bytes": 16384
+      }
+    }
+  ],
+  "schema_version": 1,
+  "scope": "Post-study OS-wide context, not continuous pressure telemetry or process attribution. No OS settings/apps were changed. memory_pressure -Q queries state and does not request stress."
+}

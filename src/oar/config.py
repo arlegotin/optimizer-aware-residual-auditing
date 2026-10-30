@@ -4,7 +4,10 @@ from dataclasses import asdict, dataclass
 import hashlib
 import json
 from pathlib import Path
-from typing import Mapping
+from typing import Mapping, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .bench import BenchmarkConfig
 
 import yaml
 
@@ -32,6 +35,7 @@ class RunConfig:
     device: str
     seeds: SeedStreams
     paths: RunPaths
+    benchmark: 'BenchmarkConfig | None' = None
 
 
 class _UniqueLoader(yaml.SafeLoader):
@@ -101,8 +105,13 @@ def load_config(path: Path) -> RunConfig:
 def resolve_config(config: RunConfig) -> dict[str, object]:
     """Return independent JSON metadata; relative paths stay relative to run cwd."""
     payload = asdict(config)
+    benchmark = payload.pop('benchmark')
     payload["paths"] = {name: str(value) for name, value in payload["paths"].items()}
     _parse(payload)  # Also validate instances constructed directly by callers.
+    if benchmark is not None:
+        from .bench import _parse_benchmark
+        _parse_benchmark(dict(schema_version=config.schema_version, device=config.device, **benchmark))
+        payload['benchmark'] = benchmark
     payload["scope"] = "correctness_structural" if config.device == "cpu" else "exploratory"
     return payload
 

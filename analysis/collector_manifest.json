@@ -1,0 +1,43 @@
+{
+  "collectors": [
+    {
+      "artifact": "analysis/operator_correctness.json",
+      "artifact_sha256": "ae092c3e4c66ca168f8e5e29b2982ee9c489565443c7142238a5087f30f7f044",
+      "collector": "analysis/collect_operator_correctness.py",
+      "collector_sha256": "e69ba75c227c808226d0e3d619ec90bbf25b87e22bf020ef66d8bf59db405cf5",
+      "command": "PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python analysis/collect_operator_correctness.py"
+    },
+    {
+      "artifact": "analysis/audit_confidence.json",
+      "artifact_sha256": "fa96b975a2d0128067fb9a623c31191033124a5cc6b6d2e48b1739a72aa84a95",
+      "collector": "analysis/collect_audit_confidence.py",
+      "collector_sha256": "95e83e9cee959f3c18036f55a8d4cc830cd92f1c9159db20fdac5879b418f3e5",
+      "command": "PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python analysis/collect_audit_confidence.py"
+    },
+    {
+      "artifact": "analysis/optimizer_correctness.json",
+      "artifact_sha256": "2f378ad2355b64f380e385ef6641df17bc01234862dff6ced9167b5da69c56f4",
+      "collector": "analysis/collect_optimizer_correctness.py",
+      "collector_sha256": "acae516d3300760f4097ea9c3a55a12f98f7df0e53c18c3918ff944f6bbda93a",
+      "command": "PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python analysis/collect_optimizer_correctness.py"
+    },
+    {
+      "artifact": "analysis/guardband_calibration.json",
+      "artifact_sha256": "24d5455bb39376610c2c0767a2ceb0744b741347dae37a5d399e12e6556ff387",
+      "collector": "analysis/collect_numerical_calibration.py",
+      "collector_sha256": "797515951845645f1b12e01d788b6ce76b2ebcb95916ffe3e275b46618b3f3f0",
+      "command": "PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python analysis/collect_numerical_calibration.py"
+    },
+    {
+      "artifact": "analysis/headroom_decision.json",
+      "artifact_sha256": "f1c74cd93b48bccbeff5026b064d21e7838317aca90fd9b7d4464304597f5af4",
+      "collector": "analysis/summarize_headroom.py",
+      "collector_sha256": "28af5349c41379aaf7b897117354a3fd0a867f9643b8413e2155c513650ee69c",
+      "command": ".venv/bin/python analysis/summarize_headroom.py"
+    }
+  ],
+  "current_benchmark_sha256": "4504126115b6bd0515a7c47e6882ce724c185a69dea0ec1f3785577fd8bed43f",
+  "execution_note": "Run hardware collectors, timing studies and tests sequentially. Numerical artifacts do not resolve NumericalPolicy or authorize online acceptance. The existing Task5 artifact is reused unchanged; Tasks3/4 and Task6 artifacts were actually regenerated in this task.",
+  "measurement_source_history": "analysis/evidence_history.json",
+  "schema_version": 1
+}

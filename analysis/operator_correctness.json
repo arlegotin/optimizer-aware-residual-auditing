@@ -43,7 +43,7 @@
   },
   "basis_cases": [
     {
-      "construction_wall_s": 0.0037102079950273037,
+      "construction_wall_s": 0.0002515409723855555,
       "construction_width": 6,
       "decomposition_device": "cpu",
       "decomposition_dtype": "float64",
@@ -68,7 +68,7 @@
       "transfer_bytes": 0
     },
     {
-      "construction_wall_s": 0.0004078329657204449,
+      "construction_wall_s": 0.00011595804244279861,
       "construction_width": 6,
       "decomposition_device": "cpu",
       "decomposition_dtype": "float64",
@@ -93,7 +93,7 @@
       "transfer_bytes": 0
     },
     {
-      "construction_wall_s": 0.000151334039401263,
+      "construction_wall_s": 9.420799324288964e-05,
       "construction_width": 6,
       "decomposition_device": "cpu",
       "decomposition_dtype": "float64",
@@ -118,7 +118,7 @@
       "transfer_bytes": 0
     },
     {
-      "construction_wall_s": 0.00042749999556690454,
+      "construction_wall_s": 0.0005935000372119248,
       "construction_width": 6,
       "decomposition_device": "cpu",
       "decomposition_dtype": "float64",
@@ -143,7 +143,7 @@
       "transfer_bytes": 192
     },
     {
-      "construction_wall_s": 0.0005244170315563679,
+      "construction_wall_s": 0.0006040000007487833,
       "construction_width": 6,
       "decomposition_device": "cpu",
       "decomposition_dtype": "float64",
@@ -168,7 +168,7 @@
       "transfer_bytes": 224
     },
     {
-      "construction_wall_s": 0.00046954199206084013,
+      "construction_wall_s": 0.00045191700337454677,
       "construction_width": 6,
       "decomposition_device": "cpu",
       "decomposition_dtype": "float64",
@@ -193,7 +193,7 @@
       "transfer_bytes": 256
     }
   ],
-  "captured_at_utc": "2026-10-30T21:30:00.899013+00:00",
+  "captured_at_utc": "2026-10-30T22:09:30.892512+00:00",
   "deep_residual": {
     "atol": 1e-12,
     "bias_gradient_errors": [
@@ -793,7 +793,8 @@
     }
   ],
   "provenance": {
-    "base_commit": "d3f8fcb7f60ae48402462586b3cc440d4d2f9f86",
+    "base_commit": "a042839e315cd60db8d9ff699c5c6a6c2940c011",
+    "collector_sha256": "e69ba75c227c808226d0e3d619ec90bbf25b87e22bf020ef66d8bf59db405cf5",
     "fallback_environment_before_import": "0",
     "machine": "arm64",
     "mps_available": true,

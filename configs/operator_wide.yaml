@@ -1,0 +1,17 @@
+# Bounded wider-kernel follow-up after candidate-only headroom was measured.
+# This is one residual MLP block, not a larger model or training workload.
+schema_version: 1
+device: mps
+seed: 61001
+blocks: 9
+max_blocks: 25
+bootstrap_replicates: 2000
+noise_relative_width: 0.15
+warmup:
+  minimum: 4
+  maximum: 16
+  window: 4
+  relative_range: 0.15
+shapes:
+  - {n: 8192, di: 768, do: 3072, rank: 16, q: 16, accumulation: 1, noncontiguous: false}
+output: analysis/timing_calibration_wide.json

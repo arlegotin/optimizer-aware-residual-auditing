@@ -12,7 +12,24 @@ def main(argv: list[str] | None = None) -> int:
     doctor = commands.add_parser("doctor", help="record redacted environment and tiny capabilities")
     doctor.add_argument("--out", type=Path, required=True)
     doctor.add_argument("--config", type=Path)
+    bench = commands.add_parser('bench', help='measure complete bounded operator costs in a fresh worker')
+    bench.add_argument('--config', type=Path, required=True)
     args = parser.parse_args(argv)
+    if args.command == 'bench':
+        from oar.bench import benchmark, load_benchmark_config, write_cost_table
+        try:
+            config = load_benchmark_config(args.config)
+        except (ValueError, OSError, TypeError) as exc:
+            print(f'bench: invalid configuration: {exc}', file=sys.stderr)
+            return 2
+        try:
+            table = benchmark(config)
+        except RuntimeError as exc:
+            print(f'bench: blocked: {exc}', file=sys.stderr)
+            return 3
+        write_cost_table(table, Path(config.benchmark.output))
+        print(f'bench: {len(table.rows)} actual cost rows; {config.benchmark.output}')
+        return 0
     if args.command == "doctor":
         from oar.config import DiscoveryConfig, load_discovery_config
         from oar.hardware import discover_environment

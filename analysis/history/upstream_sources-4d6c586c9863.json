@@ -1,0 +1,241 @@
+{
+  "schema_version": 1,
+  "sources": [
+    {
+      "asset_availability": [
+        {
+          "body_downloaded": false,
+          "content_length_header": "26421880",
+          "http_method": "HEAD",
+          "http_status": 200,
+          "source": "https://raw.githubusercontent.com/zalandoresearch/fashion-mnist/b2617bb6d3ffa2e429640350f613e3291e10b141/data/fashion/train-images-idx3-ubyte.gz"
+        },
+        {
+          "body_downloaded": false,
+          "content_length_header": "29515",
+          "http_method": "HEAD",
+          "http_status": 200,
+          "source": "https://raw.githubusercontent.com/zalandoresearch/fashion-mnist/b2617bb6d3ffa2e429640350f613e3291e10b141/data/fashion/train-labels-idx1-ubyte.gz"
+        }
+      ],
+      "files": [
+        {
+          "path": "third_party/discovery/fashion_mnist/LICENSE",
+          "sha256": "13ef4788476d292858fa60eb9a5f74aeca5c65770bc885ccaa05823a17ef7be1",
+          "size_bytes": 1109,
+          "source": "https://raw.githubusercontent.com/zalandoresearch/fashion-mnist/b2617bb6d3ffa2e429640350f613e3291e10b141/LICENSE"
+        },
+        {
+          "path": "third_party/discovery/fashion_mnist/README.md",
+          "sha256": "bdf17df9bd8b40c09165c7068b8532032094e0015b54ac09233d0ff8397181ea",
+          "size_bytes": 22711,
+          "source": "https://raw.githubusercontent.com/zalandoresearch/fashion-mnist/b2617bb6d3ffa2e429640350f613e3291e10b141/README.md"
+        },
+        {
+          "path": "third_party/discovery/fashion_mnist/tree.json",
+          "sha256": "d53e48817862842b2efafe46deda27ce31322570a930050d4c961e1993823fea",
+          "size_bytes": 15162,
+          "source": "https://api.github.com/repos/zalandoresearch/fashion-mnist/git/trees/b2617bb6d3ffa2e429640350f613e3291e10b141?recursive=1"
+        }
+      ],
+      "license_evidence": [
+        {
+          "declared_license": "MIT",
+          "path": "third_party/discovery/fashion_mnist/LICENSE",
+          "sha256": "13ef4788476d292858fa60eb9a5f74aeca5c65770bc885ccaa05823a17ef7be1"
+        }
+      ],
+      "local_status": "selected_files_and_metadata_only",
+      "name": "fashion_mnist",
+      "port_status": "not_implemented",
+      "restrictions": [
+        "preserve upstream and bundled dependency notices",
+        "full source-equivalence and calibration review required before named port claims"
+      ],
+      "revision": "b2617bb6d3ffa2e429640350f613e3291e10b141",
+      "revision_kind": "whole_repository_commit",
+      "source": "https://github.com/zalandoresearch/fashion-mnist"
+    },
+    {
+      "files": [
+        {
+          "path": "third_party/discovery/instant/LICENSE",
+          "sha256": "a3c600a0b4ff5530f5e5fb7a524b58c20176dca1bdec091e2c8e8432a84db0cc",
+          "size_bytes": 1071,
+          "source": "https://raw.githubusercontent.com/hieu-trannn/INSTANT/8a04bd43c19cc52984a49fb1b7fd1dae14fb2ffc/LICENSE"
+        },
+        {
+          "path": "third_party/discovery/instant/README.md",
+          "sha256": "142d12f8c8afe7de91f35a1101976bd5d64a3161fb14fd80a769654df75cc002",
+          "size_bytes": 3464,
+          "source": "https://raw.githubusercontent.com/hieu-trannn/INSTANT/8a04bd43c19cc52984a49fb1b7fd1dae14fb2ffc/README.md"
+        },
+        {
+          "path": "third_party/discovery/instant/language/custom_op.py",
+          "sha256": "30724baec6d6e574e839ddb3ca8a31d7d93fecf18e32f3198701ee5acafb52f9",
+          "size_bytes": 2935,
+          "source": "https://raw.githubusercontent.com/hieu-trannn/INSTANT/8a04bd43c19cc52984a49fb1b7fd1dae14fb2ffc/language/custom_op.py"
+        },
+        {
+          "path": "third_party/discovery/instant/language/callback.py",
+          "sha256": "56b9e02cb341ebdbc7a2e036e4cb0c3437a2c3587a236018ceb79ce814dc1929",
+          "size_bytes": 7994,
+          "source": "https://raw.githubusercontent.com/hieu-trannn/INSTANT/8a04bd43c19cc52984a49fb1b7fd1dae14fb2ffc/language/callback.py"
+        },
+        {
+          "path": "third_party/discovery/instant/language/SVD.py",
+          "sha256": "8f56fb85e44079ed9fcb4951d2d63aaa61aebfed7983d9c8131f17c7704be29f",
+          "size_bytes": 1705,
+          "source": "https://raw.githubusercontent.com/hieu-trannn/INSTANT/8a04bd43c19cc52984a49fb1b7fd1dae14fb2ffc/language/SVD.py"
+        }
+      ],
+      "license_evidence": [
+        {
+          "declared_license": "MIT",
+          "path": "third_party/discovery/instant/LICENSE",
+          "sha256": "a3c600a0b4ff5530f5e5fb7a524b58c20176dca1bdec091e2c8e8432a84db0cc"
+        }
+      ],
+      "local_status": "selected_files_and_metadata_only",
+      "name": "instant",
+      "port_status": "not_implemented",
+      "repository_tree_sha": "8a04bd43c19cc52984a49fb1b7fd1dae14fb2ffc",
+      "restrictions": [
+        "preserve upstream and bundled dependency notices",
+        "full source-equivalence and calibration review required before named port claims"
+      ],
+      "revision": "8a04bd43c19cc52984a49fb1b7fd1dae14fb2ffc",
+      "revision_kind": "whole_repository_commit",
+      "source": "https://github.com/hieu-trannn/INSTANT"
+    },
+    {
+      "files": [
+        {
+          "path": "third_party/discovery/vcas/LICENSE",
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+          "size_bytes": 11357,
+          "source": "https://raw.githubusercontent.com/thu-ml/VCAS/0bc7d0875de8098da53537af066a9f1921d16409/LICENSE"
+        },
+        {
+          "path": "third_party/discovery/vcas/README.md",
+          "sha256": "462bcd006855c837bd17b86d775605d2e30822c14bf697342673575bf78ec0c1",
+          "size_bytes": 3862,
+          "source": "https://raw.githubusercontent.com/thu-ml/VCAS/0bc7d0875de8098da53537af066a9f1921d16409/README.md"
+        },
+        {
+          "path": "third_party/discovery/vcas/vcas/layers/linear.py",
+          "sha256": "63ecd791ea43682b8f67a650636bec0e0210581bd24a327786fd112c61fb14b2",
+          "size_bytes": 3730,
+          "source": "https://raw.githubusercontent.com/thu-ml/VCAS/0bc7d0875de8098da53537af066a9f1921d16409/vcas/layers/linear.py"
+        }
+      ],
+      "license_evidence": [
+        {
+          "declared_license": "Apache-2.0",
+          "path": "third_party/discovery/vcas/LICENSE",
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        }
+      ],
+      "local_status": "selected_files_and_metadata_only",
+      "name": "vcas",
+      "port_status": "not_implemented",
+      "repository_tree_sha": "0bc7d0875de8098da53537af066a9f1921d16409",
+      "restrictions": [
+        "preserve upstream and bundled dependency notices",
+        "full source-equivalence and calibration review required before named port claims"
+      ],
+      "revision": "0bc7d0875de8098da53537af066a9f1921d16409",
+      "revision_kind": "whole_repository_commit",
+      "source": "https://github.com/thu-ml/VCAS"
+    },
+    {
+      "files": [
+        {
+          "path": "third_party/discovery/dropbp/LICENSE",
+          "sha256": "95414603b4fcb6e19b2cdd3ffea27f19ae3282f42717463cfac313b71b47146d",
+          "size_bytes": 1065,
+          "source": "https://raw.githubusercontent.com/WooSunghyeon/dropbp/7170a637f66e4723b8e749b466061195a0cfe399/LICENSE"
+        },
+        {
+          "path": "third_party/discovery/dropbp/README.md",
+          "sha256": "c5ed50dbca8ee1a959a24db8c1d3aebb7f6f910a4d9300d3ee1cf158f7125efe",
+          "size_bytes": 4826,
+          "source": "https://raw.githubusercontent.com/WooSunghyeon/dropbp/7170a637f66e4723b8e749b466061195a0cfe399/README.md"
+        },
+        {
+          "path": "third_party/discovery/dropbp/dropbp/layer.py",
+          "sha256": "2c4d222fe1222b7cb380ad38cceeba187ba976790a47f8ffb61d4c0349083775",
+          "size_bytes": 516,
+          "source": "https://raw.githubusercontent.com/WooSunghyeon/dropbp/7170a637f66e4723b8e749b466061195a0cfe399/dropbp/layer.py"
+        }
+      ],
+      "license_evidence": [
+        {
+          "declared_license": "MIT",
+          "path": "third_party/discovery/dropbp/LICENSE",
+          "sha256": "95414603b4fcb6e19b2cdd3ffea27f19ae3282f42717463cfac313b71b47146d"
+        }
+      ],
+      "local_status": "selected_files_and_metadata_only",
+      "name": "dropbp",
+      "port_status": "not_implemented",
+      "repository_tree_sha": "7170a637f66e4723b8e749b466061195a0cfe399",
+      "restrictions": [
+        "preserve upstream and bundled dependency notices",
+        "full source-equivalence and calibration review required before named port claims"
+      ],
+      "revision": "7170a637f66e4723b8e749b466061195a0cfe399",
+      "revision_kind": "whole_repository_commit",
+      "source": "https://github.com/WooSunghyeon/dropbp"
+    },
+    {
+      "files": [
+        {
+          "path": "third_party/discovery/wikitext/dataset-info.json",
+          "sha256": "4c98023b4f6310cd01da2116d73d9877c6e5df580e7db77d8c84304074ec47c1",
+          "size_bytes": 7765,
+          "source": "https://huggingface.co/api/datasets/Salesforce/wikitext"
+        },
+        {
+          "path": "third_party/discovery/wikitext/README.md",
+          "sha256": "d5aabf145d341366745ac703b5844c442c143943b6c77929481395c822b1c28c",
+          "size_bytes": 10464,
+          "source": "https://huggingface.co/datasets/Salesforce/wikitext/raw/b08601e04326c79dfdd32d625aee71d232d685c3/README.md"
+        },
+        {
+          "path": "third_party/discovery/wikitext/files.json",
+          "sha256": "9c9602642269af6515e5d7cd452be5e74778f3b94472b31b3cb4559f2d9981f4",
+          "size_bytes": 982,
+          "source": "https://huggingface.co/api/datasets/Salesforce/wikitext/tree/b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-2-raw-v1"
+        }
+      ],
+      "local_status": "metadata_only",
+      "name": "wikitext",
+      "restrictions": [
+        "license conflict unresolved; do not use or redistribute corpus",
+        "no official validation/test bytes accessed"
+      ],
+      "revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+      "revision_kind": "whole_repository_commit",
+      "source": "https://huggingface.co/datasets/Salesforce/wikitext"
+    },
+    {
+      "files": [
+        {
+          "path": "third_party/discovery/pytorch/MPSFallback.mm",
+          "sha256": "c5c2b435eb222f2c1b96227c4c14c86065d757c6d392d32a50c4b802c6263564",
+          "size_bytes": 4895,
+          "source": "https://raw.githubusercontent.com/pytorch/pytorch/d0f2af8b66b20da4baa50644c0cd3f887a2eae2e/aten/src/ATen/mps/MPSFallback.mm"
+        }
+      ],
+      "local_status": "fallback_source_only; license in wheel notice bundle",
+      "name": "pytorch_mps_fallback",
+      "restrictions": [
+        "selected source only; no claim of whole build reproduction"
+      ],
+      "revision": "d0f2af8b66b20da4baa50644c0cd3f887a2eae2e",
+      "revision_kind": "installed_torch_git_revision",
+      "source": "https://github.com/pytorch/pytorch"
+    }
+  ]
+}

@@ -1,0 +1,815 @@
+{
+  "accumulation": {
+    "atol": 1e-12,
+    "backward_contributions": 7,
+    "bias_gradient_error": {
+      "frobenius": 3.1401849173675503e-16,
+      "max_abs": 2.220446049250313e-16
+    },
+    "device": "cpu",
+    "dtype": "float64",
+    "input_gradient_error": {
+      "frobenius": 0.0,
+      "max_abs": 0.0
+    },
+    "microbatch_sizes": [
+      2,
+      5,
+      3,
+      8,
+      6,
+      9,
+      7
+    ],
+    "residual_error": {
+      "frobenius": 2.9691980252969e-15,
+      "max_abs": 1.4432899320127035e-15
+    },
+    "rtol": 1e-10,
+    "seed": 502,
+    "valid_counts": [
+      1,
+      3,
+      2,
+      6,
+      4,
+      7,
+      5
+    ],
+    "weight_gradient_error": {
+      "frobenius": 1.7559103758362855e-15,
+      "max_abs": 9.992007221626409e-16
+    }
+  },
+  "basis_cases": [
+    {
+      "construction_wall_s": 0.0037102079950273037,
+      "construction_width": 6,
+      "decomposition_device": "cpu",
+      "decomposition_dtype": "float64",
+      "device": "cpu",
+      "dtype": "torch.float64",
+      "fixture_rank": 0,
+      "gradient_shape": [
+        8,
+        6
+      ],
+      "max_rank": 5,
+      "numerical_rank": 0,
+      "orthogonality": 0.0,
+      "oversampling": 8,
+      "reconstruction_error": {
+        "frobenius": 0.0,
+        "max_abs": 0.0
+      },
+      "seed": 705,
+      "stored_rank": 0,
+      "timing_interpretation": "single inclusive diagnostic, not a benchmark",
+      "transfer_bytes": 0
+    },
+    {
+      "construction_wall_s": 0.0004078329657204449,
+      "construction_width": 6,
+      "decomposition_device": "cpu",
+      "decomposition_dtype": "float64",
+      "device": "cpu",
+      "dtype": "torch.float64",
+      "fixture_rank": 1,
+      "gradient_shape": [
+        8,
+        6
+      ],
+      "max_rank": 5,
+      "numerical_rank": 1,
+      "orthogonality": 2.220446049250313e-16,
+      "oversampling": 8,
+      "reconstruction_error": {
+        "frobenius": 5.477011651402113e-16,
+        "max_abs": 4.440892098500626e-16
+      },
+      "seed": 705,
+      "stored_rank": 1,
+      "timing_interpretation": "single inclusive diagnostic, not a benchmark",
+      "transfer_bytes": 0
+    },
+    {
+      "construction_wall_s": 0.000151334039401263,
+      "construction_width": 6,
+      "decomposition_device": "cpu",
+      "decomposition_dtype": "float64",
+      "device": "cpu",
+      "dtype": "torch.float64",
+      "fixture_rank": 2,
+      "gradient_shape": [
+        8,
+        6
+      ],
+      "max_rank": 5,
+      "numerical_rank": 2,
+      "orthogonality": 6.77111368612733e-16,
+      "oversampling": 8,
+      "reconstruction_error": {
+        "frobenius": 2.430587170463423e-15,
+        "max_abs": 8.881784197001252e-16
+      },
+      "seed": 705,
+      "stored_rank": 2,
+      "timing_interpretation": "single inclusive diagnostic, not a benchmark",
+      "transfer_bytes": 0
+    },
+    {
+      "construction_wall_s": 0.00042749999556690454,
+      "construction_width": 6,
+      "decomposition_device": "cpu",
+      "decomposition_dtype": "float64",
+      "device": "mps",
+      "dtype": "torch.float32",
+      "fixture_rank": 0,
+      "gradient_shape": [
+        8,
+        6
+      ],
+      "max_rank": 5,
+      "numerical_rank": 0,
+      "orthogonality": 0.0,
+      "oversampling": 8,
+      "reconstruction_error": {
+        "frobenius": 0.0,
+        "max_abs": 0.0
+      },
+      "seed": 705,
+      "stored_rank": 0,
+      "timing_interpretation": "single inclusive diagnostic, not a benchmark",
+      "transfer_bytes": 192
+    },
+    {
+      "construction_wall_s": 0.0005244170315563679,
+      "construction_width": 6,
+      "decomposition_device": "cpu",
+      "decomposition_dtype": "float64",
+      "device": "mps",
+      "dtype": "torch.float32",
+      "fixture_rank": 1,
+      "gradient_shape": [
+        8,
+        6
+      ],
+      "max_rank": 5,
+      "numerical_rank": 1,
+      "orthogonality": 2.5425996641459392e-08,
+      "oversampling": 8,
+      "reconstruction_error": {
+        "frobenius": 1.0455794935820241e-07,
+        "max_abs": 9.315175697466316e-08
+      },
+      "seed": 705,
+      "stored_rank": 1,
+      "timing_interpretation": "single inclusive diagnostic, not a benchmark",
+      "transfer_bytes": 224
+    },
+    {
+      "construction_wall_s": 0.00046954199206084013,
+      "construction_width": 6,
+      "decomposition_device": "cpu",
+      "decomposition_dtype": "float64",
+      "device": "mps",
+      "dtype": "torch.float32",
+      "fixture_rank": 2,
+      "gradient_shape": [
+        8,
+        6
+      ],
+      "max_rank": 5,
+      "numerical_rank": 2,
+      "orthogonality": 4.9668995073836174e-08,
+      "oversampling": 8,
+      "reconstruction_error": {
+        "frobenius": 4.435784735316019e-07,
+        "max_abs": 2.292013254745484e-07
+      },
+      "seed": 705,
+      "stored_rank": 2,
+      "timing_interpretation": "single inclusive diagnostic, not a benchmark",
+      "transfer_bytes": 256
+    }
+  ],
+  "captured_at_utc": "2026-10-30T21:30:00.899013+00:00",
+  "deep_residual": {
+    "atol": 1e-12,
+    "bias_gradient_errors": [
+      {
+        "frobenius": 0.0,
+        "max_abs": 0.0
+      },
+      {
+        "frobenius": 0.0,
+        "max_abs": 0.0
+      },
+      {
+        "frobenius": 0.0,
+        "max_abs": 0.0
+      },
+      {
+        "frobenius": 0.0,
+        "max_abs": 0.0
+      },
+      {
+        "frobenius": 0.0,
+        "max_abs": 0.0
+      },
+      {
+        "frobenius": 0.0,
+        "max_abs": 0.0
+      },
+      {
+        "frobenius": 0.0,
+        "max_abs": 0.0
+      },
+      {
+        "frobenius": 0.0,
+        "max_abs": 0.0
+      }
+    ],
+    "blocks": 4,
+    "device": "cpu",
+    "dtype": "float64",
+    "hidden_width": 7,
+    "input_gradient_error": {
+      "frobenius": 0.0,
+      "max_abs": 0.0
+    },
+    "ranks": [
+      2,
+      1
+    ],
+    "rtol": 1e-10,
+    "seed": 605,
+    "x_shape": [
+      2,
+      3,
+      5
+    ]
+  },
+  "operator_cases": [
+    {
+      "atol": 1e-12,
+      "bias": false,
+      "device": "cpu",
+      "dtype": "torch.float64",
+      "errors": {
+        "dw": {
+          "frobenius": 0.0,
+          "max_abs": 0.0
+        },
+        "dx": {
+          "frobenius": 0.0,
+          "max_abs": 0.0
+        },
+        "forward": {
+          "frobenius": 0.0,
+          "max_abs": 0.0
+        },
+        "h": {
+          "frobenius": 0.0,
+          "max_abs": 0.0
+        },
+        "residual": {
+          "frobenius": 7.321845092596903e-15,
+          "max_abs": 3.552713678800501e-15
+        }
+      },
+      "probe_count": 6,
+      "rank": 0,
+      "reference": "native dense CPU FP64 autograd; independently materialized projector/residual",
+      "rtol": 1e-10,
+      "seed": 409,
+      "weight_shape": [
+        5,
+        7
+      ],
+      "x_noncontiguous": true,
+      "x_shape": [
+        3,
+        4,
+        7
+      ]
+    },
+    {
+      "atol": 1e-12,
+      "bias": true,
+      "device": "cpu",
+      "dtype": "torch.float64",
+      "errors": {
+        "db": {
+          "frobenius": 0.0,
+          "max_abs": 0.0
+        },
+        "dw": {
+          "frobenius": 0.0,
+          "max_abs": 0.0
+        },
+        "dx": {
+          "frobenius": 0.0,
+          "max_abs": 0.0
+        },
+        "forward": {
+          "frobenius": 0.0,
+          "max_abs": 0.0
+        },
+        "h": {
+          "frobenius": 0.0,
+          "max_abs": 0.0
+        },
+        "residual": {
+          "frobenius": 1.0247973451733565e-14,
+          "max_abs": 4.440892098500626e-15
+        }
+      },
+      "probe_count": 6,
+      "rank": 0,
+      "reference": "native dense CPU FP64 autograd; independently materialized projector/residual",
+      "rtol": 1e-10,
+      "seed": 409,
+      "weight_shape": [
+        5,
+        7
+      ],
+      "x_noncontiguous": true,
+      "x_shape": [
+        3,
+        4,
+        7
+      ]
+    },
+    {
+      "atol": 1e-12,
+      "bias": false,
+      "device": "cpu",
+      "dtype": "torch.float64",
+      "errors": {
+        "dw": {
+          "frobenius": 1.5356487090044726e-15,
+          "max_abs": 8.881784197001252e-16
+        },
+        "dx": {
+          "frobenius": 0.0,
+          "max_abs": 0.0
+        },
+        "forward": {
+          "frobenius": 0.0,
+          "max_abs": 0.0
+        },
+        "h": {
+          "frobenius": 1.2861497693636605e-15,
+          "max_abs": 8.881784197001252e-16
+        },
+        "residual": {
+          "frobenius": 9.065757164573033e-15,
+          "max_abs": 6.106226635438361e-15
+        }
+      },
+      "probe_count": 6,
+      "rank": 2,
+      "reference": "native dense CPU FP64 autograd; independently materialized projector/residual",
+      "rtol": 1e-10,
+      "seed": 409,
+      "weight_shape": [
+        5,
+        7
+      ],
+      "x_noncontiguous": true,
+      "x_shape": [
+        3,
+        4,
+        7
+      ]
+    },
+    {
+      "atol": 1e-12,
+      "bias": true,
+      "device": "cpu",
+      "dtype": "torch.float64",
+      "errors": {
+        "db": {
+          "frobenius": 0.0,
+          "max_abs": 0.0
+        },
+        "dw": {
+          "frobenius": 2.218756761772314e-15,
+          "max_abs": 1.1102230246251565e-15
+        },
+        "dx": {
+          "frobenius": 0.0,
+          "max_abs": 0.0
+        },
+        "forward": {
+          "frobenius": 0.0,
+          "max_abs": 0.0
+        },
+        "h": {
+          "frobenius": 1.6914968298467714e-15,
+          "max_abs": 1.1102230246251565e-15
+        },
+        "residual": {
+          "frobenius": 1.1352539380706099e-14,
+          "max_abs": 6.217248937900877e-15
+        }
+      },
+      "probe_count": 6,
+      "rank": 2,
+      "reference": "native dense CPU FP64 autograd; independently materialized projector/residual",
+      "rtol": 1e-10,
+      "seed": 409,
+      "weight_shape": [
+        5,
+        7
+      ],
+      "x_noncontiguous": true,
+      "x_shape": [
+        3,
+        4,
+        7
+      ]
+    },
+    {
+      "atol": 1e-12,
+      "bias": false,
+      "device": "cpu",
+      "dtype": "torch.float64",
+      "errors": {
+        "dw": {
+          "frobenius": 3.0044048434513777e-15,
+          "max_abs": 8.881784197001252e-16
+        },
+        "dx": {
+          "frobenius": 0.0,
+          "max_abs": 0.0
+        },
+        "forward": {
+          "frobenius": 0.0,
+          "max_abs": 0.0
+        },
+        "h": {
+          "frobenius": 2.7222051074485124e-15,
+          "max_abs": 1.2212453270876722e-15
+        },
+        "residual": {
+          "frobenius": 1.1164717020074424e-14,
+          "max_abs": 9.036744127970084e-15
+        }
+      },
+      "probe_count": 6,
+      "rank": 5,
+      "reference": "native dense CPU FP64 autograd; independently materialized projector/residual",
+      "rtol": 1e-10,
+      "seed": 409,
+      "weight_shape": [
+        5,
+        7
+      ],
+      "x_noncontiguous": true,
+      "x_shape": [
+        3,
+        4,
+        7
+      ]
+    },
+    {
+      "atol": 1e-12,
+      "bias": true,
+      "device": "cpu",
+      "dtype": "torch.float64",
+      "errors": {
+        "db": {
+          "frobenius": 0.0,
+          "max_abs": 0.0
+        },
+        "dw": {
+          "frobenius": 3.7043036684065436e-15,
+          "max_abs": 1.7763568394002505e-15
+        },
+        "dx": {
+          "frobenius": 0.0,
+          "max_abs": 0.0
+        },
+        "forward": {
+          "frobenius": 0.0,
+          "max_abs": 0.0
+        },
+        "h": {
+          "frobenius": 3.593141240640879e-15,
+          "max_abs": 1.7763568394002505e-15
+        },
+        "residual": {
+          "frobenius": 1.1303231029441906e-14,
+          "max_abs": 5.504409664693476e-15
+        }
+      },
+      "probe_count": 6,
+      "rank": 5,
+      "reference": "native dense CPU FP64 autograd; independently materialized projector/residual",
+      "rtol": 1e-10,
+      "seed": 409,
+      "weight_shape": [
+        5,
+        7
+      ],
+      "x_noncontiguous": true,
+      "x_shape": [
+        3,
+        4,
+        7
+      ]
+    },
+    {
+      "atol": 1e-05,
+      "bias": false,
+      "device": "mps",
+      "dtype": "torch.float32",
+      "errors": {
+        "dw": {
+          "frobenius": 0.0,
+          "max_abs": 0.0
+        },
+        "dx": {
+          "frobenius": 7.221321792476845e-07,
+          "max_abs": 2.709454509641773e-07
+        },
+        "forward": {
+          "frobenius": 1.1654300203268496e-06,
+          "max_abs": 5.01662130281133e-07
+        },
+        "h": {
+          "frobenius": 0.0,
+          "max_abs": 0.0
+        },
+        "residual": {
+          "frobenius": 2.22062666198122e-06,
+          "max_abs": 1.098550068689974e-06
+        }
+      },
+      "probe_count": 6,
+      "rank": 0,
+      "reference": "native dense CPU FP64 autograd; independently materialized projector/residual",
+      "rtol": 2e-05,
+      "seed": 409,
+      "weight_shape": [
+        5,
+        7
+      ],
+      "x_noncontiguous": true,
+      "x_shape": [
+        3,
+        4,
+        7
+      ]
+    },
+    {
+      "atol": 1e-05,
+      "bias": true,
+      "device": "mps",
+      "dtype": "torch.float32",
+      "errors": {
+        "db": {
+          "frobenius": 3.325333318560153e-07,
+          "max_abs": 3.004346522672563e-07
+        },
+        "dw": {
+          "frobenius": 0.0,
+          "max_abs": 0.0
+        },
+        "dx": {
+          "frobenius": 1.1032261575213392e-06,
+          "max_abs": 6.206130249708508e-07
+        },
+        "forward": {
+          "frobenius": 1.33814258918956e-06,
+          "max_abs": 5.616290357224329e-07
+        },
+        "h": {
+          "frobenius": 0.0,
+          "max_abs": 0.0
+        },
+        "residual": {
+          "frobenius": 3.350034447150252e-06,
+          "max_abs": 1.5279973659687585e-06
+        }
+      },
+      "probe_count": 6,
+      "rank": 0,
+      "reference": "native dense CPU FP64 autograd; independently materialized projector/residual",
+      "rtol": 2e-05,
+      "seed": 409,
+      "weight_shape": [
+        5,
+        7
+      ],
+      "x_noncontiguous": true,
+      "x_shape": [
+        3,
+        4,
+        7
+      ]
+    },
+    {
+      "atol": 1e-05,
+      "bias": false,
+      "device": "mps",
+      "dtype": "torch.float32",
+      "errors": {
+        "dw": {
+          "frobenius": 9.121126490206295e-07,
+          "max_abs": 4.4309154567656606e-07
+        },
+        "dx": {
+          "frobenius": 7.221321792476845e-07,
+          "max_abs": 2.709454509641773e-07
+        },
+        "forward": {
+          "frobenius": 1.1654300203268496e-06,
+          "max_abs": 5.01662130281133e-07
+        },
+        "h": {
+          "frobenius": 6.793708983762325e-07,
+          "max_abs": 4.4565285106656916e-07
+        },
+        "residual": {
+          "frobenius": 2.7163574607351054e-06,
+          "max_abs": 1.1732332207969876e-06
+        }
+      },
+      "probe_count": 6,
+      "rank": 2,
+      "reference": "native dense CPU FP64 autograd; independently materialized projector/residual",
+      "rtol": 2e-05,
+      "seed": 409,
+      "weight_shape": [
+        5,
+        7
+      ],
+      "x_noncontiguous": true,
+      "x_shape": [
+        3,
+        4,
+        7
+      ]
+    },
+    {
+      "atol": 1e-05,
+      "bias": true,
+      "device": "mps",
+      "dtype": "torch.float32",
+      "errors": {
+        "db": {
+          "frobenius": 3.325333318560153e-07,
+          "max_abs": 3.004346522672563e-07
+        },
+        "dw": {
+          "frobenius": 1.019731484142053e-06,
+          "max_abs": 4.6991681273977903e-07
+        },
+        "dx": {
+          "frobenius": 1.1032261575213392e-06,
+          "max_abs": 6.206130249708508e-07
+        },
+        "forward": {
+          "frobenius": 1.33814258918956e-06,
+          "max_abs": 5.616290357224329e-07
+        },
+        "h": {
+          "frobenius": 8.394863506341653e-07,
+          "max_abs": 5.76068890478787e-07
+        },
+        "residual": {
+          "frobenius": 4.252936883110869e-06,
+          "max_abs": 1.5807726772010255e-06
+        }
+      },
+      "probe_count": 6,
+      "rank": 2,
+      "reference": "native dense CPU FP64 autograd; independently materialized projector/residual",
+      "rtol": 2e-05,
+      "seed": 409,
+      "weight_shape": [
+        5,
+        7
+      ],
+      "x_noncontiguous": true,
+      "x_shape": [
+        3,
+        4,
+        7
+      ]
+    },
+    {
+      "atol": 1e-05,
+      "bias": false,
+      "device": "mps",
+      "dtype": "torch.float32",
+      "errors": {
+        "dw": {
+          "frobenius": 1.4194933309319991e-06,
+          "max_abs": 4.949243499474676e-07
+        },
+        "dx": {
+          "frobenius": 7.221321792476845e-07,
+          "max_abs": 2.709454509641773e-07
+        },
+        "forward": {
+          "frobenius": 1.1654300203268496e-06,
+          "max_abs": 5.01662130281133e-07
+        },
+        "h": {
+          "frobenius": 1.1749215798465101e-06,
+          "max_abs": 4.4565285106656916e-07
+        },
+        "residual": {
+          "frobenius": 4.051718620496863e-06,
+          "max_abs": 1.907348634433897e-06
+        }
+      },
+      "probe_count": 6,
+      "rank": 5,
+      "reference": "native dense CPU FP64 autograd; independently materialized projector/residual",
+      "rtol": 2e-05,
+      "seed": 409,
+      "weight_shape": [
+        5,
+        7
+      ],
+      "x_noncontiguous": true,
+      "x_shape": [
+        3,
+        4,
+        7
+      ]
+    },
+    {
+      "atol": 1e-05,
+      "bias": true,
+      "device": "mps",
+      "dtype": "torch.float32",
+      "errors": {
+        "db": {
+          "frobenius": 3.325333318560153e-07,
+          "max_abs": 3.004346522672563e-07
+        },
+        "dw": {
+          "frobenius": 1.9480741223161012e-06,
+          "max_abs": 1.0949547366578827e-06
+        },
+        "dx": {
+          "frobenius": 1.1032261575213392e-06,
+          "max_abs": 6.206130249708508e-07
+        },
+        "forward": {
+          "frobenius": 1.33814258918956e-06,
+          "max_abs": 5.616290357224329e-07
+        },
+        "h": {
+          "frobenius": 1.7378532204272807e-06,
+          "max_abs": 7.308343823453356e-07
+        },
+        "residual": {
+          "frobenius": 5.551877511889822e-06,
+          "max_abs": 2.384185792636847e-06
+        }
+      },
+      "probe_count": 6,
+      "rank": 5,
+      "reference": "native dense CPU FP64 autograd; independently materialized projector/residual",
+      "rtol": 2e-05,
+      "seed": 409,
+      "weight_shape": [
+        5,
+        7
+      ],
+      "x_noncontiguous": true,
+      "x_shape": [
+        3,
+        4,
+        7
+      ]
+    }
+  ],
+  "provenance": {
+    "base_commit": "d3f8fcb7f60ae48402462586b3cc440d4d2f9f86",
+    "fallback_environment_before_import": "0",
+    "machine": "arm64",
+    "mps_available": true,
+    "python": "3.13.5",
+    "source_sha256": {
+      "pyproject.toml": "31372fb67548625c083273f55d8766bc90abcf46a7c511e897147386f5f878d2",
+      "src/oar/basis.py": "0d39eb74b7f6eb1d1dab30f3ce03ae5adfe252ea08fe199828ee15ac80290b4c",
+      "src/oar/linear.py": "e0e0ee246c43e1e71b4a98ba1e97b9a1a8774a13c8271fb063a4020524119b61",
+      "tests/test_accumulation.py": "b036abf408b31b143933773fa33436bbbd02100fed5a1397cd8cab9081cb35f7",
+      "tests/test_algebra.py": "57bcf5ba0141a246c11dca1680338f27c8656a497e4ab0c65ab7fc09e41f6756",
+      "tests/test_basis.py": "97bd57733140469a7a23bf95a7bd29a2142935651909cbc921bfb5edd0e6ac01",
+      "tests/test_exact_adjoints.py": "7276d899195b667615e19ee75a8ab955dfcff24bd25c9f6259ae13173cc229ba"
+    },
+    "torch": "2.15.0",
+    "torch_revision": "d0f2af8b66b20da4baa50644c0cd3f887a2eae2e"
+  },
+  "schema_version": 1,
+  "scope": "tiny operator correctness only; no performance, training, guardband or complete WP01 claim"
+}

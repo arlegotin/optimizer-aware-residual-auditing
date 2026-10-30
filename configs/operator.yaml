@@ -1,0 +1,21 @@
+schema_version: 1
+device: mps
+seed: 61001
+blocks: 9
+max_blocks: 25
+bootstrap_replicates: 2000
+noise_relative_width: 0.15
+warmup:
+  minimum: 4
+  maximum: 16
+  window: 4
+  relative_range: 0.15
+shapes:
+  - {n: 128, di: 128, do: 512, rank: 8, q: 8, accumulation: 1, noncontiguous: false}
+  - {n: 512, di: 256, do: 1024, rank: 8, q: 8, accumulation: 1, noncontiguous: true}
+  - {n: 2048, di: 512, do: 2048, rank: 16, q: 8, accumulation: 1, noncontiguous: false}
+  # First pilot found candidate headroom at n=2048. These bounded refinements
+  # resolve batch size and accumulation without increasing model width.
+  - {n: 4096, di: 512, do: 2048, rank: 16, q: 8, accumulation: 1, noncontiguous: false}
+  - {n: 2048, di: 512, do: 2048, rank: 8, q: 8, accumulation: 4, noncontiguous: false}
+output: analysis/timing_calibration.json

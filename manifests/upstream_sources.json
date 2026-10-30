@@ -99,13 +99,14 @@
       "local_status": "selected_files_and_metadata_only",
       "name": "instant",
       "port_status": "not_implemented",
-      "repository_tree_sha": "8a04bd43c19cc52984a49fb1b7fd1dae14fb2ffc",
+      "repository_commit_sha": "8a04bd43c19cc52984a49fb1b7fd1dae14fb2ffc",
       "restrictions": [
         "preserve upstream and bundled dependency notices",
         "full source-equivalence and calibration review required before named port claims"
       ],
       "revision": "8a04bd43c19cc52984a49fb1b7fd1dae14fb2ffc",
       "revision_kind": "whole_repository_commit",
+      "revision_note": "Historical repository_tree_sha field held a commit ID; renamed without changing archived upstream bytes. A tree object ID is not claimed.",
       "source": "https://github.com/hieu-trannn/INSTANT"
     },
     {
@@ -139,13 +140,14 @@
       "local_status": "selected_files_and_metadata_only",
       "name": "vcas",
       "port_status": "not_implemented",
-      "repository_tree_sha": "0bc7d0875de8098da53537af066a9f1921d16409",
+      "repository_commit_sha": "0bc7d0875de8098da53537af066a9f1921d16409",
       "restrictions": [
         "preserve upstream and bundled dependency notices",
         "full source-equivalence and calibration review required before named port claims"
       ],
       "revision": "0bc7d0875de8098da53537af066a9f1921d16409",
       "revision_kind": "whole_repository_commit",
+      "revision_note": "Historical repository_tree_sha field held a commit ID; renamed without changing archived upstream bytes. A tree object ID is not claimed.",
       "source": "https://github.com/thu-ml/VCAS"
     },
     {
@@ -179,13 +181,14 @@
       "local_status": "selected_files_and_metadata_only",
       "name": "dropbp",
       "port_status": "not_implemented",
-      "repository_tree_sha": "7170a637f66e4723b8e749b466061195a0cfe399",
+      "repository_commit_sha": "7170a637f66e4723b8e749b466061195a0cfe399",
       "restrictions": [
         "preserve upstream and bundled dependency notices",
         "full source-equivalence and calibration review required before named port claims"
       ],
       "revision": "7170a637f66e4723b8e749b466061195a0cfe399",
       "revision_kind": "whole_repository_commit",
+      "revision_note": "Historical repository_tree_sha field held a commit ID; renamed without changing archived upstream bytes. A tree object ID is not claimed.",
       "source": "https://github.com/WooSunghyeon/dropbp"
     },
     {

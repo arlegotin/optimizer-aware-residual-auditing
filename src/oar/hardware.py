@@ -10,8 +10,59 @@ import shutil
 import subprocess
 import sys
 import time
+import threading
 
 import psutil
+
+
+def resource_snapshot(device: str) -> dict:
+    """Separate overlapping resource measures; snapshot readings are not peaks."""
+    memory = psutil.virtual_memory()
+    try:
+        swap = psutil.swap_memory()
+    except (OSError, psutil.Error):
+        swap = None
+    result = dict(process_rss_bytes=psutil.Process().memory_info().rss,
+                  physical_memory_bytes=memory.total, available_memory_bytes=memory.available,
+                  memory_percent=memory.percent, swap_used_bytes=swap.used if swap else None,
+                  swap_in_bytes=swap.sin if swap else None, swap_out_bytes=swap.sout if swap else None,
+                  metal_current_bytes=None, metal_driver_bytes=None)
+    if device == 'mps':
+        import torch
+        result.update(metal_current_bytes=torch.mps.current_allocated_memory(),
+                      metal_driver_bytes=torch.mps.driver_allocated_memory())
+    return result
+
+
+def profile_resources(operation, device: str, interval_s: float = .005) -> dict:
+    """Separate resource profiling; never runs during headline timed blocks.
+
+    Periodic samples can miss short peaks. Metal/RSS overlap and are not added.
+    OS-wide swapping is context, not automatically attributed to this process.
+    """
+    samples = [resource_snapshot(device)]
+    stop = threading.Event()
+
+    def sample():
+        while not stop.wait(interval_s):
+            samples.append(resource_snapshot(device))
+
+    monitor = threading.Thread(target=sample, name='oar-resource-profile', daemon=True)
+    monitor.start()
+    started = time.perf_counter()
+    try:
+        operation()
+        if device == 'mps':
+            import torch
+            torch.mps.synchronize()
+    finally:
+        stop.set()
+        monitor.join()
+        samples.append(resource_snapshot(device))
+    return dict(sampling_interval_s=interval_s, inclusive_profile_wall_s=time.perf_counter()-started,
+                samples=samples, observed_max={k:max(s[k] for s in samples if s[k] is not None)
+                        for k in ('process_rss_bytes', 'metal_current_bytes', 'metal_driver_bytes')
+                        if samples[0][k] is not None})
 
 
 def _command(args):
