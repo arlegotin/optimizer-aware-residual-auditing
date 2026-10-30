@@ -1,0 +1,306 @@
+{
+  "_id": "621ffdd236468d709f18200d",
+  "author": "Salesforce",
+  "cardData": {
+    "annotations_creators": [
+      "no-annotation"
+    ],
+    "configs": [
+      {
+        "config_name": "wikitext-103-raw-v1",
+        "data_files": [
+          {
+            "path": "wikitext-103-raw-v1/test-*",
+            "split": "test"
+          },
+          {
+            "path": "wikitext-103-raw-v1/train-*",
+            "split": "train"
+          },
+          {
+            "path": "wikitext-103-raw-v1/validation-*",
+            "split": "validation"
+          }
+        ]
+      },
+      {
+        "config_name": "wikitext-103-v1",
+        "data_files": [
+          {
+            "path": "wikitext-103-v1/test-*",
+            "split": "test"
+          },
+          {
+            "path": "wikitext-103-v1/train-*",
+            "split": "train"
+          },
+          {
+            "path": "wikitext-103-v1/validation-*",
+            "split": "validation"
+          }
+        ]
+      },
+      {
+        "config_name": "wikitext-2-raw-v1",
+        "data_files": [
+          {
+            "path": "wikitext-2-raw-v1/test-*",
+            "split": "test"
+          },
+          {
+            "path": "wikitext-2-raw-v1/train-*",
+            "split": "train"
+          },
+          {
+            "path": "wikitext-2-raw-v1/validation-*",
+            "split": "validation"
+          }
+        ]
+      },
+      {
+        "config_name": "wikitext-2-v1",
+        "data_files": [
+          {
+            "path": "wikitext-2-v1/test-*",
+            "split": "test"
+          },
+          {
+            "path": "wikitext-2-v1/train-*",
+            "split": "train"
+          },
+          {
+            "path": "wikitext-2-v1/validation-*",
+            "split": "validation"
+          }
+        ]
+      }
+    ],
+    "dataset_info": [
+      {
+        "config_name": "wikitext-103-raw-v1",
+        "dataset_size": 548965325,
+        "download_size": 315466397,
+        "features": [
+          {
+            "dtype": "string",
+            "name": "text"
+          }
+        ],
+        "splits": [
+          {
+            "name": "test",
+            "num_bytes": 1305088,
+            "num_examples": 4358
+          },
+          {
+            "name": "train",
+            "num_bytes": 546500949,
+            "num_examples": 1801350
+          },
+          {
+            "name": "validation",
+            "num_bytes": 1159288,
+            "num_examples": 3760
+          }
+        ]
+      },
+      {
+        "config_name": "wikitext-103-v1",
+        "dataset_size": 547592241,
+        "download_size": 313093838,
+        "features": [
+          {
+            "dtype": "string",
+            "name": "text"
+          }
+        ],
+        "splits": [
+          {
+            "name": "test",
+            "num_bytes": 1295575,
+            "num_examples": 4358
+          },
+          {
+            "name": "train",
+            "num_bytes": 545141915,
+            "num_examples": 1801350
+          },
+          {
+            "name": "validation",
+            "num_bytes": 1154751,
+            "num_examples": 3760
+          }
+        ]
+      },
+      {
+        "config_name": "wikitext-2-raw-v1",
+        "dataset_size": 13526093,
+        "download_size": 7747362,
+        "features": [
+          {
+            "dtype": "string",
+            "name": "text"
+          }
+        ],
+        "splits": [
+          {
+            "name": "test",
+            "num_bytes": 1305088,
+            "num_examples": 4358
+          },
+          {
+            "name": "train",
+            "num_bytes": 11061717,
+            "num_examples": 36718
+          },
+          {
+            "name": "validation",
+            "num_bytes": 1159288,
+            "num_examples": 3760
+          }
+        ]
+      },
+      {
+        "config_name": "wikitext-2-v1",
+        "dataset_size": 13323188,
+        "download_size": 7371282,
+        "features": [
+          {
+            "dtype": "string",
+            "name": "text"
+          }
+        ],
+        "splits": [
+          {
+            "name": "test",
+            "num_bytes": 1270947,
+            "num_examples": 4358
+          },
+          {
+            "name": "train",
+            "num_bytes": 10918118,
+            "num_examples": 36718
+          },
+          {
+            "name": "validation",
+            "num_bytes": 1134123,
+            "num_examples": 3760
+          }
+        ]
+      }
+    ],
+    "language": [
+      "en"
+    ],
+    "language_creators": [
+      "crowdsourced"
+    ],
+    "license": [
+      "cc-by-sa-3.0",
+      "gfdl"
+    ],
+    "multilinguality": [
+      "monolingual"
+    ],
+    "paperswithcode_id": "wikitext-2",
+    "pretty_name": "WikiText",
+    "size_categories": [
+      "1M<n<10M"
+    ],
+    "source_datasets": [
+      "original"
+    ],
+    "task_categories": [
+      "text-generation",
+      "fill-mask"
+    ],
+    "task_ids": [
+      "language-modeling",
+      "masked-language-modeling"
+    ]
+  },
+  "createdAt": "2022-03-02T23:29:22.000Z",
+  "description": "\n\t\n\t\t\n\t\n\t\n\t\tDataset Card for \"wikitext\"\n\t\n\n\n\t\n\t\t\n\t\n\t\n\t\tDataset Summary\n\t\n\n The WikiText language modeling dataset is a collection of over 100 million tokens extracted from the set of verified\n Good and Featured articles on Wikipedia. The dataset is available under the Creative Commons Attribution-ShareAlike License.\nCompared to the preprocessed version of Penn Treebank (PTB), WikiText-2 is over 2 times larger and WikiText-103 is over\n110 times larger. The WikiText dataset also features a far\u2026 See the full description on the dataset page: https://huggingface.co/datasets/Salesforce/wikitext.",
+  "disabled": false,
+  "downloads": 2014841,
+  "gated": false,
+  "id": "Salesforce/wikitext",
+  "lastModified": "2024-01-04T16:49:18.000Z",
+  "likes": 854,
+  "paperswithcode_id": "wikitext-2",
+  "private": false,
+  "sha": "b08601e04326c79dfdd32d625aee71d232d685c3",
+  "siblings": [
+    {
+      "rfilename": ".gitattributes"
+    },
+    {
+      "rfilename": "README.md"
+    },
+    {
+      "rfilename": "wikitext-103-raw-v1/test-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "wikitext-103-raw-v1/train-00000-of-00002.parquet"
+    },
+    {
+      "rfilename": "wikitext-103-raw-v1/train-00001-of-00002.parquet"
+    },
+    {
+      "rfilename": "wikitext-103-raw-v1/validation-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "wikitext-103-v1/test-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "wikitext-103-v1/train-00000-of-00002.parquet"
+    },
+    {
+      "rfilename": "wikitext-103-v1/train-00001-of-00002.parquet"
+    },
+    {
+      "rfilename": "wikitext-103-v1/validation-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "wikitext-2-raw-v1/test-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "wikitext-2-raw-v1/train-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "wikitext-2-raw-v1/validation-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "wikitext-2-v1/test-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "wikitext-2-v1/train-00000-of-00001.parquet"
+    },
+    {
+      "rfilename": "wikitext-2-v1/validation-00000-of-00001.parquet"
+    }
+  ],
+  "tags": [
+    "task_categories:text-generation",
+    "task_categories:fill-mask",
+    "task_ids:language-modeling",
+    "task_ids:masked-language-modeling",
+    "annotations_creators:no-annotation",
+    "language_creators:crowdsourced",
+    "multilinguality:monolingual",
+    "source_datasets:original",
+    "language:en",
+    "license:cc-by-sa-3.0",
+    "license:gfdl",
+    "size_categories:1M<n<10M",
+    "format:parquet",
+    "modality:text",
+    "library:datasets",
+    "library:dask",
+    "library:polars",
+    "library:mlcroissant",
+    "arxiv:1609.07843",
+    "region:us"
+  ],
+  "usedStorage": 11667545537
+}

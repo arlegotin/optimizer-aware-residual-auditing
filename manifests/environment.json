@@ -1,0 +1,383 @@
+{
+  "accelerator": {
+    "absence_is_hardware_limitation": false,
+    "available": true,
+    "built": true,
+    "visibility_note": "unavailable may reflect process restrictions; verify outside sandbox before hardware conclusions"
+  },
+  "capability_scope": "tiny shapes only; no OAR, checkpoint, shape-headroom or speedup qualification",
+  "cpu_reference_eligible": true,
+  "discovery_wall_s": 1.42233920795843,
+  "fallback": {
+    "enabled": false,
+    "environment_value": "0",
+    "policy": "disabled_required_for_critical_paths"
+  },
+  "gpu_claim_eligible": true,
+  "hardware": {
+    "architecture": "arm64",
+    "chip": "Apple M3 Max",
+    "disk_free_bytes": 75916759040,
+    "gpu_models": [
+      "Apple M3 Max"
+    ],
+    "model": "Mac15,11",
+    "os_version": "26.7.1",
+    "physical_memory_bytes": 38654705664,
+    "power": {
+      "low_power_mode": null,
+      "mode_code": 0,
+      "source": "ac"
+    },
+    "python_architecture": "arm64",
+    "vm_stat_available": true
+  },
+  "memory": {
+    "available_bytes": 9721102336,
+    "process_rss_bytes": 468762624
+  },
+  "native_arm64": true,
+  "observed_at_utc": "2026-10-30T21:12:43.389259+00:00",
+  "operations": {
+    "cpu": [
+      {
+        "critical": true,
+        "device": "cpu",
+        "dtype": "float32",
+        "input_shape": [
+          4,
+          3
+        ],
+        "name": "gemm",
+        "noncontiguous": true,
+        "status": "pass",
+        "wall_s": 0.2347592920414172
+      },
+      {
+        "critical": true,
+        "device": "cpu",
+        "dtype": "float32",
+        "name": "autograd",
+        "status": "pass",
+        "wall_s": 0.0008973749936558306
+      },
+      {
+        "critical": true,
+        "device": "cpu",
+        "dtype": "float32",
+        "foreach": false,
+        "fused": false,
+        "name": "adamw",
+        "status": "pass",
+        "wall_s": 0.23260979098267853
+      },
+      {
+        "critical": true,
+        "device": "cpu",
+        "dtype": "float32",
+        "generation_device": "cpu",
+        "generation_s": 2.9499991796910763e-05,
+        "independent_streams": true,
+        "name": "cpu_gaussian_transfer",
+        "status": "pass",
+        "transfer_s": 2.333021257072687e-06,
+        "wall_s": 8.13750084489584e-05
+      },
+      {
+        "critical": true,
+        "device": "cpu",
+        "dtype": "float32",
+        "name": "model_rng_restore",
+        "replayed_equal": true,
+        "status": "pass",
+        "wall_s": 2.675002906471491e-05
+      },
+      {
+        "critical": true,
+        "device": "cpu",
+        "dtype": "float64",
+        "execution_device": "cpu",
+        "name": "reference_fp64",
+        "status": "pass",
+        "wall_s": 6.562500493600965e-05
+      },
+      {
+        "critical": false,
+        "device": "cpu",
+        "dtype": "float32",
+        "execution_device": "cpu",
+        "input_transfer_s": 1.333013642579317e-06,
+        "name": "qr",
+        "policy": "native",
+        "return_transfer_s": 2.208980731666088e-06,
+        "status": "pass",
+        "transfer_s": 3.541994374245405e-06,
+        "wall_s": 0.0003000410506501794
+      },
+      {
+        "critical": false,
+        "device": "cpu",
+        "dtype": "float32",
+        "execution_device": "cpu",
+        "input_transfer_s": 1.04197533801198e-06,
+        "name": "svd",
+        "policy": "native",
+        "return_transfer_s": 1.5830155462026596e-06,
+        "status": "pass",
+        "transfer_s": 2.6249908842146397e-06,
+        "wall_s": 0.0001051250146701932
+      },
+      {
+        "critical": true,
+        "device": "cpu",
+        "dtype": "float32",
+        "name": "norm_gelu_masked_loss_backward",
+        "status": "pass",
+        "wall_s": 0.0005104579613544047
+      },
+      {
+        "critical": true,
+        "device": "cpu",
+        "dtype": "float32",
+        "name": "attention_backward",
+        "status": "pass",
+        "wall_s": 0.00019916699966415763
+      },
+      {
+        "critical": false,
+        "device": "cpu",
+        "dtype": "float32",
+        "name": "gather_scatter_sampling",
+        "status": "pass",
+        "wall_s": 0.00011566700413823128
+      }
+    ],
+    "mps": [
+      {
+        "critical": true,
+        "device": "mps",
+        "dtype": "float32",
+        "input_shape": [
+          4,
+          3
+        ],
+        "name": "gemm",
+        "noncontiguous": true,
+        "status": "pass",
+        "wall_s": 0.03676329099107534
+      },
+      {
+        "critical": true,
+        "device": "mps",
+        "dtype": "float32",
+        "name": "autograd",
+        "status": "pass",
+        "wall_s": 0.06428083300124854
+      },
+      {
+        "critical": true,
+        "device": "mps",
+        "dtype": "float32",
+        "foreach": false,
+        "fused": false,
+        "name": "adamw",
+        "status": "pass",
+        "wall_s": 0.006398500001523644
+      },
+      {
+        "critical": true,
+        "device": "mps",
+        "dtype": "float32",
+        "generation_device": "cpu",
+        "generation_s": 1.4249992091208696e-05,
+        "independent_streams": true,
+        "name": "cpu_gaussian_transfer",
+        "status": "pass",
+        "transfer_s": 0.00015179195906966925,
+        "wall_s": 0.0003451249795034528
+      },
+      {
+        "critical": true,
+        "device": "mps",
+        "dtype": "float32",
+        "name": "model_rng_restore",
+        "replayed_equal": true,
+        "status": "pass",
+        "wall_s": 0.0003720419481396675
+      },
+      {
+        "critical": true,
+        "device": "mps",
+        "dtype": "float64",
+        "execution_device": "cpu",
+        "name": "reference_fp64",
+        "status": "pass",
+        "wall_s": 7.120799273252487e-05
+      },
+      {
+        "critical": false,
+        "device": "mps",
+        "dtype": "float32",
+        "execution_device": "mps",
+        "input_transfer_s": 3.3339601941406727e-06,
+        "name": "qr",
+        "policy": "native",
+        "return_transfer_s": 7.2499969974160194e-06,
+        "status": "pass",
+        "transfer_s": 1.0583957191556692e-05,
+        "wall_s": 0.0043232080060988665
+      },
+      {
+        "critical": false,
+        "device": "mps",
+        "dtype": "float32",
+        "execution_device": "mps",
+        "input_transfer_s": 2.8329668566584587e-06,
+        "name": "svd",
+        "policy": "native",
+        "return_transfer_s": 3.4580007195472717e-06,
+        "status": "pass",
+        "transfer_s": 6.2909675762057304e-06,
+        "wall_s": 0.001291458960622549
+      },
+      {
+        "critical": true,
+        "device": "mps",
+        "dtype": "float64",
+        "execution_device": "cpu",
+        "input_transfer_s": 0.00019591697491705418,
+        "name": "qr_cpu_fp64",
+        "policy": "explicit_cpu_calibration",
+        "return_transfer_s": 0.00016449997201561928,
+        "status": "pass",
+        "transfer_s": 0.00036041694693267345,
+        "wall_s": 0.000709415995515883
+      },
+      {
+        "critical": true,
+        "device": "mps",
+        "dtype": "float64",
+        "execution_device": "cpu",
+        "input_transfer_s": 0.00015979103045538068,
+        "name": "svd_cpu_fp64",
+        "policy": "explicit_cpu_calibration",
+        "return_transfer_s": 0.00016779202269390225,
+        "status": "pass",
+        "transfer_s": 0.00032758305314928293,
+        "wall_s": 0.0005802920204587281
+      },
+      {
+        "critical": true,
+        "device": "mps",
+        "dtype": "float32",
+        "name": "norm_gelu_masked_loss_backward",
+        "status": "pass",
+        "wall_s": 0.011737583961803466
+      },
+      {
+        "critical": true,
+        "device": "mps",
+        "dtype": "float32",
+        "name": "attention_backward",
+        "status": "pass",
+        "wall_s": 0.011441415990702808
+      },
+      {
+        "critical": false,
+        "device": "mps",
+        "dtype": "float32",
+        "name": "gather_scatter_sampling",
+        "status": "pass",
+        "wall_s": 0.0013367499923333526
+      }
+    ]
+  },
+  "packages": {
+    "Jinja2": {
+      "license": "unresolved",
+      "version": "3.1.6"
+    },
+    "MarkupSafe": {
+      "license": "BSD-3-Clause",
+      "version": "3.0.4"
+    },
+    "PyYAML": {
+      "license": "MIT",
+      "version": "6.0.3"
+    },
+    "Pygments": {
+      "license": "BSD-2-Clause",
+      "version": "2.21.0"
+    },
+    "filelock": {
+      "license": "MIT",
+      "version": "4.2.5"
+    },
+    "fsspec": {
+      "license": "BSD-3-Clause",
+      "version": "2026.9.0"
+    },
+    "iniconfig": {
+      "license": "MIT",
+      "version": "2.3.1"
+    },
+    "mpmath": {
+      "license": "BSD",
+      "version": "1.3.0"
+    },
+    "networkx": {
+      "license": "BSD-3-Clause",
+      "version": "3.7"
+    },
+    "numpy": {
+      "license": "BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0",
+      "version": "2.5.4"
+    },
+    "oar": {
+      "license": "unresolved",
+      "version": "0.1.0"
+    },
+    "packaging": {
+      "license": "Apache-2.0 OR BSD-2-Clause",
+      "version": "26.3"
+    },
+    "pip": {
+      "license": "MIT",
+      "version": "25.1.1"
+    },
+    "pluggy": {
+      "license": "MIT",
+      "version": "1.7.0"
+    },
+    "psutil": {
+      "license": "BSD-3-Clause",
+      "version": "7.2.2"
+    },
+    "pytest": {
+      "license": "MIT",
+      "version": "9.2.0"
+    },
+    "setuptools": {
+      "license": "MIT",
+      "version": "84.2.1"
+    },
+    "sympy": {
+      "license": "BSD",
+      "version": "1.14.0"
+    },
+    "torch": {
+      "license": "Apache-2.0 AND Apache-2.0 WITH LLVM-exception AND BSD-2-Clause AND BSD-3-Clause AND BSL-1.0 AND ISC AND MIT AND Zlib",
+      "version": "2.15.0"
+    },
+    "typing_extensions": {
+      "license": "PSF-2.0",
+      "version": "4.16.0"
+    }
+  },
+  "python": {
+    "implementation": "CPython",
+    "version": "3.13.5"
+  },
+  "schema_version": 1,
+  "scope": "exploratory_gpu"
+}

@@ -110,3 +110,26 @@ def resolve_config(config: RunConfig) -> dict[str, object]:
 def config_sha256(config: RunConfig) -> str:
     canonical = json.dumps(resolve_config(config), sort_keys=True, separators=(",", ":"), allow_nan=False)
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+@dataclass(frozen=True)
+class DiscoveryConfig:
+    schema_version: int = 1
+    device: str = "auto"
+    allow_mps_fallback: bool = False
+
+
+def load_discovery_config(path: Path) -> DiscoveryConfig:
+    """Discovery is separate from training; automatic fallback is never permitted."""
+    try:
+        payload = yaml.load(Path(path).read_text(encoding="utf-8"), Loader=_UniqueLoader)
+    except yaml.YAMLError as exc:
+        raise ValueError("invalid YAML configuration") from exc
+    raw = _fields(payload, {"schema_version", "device", "allow_mps_fallback"}, "discovery")
+    if type(raw["schema_version"]) is not int or raw["schema_version"] != 1:
+        raise ValueError("unsupported discovery schema_version")
+    if raw["device"] not in ("auto", "cpu", "mps"):
+        raise ValueError("discovery device must be auto, cpu or mps")
+    if raw["allow_mps_fallback"] is not False:
+        raise ValueError("MPS fallback must be false")
+    return DiscoveryConfig(**raw)

@@ -1,0 +1,3 @@
+schema_version: 1
+device: auto
+allow_mps_fallback: false

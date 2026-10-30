@@ -32,3 +32,69 @@ structural-oracle branch; the initial gate graph is deliberately conservative.
 
 Detailed local implementation/TDD evidence is in the ignored task report:
 `.superpowers/sdd/2026-10-30-oar-implementation/task-1-report.md`.
+
+## 2026-10-30 — Task 1 review completion
+
+Task 1 implementation `45a229e` and correction `2115d04` have been independently
+reviewed. The initial nonfinite gate-evidence issue was fixed and re-reviewed
+clean; the reviewed baseline has **45 passing tests**. No scientific gate was
+passed by those scaffolding tests.
+
+## 2026-10-30 — Task 2: actual hardware, operations and provenance (WP00)
+
+Implemented allowlisted hardware redaction, tiny capability checks, `doctor`, a
+separate strict discovery configuration and content-bound local asset/notice
+inspection. The shell-output fixture exercises native parsing while actual CPU
+and MPS checks exercise numerical outputs, optimizer mutation, independent
+CPU-generated Gaussian streams and model-RNG save/restore. Changed asset or
+notice bytes invalidate supplied approval; missing, conflicting or unresolved
+license evidence remains blocked.
+
+Actual discovery was rerun outside the sandbox with
+`PYTORCH_ENABLE_MPS_FALLBACK=0`. Sandbox MPS unavailability and denied `sysctl`
+were process restrictions: the actual machine is native arm64, Apple M3 Max,
+Mac15,11, macOS 26.7.1, with **38,654,705,664 physical bytes** and about **75.9 GB
+free disk** at discovery, on AC power (`pmset` mode code 0; the separate legacy
+low-power flag was unavailable). Tiny FP32 GEMM/noncontiguous input, exact native
+linear derivatives, AdamW, layer norm/GELU/masked-loss and attention backward,
+CPU probe transfer and model-RNG replay all passed. Tiny native QR/SVD and
+explicit CPU FP64 QR/SVD also passed. Combined MPS-to-CPU FP64 conversion raised
+`RuntimeError: Undefined type Double`; discovery now transfers to CPU first and
+then casts. Sampling initially changed the MPS model RNG; a real-device
+regression verifies that the entire suite now restores it.
+
+Froze **19 actual runtime/tooling wheels (158,389,709 bytes)** with SHA-256 and
+hash-enforced requirements. Eighteen archives came from the existing pip cache;
+only the previously uncached pip 25.1.1 wheel needed a small download. Archived
+package/bundled notices and selected upstream source/notices are under
+`third_party/discovery/`. Whole-repository revisions pin INSTANT, VCAS, DropBP,
+Fashion-MNIST and WikiText; historical excerpt blob IDs are not used as commit
+pins. The exact installed PyTorch revision's fallback implementation confirms
+that an absent variable or `0` disables general fallback. Its unconditional
+`embedding_renorm_` CPU fallback is outside this critical-operation suite and
+must not enter a timed critical path without explicit accounting.
+
+**Gate interpretation:** WP00 passes for CPU correctness and the next operator
+qualification/headroom work on actual MPS. This rests on actual operations,
+frozen package/source identities and at least one available, permissible core
+dataset: Fashion-MNIST has consistent MIT evidence at its pinned official
+revision and both pinned training-file HEAD requests returned 200 with their
+expected sizes. Dataset bodies have not been downloaded; their local SHA-256
+fields remain null, upstream checksums are separately labeled and
+`workload_ready` remains false pending byte verification/preprocessing.
+WikiText's pinned official card still conflicts (CC BY-SA 3.0/GFDL metadata
+versus CC BY-SA 4.0 prose); **the language workload remains blocked** until that
+evidence is reconciled. Vision cannot substitute for a language-pretraining
+claim. Official validation/test bodies were not accessed.
+
+Final verification: **73 passed in 1.51s** outside the sandbox with actual MPS
+and fallback disabled; the sandbox run had **72 passed, 1 skipped**. The
+hash-enforced offline lock dry run resolved all 19 wheels, `pip check` found no
+broken requirements, and all gate/source/wheel/notice hashes and environment
+redaction checks passed. Exact reproduction evidence is recorded in
+`.superpowers/sdd/2026-10-30-oar-implementation/task-2-report.md`. Discovery is
+limited to tiny shapes; no custom OAR operator, checkpoint/replay equivalence,
+shape-specific speed, thermal budget, training, learning or speedup claim has
+been established. WP01 numerical/transaction verification is the next action;
+WP02 headroom still depends on WP01. `doctor` reports actual capability scope
+and never writes a gate pass itself.
