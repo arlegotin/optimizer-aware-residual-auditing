@@ -462,3 +462,16 @@ references, leakage/RNG isolation, guard/tamper and unresolved rare-event claims
 Initial actual fallback0 CPU/MPS full suite: **300 passed in6.93s**. Next permitted
 action is the bounded development-only learning-rate pilot before query study;
 current full online cost stays negative and NumericalPolicy unresolved.
+
+### Task 11 pilot and pre-query lock
+
+Committed first code/scope as a100d5c before real pilot. Fresh MPS pilot26.046s:
+full-rank seed1101 MSE.870242 ->.108646 after128 updates at selected.003;
+all four rates/curves retained in `analysis/structural_oracle_pilot.json`.
+Boundary/untuned limitation explicit. Corrected root dX to match fixture;
+pilot learning valid but wall is not an equivalent-boundary headline. Locked
+study config/second hash amendment before query outcomes. Shift moved64 ->120
+without adding cases so q128 age16 straddles shift; native moments continuous.
+First-query measured forecast controls conservative600s engineering ceiling;
+partial coverage becomes incomplete/inconclusive. Actual fallback0 full suite:
+**303 passed in6.85s**. No online gate reopens; next is bounded query collection.

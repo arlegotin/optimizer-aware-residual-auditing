@@ -146,6 +146,7 @@ def test_cpu_end_to_end_worker_outputs_units_and_costs(tmp_path):
     assert summary['online_eligible'] is False
     assert summary['total_wall_s'] > 0
     assert summary['curves'] and summary['artifact_index']
+    assert summary['resource_forecast']['estimated_study_wall_s'] > 0
     assert summary['scope'] == 'synthetic_structural_exploratory'
 
 
@@ -232,3 +233,33 @@ def test_rare_harm_events_do_not_produce_claimed_discrimination():
     item=result['discrimination']['development_harm/relative']
     assert item['events']==1 and item['auc'] is None
     assert item['reason']=='insufficient_label_support'
+
+
+def test_synthetic_native_boundary_preserves_root_input_gradients(tmp_path):
+    o=api();c=tiny_config(tmp_path)
+    x,y=o.replay_synthetic(o.synthetic_batch(c,17,'full_rank',0,'data',0),c,17,'full_rank')
+    assert x.requires_grad
+    p=o.initialize(c,17,'student')
+    torch.nn.functional.mse_loss(o.forward(x,p),y).backward()
+    assert x.grad is not None and torch.isfinite(x.grad).all()
+
+
+def test_engineering_ceiling_preserves_incomplete_result(tmp_path):
+    from dataclasses import replace
+    o=api();c=replace(tiny_config(tmp_path),selected_learning_rate=.003,max_wall_s=1e-9)
+    result=o.run_oracle_worker(c,pilot_only=False)
+    summary=json.loads(result.read_text())
+    assert summary['outcome']=='incomplete_inconclusive'
+    assert summary['coverage_complete'] is False
+    assert 'ceiling' in summary['incomplete_reason']
+
+
+def test_constant_and_unconditional_projection_controls_share_proposals():
+    o=api()
+    rows=[dict(proposal_id=split,split=split,basis_kind='past',condition='full_rank',seed=1,
+        query_step=8,rank=4,basis_age=1,relative_residual=.5,raw_alignment=1.,ordinary_bound=.5,
+        complement_bound=.25,development_delta=-.1,dense_development_delta=-.2,
+        same_batch_delta=-.1,true_alignment=.1,lost_progress=.1) for split in ('tuning','evaluation')]
+    summary=o.summarize_policies(rows,(.25,.5,.75),(.1,.5,1.))
+    assert summary['evaluation']['always_project']['accepted']==1
+    assert summary['evaluation']['constant']['accepted']==0

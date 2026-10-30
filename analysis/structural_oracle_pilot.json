@@ -1,0 +1,319 @@
+{
+  "artifact_index": [],
+  "attempts": [],
+  "code_revision": "a100d5c2aa031420d50ae56dcb45fc186e52a45f",
+  "config": {
+    "ages": [
+      1,
+      4,
+      16
+    ],
+    "checkpoints": [
+      8,
+      32,
+      128
+    ],
+    "checkpoints_dir": "checkpoints/structural_oracle",
+    "conditions": [
+      "low_rank",
+      "full_rank",
+      "direction_shift"
+    ],
+    "device": "mps",
+    "learning_rates": [
+      0.0001,
+      0.0003,
+      0.001,
+      0.003
+    ],
+    "loss_unit": "mse_per_output_element",
+    "max_wall_s": 600,
+    "output": "analysis",
+    "phase": "exploratory",
+    "pilot_steps": 128,
+    "queries_per_split": 1,
+    "ranks": [
+      4,
+      16,
+      64
+    ],
+    "relative_thresholds": [
+      0.1,
+      0.25,
+      0.5,
+      1.0,
+      2.0
+    ],
+    "schema_version": 1,
+    "seeds": [
+      1101,
+      2202
+    ],
+    "selected_learning_rate": null,
+    "shape": {
+      "di": 512,
+      "do": 2048,
+      "n": 2048
+    },
+    "shift_step": 64,
+    "stage": "pilot",
+    "synthetic_only": true,
+    "taus": [
+      0.25,
+      0.5,
+      0.75
+    ],
+    "teacher_rank": 16
+  },
+  "count_unit": "synthetic_observations",
+  "curves": [],
+  "fallback_environment": "0",
+  "loss_unit": "mse_per_output_element",
+  "mps_driver_at_finish_bytes": 1118535680,
+  "online_eligible": false,
+  "outcome": "pilot_complete",
+  "pilot": [
+    {
+      "curves": [
+        {
+          "committed_updates": 0,
+          "condition": "full_rank",
+          "development_mse": 0.8702419996261597,
+          "elapsed_s": 1.0343594999285415,
+          "lr": 0.0001,
+          "seed": 1101,
+          "target_phase": "initial"
+        },
+        {
+          "committed_updates": 8,
+          "condition": "full_rank",
+          "development_mse": 0.6884006261825562,
+          "elapsed_s": 1.505625583929941,
+          "lr": 0.0001,
+          "seed": 1101,
+          "target_phase": "initial"
+        },
+        {
+          "committed_updates": 32,
+          "condition": "full_rank",
+          "development_mse": 0.5633794069290161,
+          "elapsed_s": 2.682348374975845,
+          "lr": 0.0001,
+          "seed": 1101,
+          "target_phase": "initial"
+        },
+        {
+          "committed_updates": 64,
+          "condition": "full_rank",
+          "development_mse": 0.44981682300567627,
+          "elapsed_s": 4.234770791954361,
+          "lr": 0.0001,
+          "seed": 1101,
+          "target_phase": "initial"
+        },
+        {
+          "committed_updates": 128,
+          "condition": "full_rank",
+          "development_mse": 0.30950573086738586,
+          "elapsed_s": 7.313554083928466,
+          "lr": 0.0001,
+          "seed": 1101,
+          "target_phase": "initial"
+        }
+      ],
+      "lr": 0.0001,
+      "wall_s": 7.313629999989644
+    },
+    {
+      "curves": [
+        {
+          "committed_updates": 0,
+          "condition": "full_rank",
+          "development_mse": 0.8702419996261597,
+          "elapsed_s": 0.05649512505624443,
+          "lr": 0.0003,
+          "seed": 1101,
+          "target_phase": "initial"
+        },
+        {
+          "committed_updates": 8,
+          "condition": "full_rank",
+          "development_mse": 0.6207457780838013,
+          "elapsed_s": 0.4653820829698816,
+          "lr": 0.0003,
+          "seed": 1101,
+          "target_phase": "initial"
+        },
+        {
+          "committed_updates": 32,
+          "condition": "full_rank",
+          "development_mse": 0.3786671459674835,
+          "elapsed_s": 1.6518396669998765,
+          "lr": 0.0003,
+          "seed": 1101,
+          "target_phase": "initial"
+        },
+        {
+          "committed_updates": 64,
+          "condition": "full_rank",
+          "development_mse": 0.24150288105010986,
+          "elapsed_s": 3.1989427079679444,
+          "lr": 0.0003,
+          "seed": 1101,
+          "target_phase": "initial"
+        },
+        {
+          "committed_updates": 128,
+          "condition": "full_rank",
+          "development_mse": 0.16626575589179993,
+          "elapsed_s": 6.278630875051022,
+          "lr": 0.0003,
+          "seed": 1101,
+          "target_phase": "initial"
+        }
+      ],
+      "lr": 0.0003,
+      "wall_s": 6.278664791025221
+    },
+    {
+      "curves": [
+        {
+          "committed_updates": 0,
+          "condition": "full_rank",
+          "development_mse": 0.8702419996261597,
+          "elapsed_s": 0.053756625042296946,
+          "lr": 0.001,
+          "seed": 1101,
+          "target_phase": "initial"
+        },
+        {
+          "committed_updates": 8,
+          "condition": "full_rank",
+          "development_mse": 0.487678587436676,
+          "elapsed_s": 0.47530508297495544,
+          "lr": 0.001,
+          "seed": 1101,
+          "target_phase": "initial"
+        },
+        {
+          "committed_updates": 32,
+          "condition": "full_rank",
+          "development_mse": 0.19581660628318787,
+          "elapsed_s": 1.6476112080272287,
+          "lr": 0.001,
+          "seed": 1101,
+          "target_phase": "initial"
+        },
+        {
+          "committed_updates": 64,
+          "condition": "full_rank",
+          "development_mse": 0.14658978581428528,
+          "elapsed_s": 3.2228557920316234,
+          "lr": 0.001,
+          "seed": 1101,
+          "target_phase": "initial"
+        },
+        {
+          "committed_updates": 128,
+          "condition": "full_rank",
+          "development_mse": 0.12195167690515518,
+          "elapsed_s": 6.242694708053023,
+          "lr": 0.001,
+          "seed": 1101,
+          "target_phase": "initial"
+        }
+      ],
+      "lr": 0.001,
+      "wall_s": 6.242724583018571
+    },
+    {
+      "curves": [
+        {
+          "committed_updates": 0,
+          "condition": "full_rank",
+          "development_mse": 0.8702419996261597,
+          "elapsed_s": 0.05745716695673764,
+          "lr": 0.003,
+          "seed": 1101,
+          "target_phase": "initial"
+        },
+        {
+          "committed_updates": 8,
+          "condition": "full_rank",
+          "development_mse": 0.43459075689315796,
+          "elapsed_s": 0.4835408329963684,
+          "lr": 0.003,
+          "seed": 1101,
+          "target_phase": "initial"
+        },
+        {
+          "committed_updates": 32,
+          "condition": "full_rank",
+          "development_mse": 0.13793069124221802,
+          "elapsed_s": 1.6011815420351923,
+          "lr": 0.003,
+          "seed": 1101,
+          "target_phase": "initial"
+        },
+        {
+          "committed_updates": 64,
+          "condition": "full_rank",
+          "development_mse": 0.11587777733802795,
+          "elapsed_s": 3.1578615830512717,
+          "lr": 0.003,
+          "seed": 1101,
+          "target_phase": "initial"
+        },
+        {
+          "committed_updates": 128,
+          "condition": "full_rank",
+          "development_mse": 0.10864575207233429,
+          "elapsed_s": 6.197663375060074,
+          "lr": 0.003,
+          "seed": 1101,
+          "target_phase": "initial"
+        }
+      ],
+      "lr": 0.003,
+      "wall_s": 6.197694833041169
+    }
+  ],
+  "provenance": {
+    "analysis/headroom_decision.json": "490688ee41700aa87adb1d627ecb6e1ff526a66b8a3fe797b22755d11555a059",
+    "analysis/timing_calibration.json": "66f698a25c2ca414bb6eca13e541a70dc8ec6ede70cc77ae2831cc5e05f9c0fa",
+    "configs/structural_oracle.yaml": "c8625af4f2270d8d380388860c3eec2795e40633da72dc72a9d8713406149ff5",
+    "decisions/structural_oracle_scope.md": "cf20272a5f884dc7f9c662f12aaad4459a6623dbd2cd2d5721d548a2f2d21950",
+    "src/oar/basis.py": "0d39eb74b7f6eb1d1dab30f3ce03ae5adfe252ea08fe199828ee15ac80290b4c",
+    "src/oar/linear.py": "e0e0ee246c43e1e71b4a98ba1e97b9a1a8774a13c8271fb063a4020524119b61",
+    "src/oar/optimizer_preview.py": "a0f965d69874e71d3b0e91663713293884e1270d08442fe07531f4b057a45888",
+    "src/oar/oracle.py": "3f7249bbde39874dfb2be5e030da4096bfd8b335160816db8ec253c4e94b27fc"
+  },
+  "resources_note": "RSS and Metal are overlapping endpoint snapshots, not measured peaks; CPU SVD and transfers are charged, no online speedup.",
+  "rng_domains": {
+    "1101": {
+      "construction": 8975068312181415516,
+      "data": 1803641544560465975,
+      "development": 6165307158247845757,
+      "evaluation": 7701167049439304142,
+      "probe": 2671049161864110936,
+      "student": 5565765928800070855,
+      "teacher": 212294251222687482,
+      "tuning": 5770030428630513784
+    },
+    "2202": {
+      "construction": 1478530346718695238,
+      "data": 4262679164222371725,
+      "development": 4161444520806841319,
+      "evaluation": 580951498608994842,
+      "probe": 3962219093017126604,
+      "student": 7778311436405151498,
+      "teacher": 2132666451598530184,
+      "tuning": 7802301803740629722
+    }
+  },
+  "rss_at_finish_bytes": 329154560,
+  "schema_version": 1,
+  "scope": "synthetic_structural_exploratory",
+  "selected_learning_rate": 0.003,
+  "total_wall_s": 26.04558679193724
+}

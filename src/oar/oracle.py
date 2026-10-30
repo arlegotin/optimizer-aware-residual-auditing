@@ -27,6 +27,10 @@ from .optimizer_preview import preview_adamw
 from .records import AdamWGroup, AdamWParamState, ReplayableBatch, GateRecord, from_payload
 
 
+class StudyIncomplete(RuntimeError):
+    """Bounded resource stop; valid incomplete evidence, never a successful prefix."""
+
+
 @dataclass(frozen=True)
 class OracleConfig:
     schema_version: int
@@ -138,6 +142,9 @@ def require_structural_oracle(config, config_path, *, root=Path('.'), command='a
                 not matched[0]['candidate_measurement_qualified'] or
                 matched[0]['conditional_full_headroom'] != 'observed_negative'):
             raise ValueError('no matching candidate-potential/audit-failure evidence')
+        if config.max_wall_s>600 or len(config.seeds)>2 or config.queries_per_split>1 or max(config.checkpoints)>128 or max(config.ranks)>64:
+            raise ValueError('bounded scope coverage/resource ceiling exceeded')
+        if config.stage=='study' and config.selected_learning_rate is None:raise ValueError('study requires locked pilot learning rate')
         if config.device != 'mps' or config.shape != {'n': 2048, 'di': 512, 'do': 2048}:
             raise ValueError('amended research shape/backend changed')
         return amendment
@@ -196,7 +203,7 @@ def replay_synthetic(batch, config, seed, condition):
     if condition == 'direction_shift' and d['step'] >= config.shift_step:
         teacher['w2'] = teacher['w2'].roll(config.shape['di']//2, dims=0)
     with torch.no_grad(): y = forward(x, teacher)
-    return x, y
+    return x.requires_grad_(), y
 
 
 def synchronize(device):
@@ -231,7 +238,7 @@ def bootstrap_trajectory(config, seed, condition, lr, *, retain=True, steps=None
                            development_mse=loss_value(x,y,p), elapsed_s=time.perf_counter()-started))
     measure(0)
     for s in range(steps):
-        if time.perf_counter()-started > config.max_wall_s: raise RuntimeError('trajectory resource cap')
+        if time.perf_counter()-started > config.max_wall_s: raise StudyIncomplete('trajectory engineering ceiling reached')
         if retain and s in config.checkpoints:
             selected = {q: b for q,b in sources.items() if q in {s-a for a in config.ages}}
             group = AdamWGroup(tuple(p), lr, (.9,.999), 1e-8, .01)
@@ -372,13 +379,14 @@ def summarize_policies(rows,taus,relative_thresholds):
     items=list(unique.values());tune=[r for r in items if r['split']=='tuning'];evaluation=[r for r in items if r['split']=='evaluation']
     def get(r,name):return r.get('proposal_'+name,r.get(name))
     def accept(r,kind,threshold):
+        if kind in ('constant','always_project'):return threshold
         if kind=='fixed':return (r['rank'],r['basis_age'])==threshold
         if kind=='relative':return get(r,'relative_residual') is not None and get(r,'relative_residual')<=threshold
         a=get(r,'raw_alignment');b=get(r,kind+'_bound')
         return a>0 and b<=threshold*a
     # Minimize dev MSE change against exact fallback on tuning, no evaluation labels.
     fitted={};performance={}
-    choices={'fixed':sorted({(r['rank'],r['basis_age']) for r in tune}), 'relative':relative_thresholds,'ordinary':taus,'complement':taus}
+    choices={'constant':(False,True),'always_project':(True,), 'fixed':sorted({(r['rank'],r['basis_age']) for r in tune}), 'relative':relative_thresholds,'ordinary':taus,'complement':taus}
     for kind,grid in choices.items():
         if not tune or not grid:continue
         objective=lambda threshold:sum(r['development_delta'] if accept(r,kind,threshold) else r.get('dense_development_delta',0.) for r in tune)/len(tune)
@@ -445,7 +453,7 @@ def run_oracle_worker(config, *, pilot_only):
             with auditpath.open('w') as stream:
                 for condition in config.conditions:
                     for seed in config.seeds:
-                        if time.perf_counter()-start>config.max_wall_s:raise RuntimeError('study resource cap reached')
+                        if time.perf_counter()-start>config.max_wall_s:raise StudyIncomplete('study engineering ceiling reached')
                         t=time.perf_counter();paths,curves=bootstrap_trajectory(config,seed,condition,selected)
                         summary['curves'].extend(curves)
                         phases={r['target_phase'] for r in curves}
@@ -453,16 +461,26 @@ def run_oracle_worker(config, *, pilot_only):
                             [r for r in curves if r['target_phase']==phase][-1]['development_mse']+1e-7 for phase in phases)
                         summary['attempts'].append(dict(condition=condition,seed=seed,learnable=learnable,native_wall_s=time.perf_counter()-t))
                         for path in paths:
-                            if time.perf_counter()-start>config.max_wall_s:raise RuntimeError('study resource cap reached')
+                            if time.perf_counter()-start>config.max_wall_s:raise StudyIncomplete('study engineering ceiling reached')
                             snap=torch.load(path,weights_only=False)
                             summary['artifact_index'].append(dict(path=str(path),sha256=sha(path),bytes=path.stat().st_size,step=snap['step'],condition=condition,seed=seed,
                                 sources=sorted(snap['sources']),provenance='native_committed_state_and_actual_pre_update_bases'))
                             if not learnable:continue
                             past=[synthetic_batch(config,seed,condition,s,'data',0) for s in snap['sources']]
                             queries=[synthetic_batch(config,seed,condition,snap['step'],domain,i) for domain in ('tuning','evaluation') for i in range(config.queries_per_split)]
+                            at=time.perf_counter()
                             rows=audit_checkpoint(path,past,queries,config.ranks,costs)
+                            auditwall=time.perf_counter()-at
                             for r in rows:stream.write(json.dumps(r,sort_keys=True,allow_nan=False)+'\n')
                             stream.flush();allrows.extend(rows)
+                            if 'resource_forecast' not in summary:
+                                planned=len(config.conditions)*len(config.seeds)*sum((1+sum(q-a>=0 for a in config.ages))*len(config.ranks)*2*2*config.queries_per_split for q in config.checkpoints)
+                                forecast=auditwall*planned/len(rows)+summary['attempts'][-1]['native_wall_s']*len(config.conditions)*len(config.seeds)
+                                summary['resource_forecast']=dict(estimated_study_wall_s=forecast,engineering_ceiling_s=config.max_wall_s,
+                                    measured_first_checkpoint_audit_s=auditwall,measured_first_native_history_s=summary['attempts'][-1]['native_wall_s'],
+                                    planned_layer_rows=planned,method='first native history times histories plus first checkpoint cost per layer-row times planned rows; conservative shared-overhead scaling; not a confidence bound')
+                                print(f'forecast study wall={forecast:.2f}s ceiling={config.max_wall_s}s',flush=True)
+                                if forecast>config.max_wall_s:raise StudyIncomplete('first-query forecast exceeds conservative engineering ceiling; partial coverage retained')
                             print(f'audit {condition} seed={seed} step={snap["step"]} rows={len(rows)} elapsed={time.perf_counter()-start:.2f}s',flush=True)
             summary['policies']=summarize_policies(allrows,config.taus,config.relative_thresholds)
             summary['row_count']=len(allrows)
@@ -478,7 +496,12 @@ def run_oracle_worker(config, *, pilot_only):
                 oracle='current_svd_oracle uses paid exact current gradient, never a past/deployable proposal'))
         summary['resources_note']='RSS and Metal are overlapping endpoint snapshots, not measured peaks; CPU SVD and transfers are charged, no online speedup.'
         summary['provenance']={name:sha(name) for name in ('src/oar/oracle.py','src/oar/linear.py','src/oar/basis.py','src/oar/optimizer_preview.py','configs/structural_oracle.yaml','decisions/structural_oracle_scope.md','analysis/timing_calibration.json','analysis/headroom_decision.json')}
+        summary['coverage_complete']=True
         summary['outcome']='pilot_complete' if pilot_only else 'synthetic_only_online_still_blocked'
+    except StudyIncomplete as exc:
+        summary['outcome']='incomplete_inconclusive';summary['coverage_complete']=False
+        summary['incomplete_reason']=str(exc)
+        summary['row_count']=len(allrows) if 'allrows' in locals() else 0
     except Exception as exc:
         summary['outcome']='failed';summary['failure']=dict(type=type(exc).__name__,message=str(exc));raise
     finally:
@@ -492,7 +515,10 @@ def run_oracle_worker(config, *, pilot_only):
 def run_structural_oracle(config_path: Path) -> Path:
     config=load_oracle_config(config_path);require_structural_oracle(config,config_path)
     env=os.environ.copy();env['PYTORCH_ENABLE_MPS_FALLBACK']='0'
-    subprocess.run([sys.executable,'-m','oar.oracle',str(config_path)],env=env,check=True)
+    try:
+        subprocess.run([sys.executable,'-m','oar.oracle',str(config_path)],env=env,check=True)
+    except subprocess.CalledProcessError as exc:
+        raise RuntimeError('synthetic oracle worker failed; retained failure summary and partial rows') from exc
     return Path(config.output)/('structural_oracle_pilot.json' if config.stage=='pilot' else 'structural_oracle_summary.json')
 
 

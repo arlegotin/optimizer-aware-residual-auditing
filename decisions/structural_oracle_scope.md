@@ -12,7 +12,7 @@ Gaussian synthetic observations, independently initialized fixed teachers, and
 native default AdamW qualified by the current cost table. Preview uses the
 qualified scalar rule. Output is mean squared error per output element. The
 low-rank teacher's W2 has rank16; full-rank and output-direction-shift teachers
-are separate conditions. Direction shift rolls W2 output rows at source update64;
+are separate conditions. Direction shift rolls W2 output rows at source update120;
 its pre/post learning curves must both decrease before audit inference.
 
 Student/data/teacher/construction/tuning/evaluation/development/probe domains
@@ -64,3 +64,26 @@ Even above it, shared checkpoints and two seeds prevent independent-run claims.
 Raw counts and all attempted proposals remain available, including exact current
 SVD diagnostics. Fixed schedule and score comparisons are offline selections;
 none bypasses the unresolved numerical policy.
+
+Pilot completed on code a100d5c before query outcomes:26.0455868s total,
+full-rank seed1101 development MSE.870242 -> .309506/.166266/.121952/.108646
+for LR.0001/.0003/.001/.003. Select .003 by declared rule; its upper-boundary
+status is a limitation, not optimized-baseline evidence. Pilot excluded root
+input dX; its learning remains valid, its wall time is only a rough scaffold
+forecast. Corrected study preserves root dX matching the measured block.
+
+Pre-query coverage ruling: move the teacher shift64 ->120. At q128 this makes
+age16 source112 genuinely pre-shift, while ages4/1 sources124/127 are post-shift.
+No extra checkpoints/cases, no query outcomes used. The actual new-target
+learnability interval is120 ->128; an invalid condition is retained and excluded
+from audit inference. Early full-rank/shift trajectories intentionally share
+initialization and inputs; their duplicate stages do not add independent runs.
+
+After the first real audit checkpoint, forecast total resource use from measured
+native-history time times six histories plus measured audit time per layer-row
+times all792 planned rows. Shared-query overhead scaling is conservative and
+not a confidence bound. If that forecast exceeds600s or actual time reaches the
+engineering ceiling at a checkpoint boundary, preserve partial coverage and
+report incomplete/inconclusive; never select a favorable prefix as success.
+Unconditional fixed projection and a tuning-selected constant accept/exact
+fallback control are included alongside rank/age schedules and score criteria.

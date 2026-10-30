@@ -91,3 +91,51 @@ Initial full fresh actual-device verification:
 **300 passed in6.93s**, no failures/skips. Approval escalation used for real MPS;
 no experiment/timing overlapped this suite. Scope/config and tested code commit
 precedes all real synthetic pilot/query experiments.
+
+## Initial committed MPS pilot and pre-query correction
+
+Initial implementation/scope/config commit **a100d5c**. Command:
+`PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python -m oar.cli audit-checkpoints --config configs/structural_oracle.yaml`
+with config stage pilot in that commit. Fresh real MPS fallback0 process,
+no overlapping GPU work. Durable artifact `analysis/structural_oracle_pilot.json`
+contains code revision, resolved config/domains, all curves and wall/resource
+snapshots. Total26.0455868s; individual rates:
+
+| LR |128-update wall s |initial/final fixed-development MSE |
+|---|---:|---|
+|.0001 |7.313630 |.870242 -> .309506 |
+|.0003 |6.278665 |.870242 -> .166266 |
+|.001 |6.242725 |.870242 -> .121952 |
+|.003 |6.197695 |.870242 -> .108646 |
+
+Declared rule chooses.003. Boundary winner retained, no unbounded expansion,
+no claim of tuned competitive baseline. Endpoint RSS329,154,560 and Metal
+1,118,535,680 bytes overlap and are not peaks. Six native histories forecast
+~37–45s before paid decompositions/diagnostics, total engineering ceiling600s.
+Early learning/cost milestone sent to controller before query execution.
+
+Self-review found replay inputs did not require root input gradients, unlike
+the measured fixture. Pilot learning gradients/values remain valid; its wall
+is not a timing-equivalent headline. Added root-input-gradient test:14 passed/
+1 failed as expected. Enabled root dX for native/projected study boundaries.
+Added measured first-query resource forecast assertion (expected missing key
+failure), implemented conservative forecast and resource ceiling. A tiny-ceiling
+test initially failed on operational RuntimeError; changed bounded stops to
+preserved `incomplete_inconclusive` results with incomplete coverage, never a
+favorable prefix. Added explicit constant/unconditional projection control test
+(expected missing-control failure), then implementation.17 focused tests pass.
+
+Pre-query shift coverage ruling, disclosed to controller:64 ->120 so query128
+age16 source112 is before shift and ages4/1 source124/127 after it. Original64
+proposal had no basis straddling shift at requested checkpoints. No extra cases,
+no query outcomes, full-rank-only pilot unaffected. Both initial and120→128
+post-shift development learning must decrease before that condition's inference.
+Early full-rank/shift stages share exact input/init history and are not extra
+independent seeds. New stage-study config locks LR.003, shift120 and hashes.
+Second amendment appends, preserving initial exploratory authorization history.
+
+Pre-query full actual-device verification after correction:
+`PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python -m pytest -q`:
+**303 passed in6.85s**, no failures/skips. Pilot artifact SHA256:
+`6e727d64b54a52f560936a9cc1b64f704ff94669d8889cbe5b748734386efc18`.
+Native moments remain continuous across teacher shift; no state restart.
