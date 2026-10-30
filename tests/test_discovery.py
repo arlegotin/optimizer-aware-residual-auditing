@@ -178,6 +178,7 @@ def test_doctor_writes_classification_without_fabricating_gate(tmp_path, monkeyp
     assert not (tmp_path / "gates.jsonl").exists()
 
 
+@pytest.mark.mps
 @pytest.mark.skipif(not torch.backends.mps.is_available(), reason="requires actual visible MPS; rerun outside sandbox")
 def test_mps_explicit_cpu_fp64_decompositions_and_rng_isolation():
     from oar.hardware import check_operations

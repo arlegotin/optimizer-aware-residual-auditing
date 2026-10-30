@@ -118,3 +118,56 @@ exit 2 for fallback-enabled configuration. Actual `doctor` again classified
 fresh-process overhead is included in discovery wall time. Refreshed the
 environment manifest and appended WP00 evidence with updated hashes. Dataset
 limits and the WikiText block remain unchanged.
+
+## 2026-10-30 — Task 2 review completion
+
+Task 2 implementation `36b7dcb` and correction `d3f8fcb` have completed
+independent review. The correction's actual-device baseline is **76 passing
+tests**. WP00 remains qualified only for its documented tiny operator and
+next-stage discovery scope; WikiText is still blocked and dataset bodies remain
+unverified. Task 3 starts from the reviewed correction.
+
+## 2026-10-30 — Task 3: projected derivatives and past-only construction
+
+Implemented `projected_linear` with native forward, exact input/bias adjoints,
+projected dense weight gradients and detached streaming `H`/`R`. One
+`LinearCapture` spans an effective batch, with fixed basis/probe storage and
+parameter identity/version checks. Higher-order differentiation fails before
+capture mutation. No token normalization is applied inside the operator, and no
+activation/adjoint archive is retained after ordinary backward releases its
+saved tensors.
+
+Implemented ordered randomized QR/small-SVD construction from a supplied exact
+pre-update gradient, using an independent CPU generator and explicit CPU FP64
+decomposition. Numerical null directions are dropped using the source
+precision. `BasisState.for_step` and `LinearCapture.from_basis` require a source
+step strictly before the consuming step. Source and returned-vector transfers,
+MPS synchronization and inclusive construction time are recorded. The trainer
+will own refresh-gradient lifetime and include complete construction time in
+active time; the basis state retains no gradient archive.
+
+TDD began with four expected missing-module errors. A subsequent red/green
+regression found and fixed the missing parameter-freeze check between
+microbatches. Tests compare against independently materialized native CPU FP64
+autograd, including rectangular/noncontiguous inputs, rank zero/full/deficient
+bases, zero adjoints, bias/no-bias cases, four residual blocks, an injected wrong
+input derivative, higher-order rejection and seven unequal masked microbatches.
+The MPS marker now selects both new device checks and the existing discovery
+device check: **3 selected, 125 deselected**.
+
+Final full verification outside the sandbox with
+`PYTORCH_ENABLE_MPS_FALLBACK=0`: **128 passed in 6.06s** on actual MPS/CPU.
+Committed [operator correctness evidence](../analysis/operator_correctness.json)
+contains 12 CPU/MPS cases, six deficient-basis constructions, accumulation and
+deep-adjoint errors, seeds, source hashes, shapes and tolerances. Maximum
+absolute operator error over those fixtures was **9.04e-15 CPU FP64** and
+**2.39e-6 MPS FP32**. These are tiny correctness results; construction times are
+inclusive diagnostics, with no performance or speedup claim and no calibrated
+production audit guardband. Detailed commands, TDD evidence, interfaces and
+self-review are in `.superpowers/sdd/2026-10-30-oar-implementation/task-3-report.md`.
+
+**Scientific status:** Task 3 is complete; WP01 remains open for Tasks 4 and 5
+(confidence/audit allocation and functional optimizer preview). No WP01 pass or
+dependent experiment authorization was written. Existing dataset and workload
+blocks remain in force. Standard `.DS_Store` exclusion was added while
+preserving the local Finder file's bytes.

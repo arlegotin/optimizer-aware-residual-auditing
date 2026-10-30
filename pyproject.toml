@@ -20,3 +20,4 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["mps: requires actual visible Apple MPS hardware; a skip is not hardware evidence"]
