@@ -1,6 +1,7 @@
 # Task 11 — bounded synthetic structural oracle
 
-Status: implementation and exploratory pilot preparation, no real study yet.
+Status: bounded synthetic study completed; ordinary WP04 remains inconclusive,
+WP02 online stop retained. Next permitted action after review: WP09 synthesis.
 Authority: task-11-brief.md narrowed by structural-oracle-amendment-brief.md;
 reviewed base6f04c6eea4d4aab0f1df31dfe6e1361275c91666. Read global constraints,
 common interfaces, spec§8 and blueprint§§1/2,7.3,11. No whole-plan execution.
