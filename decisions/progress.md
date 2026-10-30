@@ -514,3 +514,10 @@ Independent raw-row rank-sum AUC checks reproduce stored pairwise AUCs;
 all18 raw-checkpoint byte hashes and792 finite unit/temporal-labeled rows pass
 independent checks. Final derived-only postprocessor invocation.0584s.
 WP04 append is inconclusive for broad unmet requirements; WP02 remains stop.
+
+Task11 final control refinement: flat and rotating constructed SGD fixtures now
+use genuinely flat and60-degree-rotated spectra, with hand-derived energy/
+residual checks that fail against prior fixtures. No empirical results or study
+code changed. Latest full actual fallback0 suite **305 passed in7.24s**, zero
+failures/skips; refreshed WP04 inconclusive hashes append. Results commitdc56170
+remains the separate study artifact commit; WP02 stop and WP09 next action hold.

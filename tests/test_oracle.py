@@ -62,15 +62,25 @@ def test_geometry_matches_independent_numpy_and_adam_counterexample():
 @pytest.mark.parametrize('kind', ['flat', 'rotating', 'rare'])
 def test_constructed_projected_sgd_descent_and_residual_geometry(kind):
     o = api()
-    g = torch.diag(torch.tensor([1., 1., 1e-5], dtype=torch.float64))
-    if kind == 'rotating':
-        u = torch.tensor([[0.], [1.], [0.]], dtype=torch.float64)
+    # Fixed past mode e1; query rotation changes its left singular direction.
+    u = torch.tensor([[1.], [0.], [0.]], dtype=torch.float64)
+    if kind == 'flat':
+        g = torch.eye(3, dtype=torch.float64)
+    elif kind == 'rotating':
+        direction = torch.tensor([.5, 3**.5/2, 0.], dtype=torch.float64)
+        g = torch.outer(direction, torch.tensor([1., 0., 0.], dtype=torch.float64))
     else:
-        u = torch.tensor([[1.], [0.], [0.]], dtype=torch.float64)
+        g = torch.diag(torch.tensor([1., 1., 1e-5], dtype=torch.float64))
     gh = u@(u.T@g)
     r = o.layer_geometry(g, gh, u, .1*gh)
     assert r['true_alignment'] == pytest.approx(.1*float(gh.square().sum()))
     assert r['complement_bound'] < 1e-15
+    if kind == 'flat':
+        assert r['energy'] == pytest.approx(1/3)
+        assert r['residual_norm'] == pytest.approx(2**.5)
+    if kind == 'rotating':
+        assert r['energy'] == pytest.approx(.25)
+        assert r['residual_norm'] == pytest.approx(3**.5/2)
     if kind == 'rare':
         assert float(g[2, 2]) != 0 and float(gh[2, 2]) == 0
 

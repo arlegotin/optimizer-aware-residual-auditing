@@ -395,3 +395,19 @@ checks must remain blocked, while the narrow already-amended synthetic command
 continues to validate its unchanged WP02/entry evidence for reproduction.
 Results commit is separate from pre-experiment implementation/scope commits;
 no push, dataset body, remote service or general trainer was used.
+
+### Final constructed-control refinement
+
+Results committed separately as **dc56170** after implementation a100d5c and
+pre-query lock2e89e74. A final test self-review found the initial three-case
+SGD parametrization's 'flat' spectrum included a tiny coordinate, and its
+'rotation' was within a repeated singular-value space. Tightened controls to
+identity spectrum (retained energy1/3, residual sqrt2) and a genuinely60-degree
+rotated rank-one query relative to fixed past e1 (energy1/4, residual sqrt3/2),
+keeping the distinct rare-coordinate control. New independent assertions fail
+on old fixtures:2 failed/1 passed, as expected. Restored corrected fixtures;
+focused19 passed in2.15s. Final actual fallback0 CPU/MPS suite:
+**305 passed in7.24s**, no failures/skips. This supersedes the6.71s verification
+clock above, with unchanged test count and unchanged study source/results.
+No research experiment, fitting, threshold or coverage changed. Refreshed
+WP04 inconclusive evidence hashes append without rewriting previous records.
