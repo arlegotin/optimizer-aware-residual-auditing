@@ -177,10 +177,11 @@ def test_tensor_payload_keeps_tensors_and_json_refuses_them():
     tensor = torch.tensor([1.25], dtype=torch.float64)
     pending = PendingUpdate(parameter_version=4, state_version=7,
                             candidate_parameters={"mlp.weight": tensor},
-                            decrements={"mlp.weight": tensor},
+                            displacements={"mlp.weight": tensor},
                             optimizer_state={"mlp.weight": AdamWParamState(3, tensor, tensor)})
     restored = from_payload(to_payload(pending))
     assert torch.equal(restored.candidate_parameters["mlp.weight"], tensor)
+    assert torch.equal(restored.displacements["mlp.weight"], tensor)
     assert restored.optimizer_state["mlp.weight"].exp_avg.dtype == torch.float64
     assert restored.consumed is False
     with pytest.raises(TypeError, match="tensor|Tensor"):
@@ -323,3 +324,16 @@ def test_gate_payload_preserves_integer_resource_counts():
     assert restored.measured_resources["bytes"] == 9007199254740993
     assert type(restored.measured_resources["bytes"]) is int
     assert restored.measured_resources["wall_s"] == 0.5
+
+
+@pytest.mark.parametrize("constant", ["NaN", "Infinity", "-Infinity", "1e400"])
+def test_nonfinite_gate_evidence_blocks_prerequisite(tmp_path, constant):
+    from oar.gates import GateBlocked, require_gate
+    from oar.records import GateRecord, to_payload
+
+    payload = to_payload(GateRecord(package="WP00", status="pass", reason="fixture", next_action="continue",
+                                    measured_resources={"wall_s": 0.5}))
+    ledger = tmp_path / "gates.jsonl"
+    ledger.write_text(json.dumps(payload).replace("0.5", constant) + "\n")
+    with pytest.raises(GateBlocked):
+        require_gate("WP01", ledger)

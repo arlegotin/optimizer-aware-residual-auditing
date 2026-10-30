@@ -8,6 +8,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field, fields, is_dataclass
 from enum import Enum
 import json
+import math
 from types import MappingProxyType, UnionType
 from typing import TypeAlias, Union, get_args, get_origin, get_type_hints
 
@@ -111,7 +112,7 @@ class PendingUpdate:
     parameter_version: int
     state_version: int
     candidate_parameters: dict[ParameterId, Tensor]
-    decrements: dict[ParameterId, Tensor]
+    displacements: dict[ParameterId, Tensor]
     optimizer_state: dict[ParameterId, AdamWParamState]
     consumed: bool = False
     schema_version: int = field(default=1, init=False)
@@ -228,7 +229,10 @@ def _decode(value, expected):
             raise ValueError("expected Tensor checkpoint payload")
         return value
     if expected is float and type(value) in (int, float):
-        return float(value)
+        converted = float(value)
+        if not math.isfinite(converted):
+            raise ValueError("nonfinite payload measurement")
+        return converted
     if type(value) is not expected:
         raise ValueError(f"expected {expected}, got {type(value).__name__}")
     return value
