@@ -301,3 +301,55 @@ def test_cli_rejects_syntactically_invalid_oracle_yaml(tmp_path):
     from oar.cli import main
     path=tmp_path/'bad.yaml';path.write_text('shape: [\n')
     assert main(['audit-checkpoints','--config',str(path)])==2
+
+
+@pytest.mark.parametrize('failure', ['budget', 'nonfinite'])
+def test_inside_bootstrap_failure_retains_real_partial_progress(tmp_path, monkeypatch, failure):
+    """Three real native CPU updates and an earlier saved checkpoint precede failure."""
+    from dataclasses import replace
+    import time
+    from types import SimpleNamespace
+    o = api()
+    c = replace(tiny_config(tmp_path), conditions=('full_rank',), selected_learning_rate=.003)
+    replay = o.replay_synthetic
+    offset = [0.]
+    real_clock = time.perf_counter
+    monkeypatch.setattr(o, 'time', SimpleNamespace(perf_counter=lambda: real_clock()+offset[0]))
+
+    def failing_batch(batch, config, seed, condition):
+        x, y = replay(batch, config, seed, condition)
+        descriptor = batch.microbatches[0]
+        if descriptor['domain'] == 'data':
+            if failure == 'budget' and descriptor['step'] == 2:
+                offset[0] = 2*c.max_wall_s
+            if failure == 'nonfinite' and descriptor['step'] == 3:
+                y = torch.full_like(y, float('nan'))
+        return x, y
+
+    monkeypatch.setattr(o, 'replay_synthetic', failing_batch)
+    if failure == 'nonfinite':
+        with pytest.raises(ValueError, match='finite'):
+            o.run_oracle_worker(c, pilot_only=False)
+    else:
+        o.run_oracle_worker(c, pilot_only=False)
+    summary = json.loads((Path(c.output)/'structural_oracle_summary.json').read_text())
+    assert summary['coverage_complete'] is False
+    assert summary['outcome'] == ('failed' if failure == 'nonfinite' else 'incomplete_inconclusive')
+    assert len(summary['attempts']) == 1
+    attempt = summary['attempts'][0]
+    assert attempt['condition'] == 'full_rank' and attempt['seed'] == 17
+    assert attempt['last_committed_update'] == 3
+    assert attempt['last_committed_evidence']['next_training_source_step'] == 3
+    assert attempt['native_wall_s'] > 0 and attempt['failure']['message']
+    assert attempt['status'] == ('failed' if failure == 'nonfinite' else 'incomplete')
+    assert [point['committed_updates'] for point in summary['curves']] == [0, 2]
+    assert attempt['curves'] == summary['curves']
+    assert len(summary['artifact_index']) == 1
+    saved = summary['artifact_index'][0]
+    assert saved['step'] == 2 and o.sha(saved['path']) == saved['sha256']
+    assert attempt['checkpoint_paths'] == [saved['path']]
+    assert attempt['last_checkpoint'] == saved
+    checkpoint = torch.load(saved['path'], weights_only=False)
+    assert checkpoint['step'] == 2
+    assert all(state['step'] == 2 for state in checkpoint['state'].values())
+    assert summary['row_count'] == 0

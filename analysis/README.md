@@ -58,6 +58,9 @@ Current fix1 main/wide source hashes match the current measured implementation. 
 
 ## Bounded synthetic structural oracle (Task 11)
 
+The complete durable [protocol and report](../decisions/reports/structural_oracle.md)
+includes TDD, provenance, timing qualifications, findings and review corrections.
+
 The public command is:
 
 ```sh

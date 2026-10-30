@@ -218,60 +218,101 @@ def loss_value(x, y, p):
     with torch.no_grad(): return float(F.mse_loss(forward(x, p), y).item())
 
 
-def bootstrap_trajectory(config, seed, condition, lr, *, retain=True, steps=None):
-    """Native synthetic scaffolding; bases come from real pre-clipping old gradients."""
+def bootstrap_trajectory(config, seed, condition, lr, *, retain=True, steps=None, progress=None):
+    """Native scaffolding with incremental evidence owned by the registered attempt.
+
+    Last committed update counts and saved checkpoints are distinct: a failure
+    can follow committed updates newer than the latest selected checkpoint.
+    """
     started = time.perf_counter()
     steps = max(config.checkpoints) if steps is None else steps
-    p = initialize(config, seed, 'student')
-    optimizer = torch.optim.AdamW(list(p.values()), lr=lr, betas=(.9,.999), eps=1e-8, weight_decay=.01)
-    source_steps = {q-a for q in config.checkpoints for a in config.ages if q-a >= 0} if retain else set()
-    sources, paths, curves = {}, [], []
-    directory = Path(config.checkpoints_dir)/f'{condition}-{seed}'
-    if retain: directory.mkdir(parents=True, exist_ok=True)
-    def measure(step):
-        # Same independent Gaussian development inputs; target changes only at declared shift.
-        d = synthetic_batch(config, seed, condition, 0, 'development', 0)
-        x, y = replay_synthetic(d, config, seed, condition)
-        if condition == 'direction_shift' and step >= config.shift_step:
-            _, y = replay_synthetic(synthetic_batch(config, seed, condition, config.shift_step, 'development', 0), config, seed, condition)
-            # Use the same inputs with shifted target, not a changed input batch.
-            t = initialize(config, seed, 'teacher'); t['w2'] = t['w2'].roll(config.shape['di']//2, dims=0)
-            with torch.no_grad(): y = forward(x, t)
-        curves.append(dict(condition=condition, seed=seed, lr=lr, committed_updates=step,
-                           target_phase='post_shift' if condition == 'direction_shift' and step >= config.shift_step else 'initial',
-                           development_mse=loss_value(x,y,p), elapsed_s=time.perf_counter()-started))
-    measure(0)
-    for s in range(steps):
-        if time.perf_counter()-started > config.max_wall_s: raise StudyIncomplete('trajectory engineering ceiling reached')
-        if retain and s in config.checkpoints:
-            selected = {q: b for q,b in sources.items() if q in {s-a for a in config.ages}}
-            group = AdamWGroup(tuple(p), lr, (.9,.999), 1e-8, .01)
+    paths, curves = [], []
+    progress = {} if progress is None else progress
+    progress.update(condition=condition, seed=seed, lr=lr, status='running',
+                    curves=curves, checkpoint_paths=[], artifact_index=[],
+                    last_committed_update=0, last_checkpoint=None)
+    try:
+        p = initialize(config, seed, 'student')
+        optimizer = torch.optim.AdamW(list(p.values()), lr=lr, betas=(.9,.999), eps=1e-8, weight_decay=.01)
+        source_steps = {q-a for q in config.checkpoints for a in config.ages if q-a >= 0} if retain else set()
+        sources = {}
+        directory = Path(config.checkpoints_dir)/f'{condition}-{seed}'
+        if retain:
+            directory.mkdir(parents=True, exist_ok=True)
+
+        def save_checkpoint(step):
+            selected = {q: b for q, b in sources.items() if q in {step-a for a in config.ages}}
+            encoded = {s: {name: dict(vectors=b.vectors.cpu(), source_step=b.source_step,
+                numerical_rank=b.numerical_rank, orthogonality=b.orthogonality,
+                construction_width=b.construction_width, construction_wall_s=b.construction_wall_s,
+                transfer_bytes=b.transfer_bytes) for name, b in bases.items()} for s, bases in selected.items()}
             payload = dict(schema_version=1, config=asdict(config), seed=seed, condition=condition,
-                           step=s, parameters={k:v.detach().cpu() for k,v in p.items()},
-                           state={k:dict(step=v.step, exp_avg=v.exp_avg.cpu(), exp_avg_sq=v.exp_avg_sq.cpu())
-                                  for k,v in native_state(p,optimizer).items()}, group=asdict(group), sources={s:{n:dict(vectors=b.vectors.cpu(),source_step=b.source_step,numerical_rank=b.numerical_rank,orthogonality=b.orthogonality,construction_width=b.construction_width,construction_wall_s=b.construction_wall_s,transfer_bytes=b.transfer_bytes) for n,b in bs.items()} for s,bs in selected.items()},
-                           native_variant='default', loss_unit=config.loss_unit)
-            path = directory/f'{s}.pt'; torch.save(payload,path); paths.append(path)
-        optimizer.zero_grad(set_to_none=True)
-        batch = synthetic_batch(config, seed, condition, s, 'data', 0)
-        x,y = replay_synthetic(batch,config,seed,condition)
-        F.mse_loss(forward(x,p),y).backward()
-        if s in source_steps:
-            sources[s] = {name:build_basis(p[name].grad, max(config.ranks), 8,
-                            generator(seed,'construction',s,name),s) for name in ('w1','w2')}
-        torch.nn.utils.clip_grad_norm_(list(p.values()), 1., foreach=False, error_if_nonfinite=True)
-        optimizer.step()
-        if s+1 in set(config.checkpoints) | {config.shift_step, steps}: measure(s+1)
-    if retain and steps in config.checkpoints:
-        selected = {q:b for q,b in sources.items() if q in {steps-a for a in config.ages}}
-        payload = dict(schema_version=1,config=asdict(config),seed=seed,condition=condition,step=steps,
-                       parameters={k:v.detach().cpu() for k,v in p.items()},
-                       state={k:dict(step=v.step,exp_avg=v.exp_avg.cpu(),exp_avg_sq=v.exp_avg_sq.cpu()) for k,v in native_state(p,optimizer).items()},
-                       group=asdict(AdamWGroup(tuple(p),lr,(.9,.999),1e-8,.01)),sources={s:{n:dict(vectors=b.vectors.cpu(),source_step=b.source_step,numerical_rank=b.numerical_rank,orthogonality=b.orthogonality,construction_width=b.construction_width,construction_wall_s=b.construction_wall_s,transfer_bytes=b.transfer_bytes) for n,b in bs.items()} for s,bs in selected.items()},
-                       native_variant='default',loss_unit=config.loss_unit)
-        path=directory/f'{steps}.pt';torch.save(payload,path);paths.append(path)
-    synchronize(config.device)
-    return paths,curves
+                step=step, parameters={k: v.detach().cpu() for k, v in p.items()},
+                state={k: dict(step=v.step, exp_avg=v.exp_avg.cpu(), exp_avg_sq=v.exp_avg_sq.cpu())
+                       for k, v in native_state(p, optimizer).items()},
+                group=asdict(AdamWGroup(tuple(p), lr, (.9,.999), 1e-8, .01)), sources=encoded,
+                native_variant='default', loss_unit=config.loss_unit)
+            path = directory/f'{step}.pt'
+            torch.save(payload, path)
+            paths.append(path)
+            entry = dict(path=str(path), sha256=sha(path), bytes=path.stat().st_size, step=step,
+                condition=condition, seed=seed, sources=sorted(selected),
+                provenance='native_committed_state_and_actual_pre_update_bases')
+            progress['checkpoint_paths'].append(str(path))
+            progress['artifact_index'].append(entry)
+            progress['last_checkpoint'] = entry
+
+        def measure(step):
+            # Fixed independent inputs; the teacher changes only at the declared shift.
+            d = synthetic_batch(config, seed, condition, 0, 'development', 0)
+            x, y = replay_synthetic(d, config, seed, condition)
+            if condition == 'direction_shift' and step >= config.shift_step:
+                _, y = replay_synthetic(synthetic_batch(config, seed, condition, config.shift_step, 'development', 0), config, seed, condition)
+                t = initialize(config, seed, 'teacher')
+                t['w2'] = t['w2'].roll(config.shape['di']//2, dims=0)
+                with torch.no_grad():
+                    y = forward(x, t)
+            value = loss_value(x, y, p)
+            if not math.isfinite(value):
+                raise FloatingPointError(f'nonfinite development MSE at committed update {step}')
+            curves.append(dict(condition=condition, seed=seed, lr=lr, committed_updates=step,
+                target_phase='post_shift' if condition == 'direction_shift' and step >= config.shift_step else 'initial',
+                development_mse=value, elapsed_s=time.perf_counter()-started))
+
+        measure(0)
+        for s in range(steps):
+            if time.perf_counter()-started > config.max_wall_s:
+                raise StudyIncomplete('trajectory engineering ceiling reached')
+            if retain and s in config.checkpoints:
+                save_checkpoint(s)
+            optimizer.zero_grad(set_to_none=True)
+            batch = synthetic_batch(config, seed, condition, s, 'data', 0)
+            x, y = replay_synthetic(batch, config, seed, condition)
+            F.mse_loss(forward(x, p), y).backward()
+            if s in source_steps:
+                sources[s] = {name: build_basis(p[name].grad, max(config.ranks), 8,
+                    generator(seed, 'construction', s, name), s) for name in ('w1', 'w2')}
+            torch.nn.utils.clip_grad_norm_(list(p.values()), 1., foreach=False, error_if_nonfinite=True)
+            optimizer.step()
+            progress['last_committed_update'] = s+1
+            if s+1 in set(config.checkpoints) | {config.shift_step, steps}:
+                measure(s+1)
+        if retain and steps in config.checkpoints:
+            save_checkpoint(steps)
+        progress['status'] = 'completed'
+        return paths, curves
+    except Exception as exc:
+        progress['status'] = 'incomplete' if isinstance(exc, StudyIncomplete) else 'failed'
+        progress['failure'] = dict(type=type(exc).__name__, message=str(exc))
+        raise
+    finally:
+        synchronize(config.device)
+        progress['native_wall_s'] = time.perf_counter()-started
+        progress['last_committed_evidence'] = dict(
+            committed_updates=progress['last_committed_update'],
+            next_training_source_step=progress['last_committed_update'],
+            last_saved_checkpoint=progress['last_checkpoint'],
+            limitation='Only the last selected checkpoint persists tensors; later committed-update counts are execution evidence, not a resumable snapshot.')
 
 
 def fp64(x): return x.detach().to('cpu').to(torch.float64)
@@ -437,15 +478,36 @@ def run_oracle_worker(config, *, pilot_only):
     start=time.perf_counter();out=Path(config.output);out.mkdir(parents=True,exist_ok=True)
     summary=dict(schema_version=1,scope='synthetic_structural_exploratory',online_eligible=False,
                  config=asdict(config),loss_unit=config.loss_unit,count_unit='synthetic_observations',
-                 curves=[],artifact_index=[],attempts=[],rng_domains={str(seed):{d:domain_seed(seed,d) for d in _DOMAINS} for seed in config.seeds},
+                 coverage_complete=False,curves=[],artifact_index=[],attempts=[],rng_domains={str(seed):{d:domain_seed(seed,d) for d in _DOMAINS} for seed in config.seeds},
                  code_revision=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
                  fallback_environment=os.environ.get('PYTORCH_ENABLE_MPS_FALLBACK'))
+    def run_bootstrap(seed, condition, lr, *, phase, **kwargs):
+        attempt = dict(condition=condition, seed=seed, lr=lr, phase=phase, status='registered',
+            curves=[], checkpoint_paths=[], artifact_index=[], last_committed_update=0,
+            last_checkpoint=None, native_wall_s=0.)
+        summary['attempts'].append(attempt)
+        if phase == 'pilot':
+            summary['pilot'].append(attempt)
+        try:
+            if time.perf_counter()-start > config.max_wall_s:
+                raise StudyIncomplete('study engineering ceiling reached')
+            paths, curves = bootstrap_trajectory(config, seed, condition, lr, progress=attempt, **kwargs)
+            return paths, curves, attempt
+        except Exception as exc:
+            attempt['status'] = 'incomplete' if isinstance(exc, StudyIncomplete) else 'failed'
+            attempt.setdefault('failure', dict(type=type(exc).__name__, message=str(exc)))
+            raise
+        finally:
+            summary['curves'].extend(attempt['curves'])
+            summary['artifact_index'].extend(attempt['artifact_index'])
+            attempt['wall_s'] = attempt['native_wall_s']
+
     try:
         if config.selected_learning_rate is None:
             pilots=[];summary['pilot']=pilots
             for lr in config.learning_rates:
-                t=time.perf_counter();_,curves=bootstrap_trajectory(config,config.seeds[0],'full_rank',lr,retain=False,steps=config.pilot_steps)
-                pilots.append(dict(lr=lr,curves=curves,wall_s=time.perf_counter()-t));print(f'pilot lr={lr} MSE {curves[0]["development_mse"]:.6g} -> {curves[-1]["development_mse"]:.6g}',flush=True)
+                _,curves,attempt=run_bootstrap(config.seeds[0],'full_rank',lr,phase='pilot',retain=False,steps=config.pilot_steps)
+                print(f'pilot lr={lr} MSE {curves[0]["development_mse"]:.6g} -> {curves[-1]["development_mse"]:.6g}',flush=True)
             selected=min(pilots,key=lambda r:r['curves'][-1]['development_mse'])['lr']
             summary['pilot']=pilots;summary['selected_learning_rate']=selected
         else:selected=config.selected_learning_rate
@@ -457,18 +519,14 @@ def run_oracle_worker(config, *, pilot_only):
             with auditpath.open('w') as stream:
                 for condition in config.conditions:
                     for seed in config.seeds:
-                        if time.perf_counter()-start>config.max_wall_s:raise StudyIncomplete('study engineering ceiling reached')
-                        t=time.perf_counter();paths,curves=bootstrap_trajectory(config,seed,condition,selected)
-                        summary['curves'].extend(curves)
+                        paths,curves,attempt=run_bootstrap(seed,condition,selected,phase='study')
                         phases={r['target_phase'] for r in curves}
                         learnable=all(next(r for r in curves if r['target_phase']==phase)['development_mse'] >
                             [r for r in curves if r['target_phase']==phase][-1]['development_mse']+1e-7 for phase in phases)
-                        summary['attempts'].append(dict(condition=condition,seed=seed,learnable=learnable,native_wall_s=time.perf_counter()-t))
+                        attempt['learnable']=learnable
                         for path in paths:
                             if time.perf_counter()-start>config.max_wall_s:raise StudyIncomplete('study engineering ceiling reached')
                             snap=torch.load(path,weights_only=False)
-                            summary['artifact_index'].append(dict(path=str(path),sha256=sha(path),bytes=path.stat().st_size,step=snap['step'],condition=condition,seed=seed,
-                                sources=sorted(snap['sources']),provenance='native_committed_state_and_actual_pre_update_bases'))
                             if not learnable:continue
                             past=[synthetic_batch(config,seed,condition,s,'data',0) for s in snap['sources']]
                             queries=[synthetic_batch(config,seed,condition,snap['step'],domain,i) for domain in ('tuning','evaluation') for i in range(config.queries_per_split)]
@@ -507,7 +565,9 @@ def run_oracle_worker(config, *, pilot_only):
         summary['incomplete_reason']=str(exc)
         summary['row_count']=len(allrows) if 'allrows' in locals() else 0
     except Exception as exc:
-        summary['outcome']='failed';summary['failure']=dict(type=type(exc).__name__,message=str(exc));raise
+        summary['outcome']='failed';summary['coverage_complete']=False
+        summary['row_count']=len(allrows) if 'allrows' in locals() else 0
+        summary['failure']=dict(type=type(exc).__name__,message=str(exc));raise
     finally:
         synchronize(config.device);summary['total_wall_s']=time.perf_counter()-start
         summary['rss_at_finish_bytes']=psutil.Process().memory_info().rss

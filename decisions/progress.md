@@ -505,7 +505,7 @@ resolution or online reopening. WP02 stop unchanged; broad WP04 inconclusive.
 Next permitted action after Task11 review: **WP09 synthesis**. No new cost remedy,
 shape/grid/optimization or collection authorized by these synthetic results.
 Full protocol/TDD/provenance/timing/interpretation/self-review is in
-`.superpowers/sdd/2026-10-30-oar-implementation/task-11-report.md`;
+[durable Task11 report](reports/structural_oracle.md);
 durable public and postprocessor commands are in `analysis/README.md`.
 
 Final Task11 verification: actual fallback0 CPU/MPS full suite **305 passed
@@ -521,3 +521,19 @@ residual checks that fail against prior fixtures. No empirical results or study
 code changed. Latest full actual fallback0 suite **305 passed in7.24s**, zero
 failures/skips; refreshed WP04 inconclusive hashes append. Results commitdc56170
 remains the separate study artifact commit; WP02 stop and WP09 next action hold.
+
+### Task11 review fix1 — partial failure evidence and durable report
+
+Registered native condition/seed/LR attempts before bootstrap and retained
+partial curves/checkpoint paths/hashes, last confirmed update/source ordinal,
+last selected checkpoint, failure reason/status and elapsed native cost when
+budget or numerical errors occur inside bootstrap. Tiny CPU regressions perform
+three real updates before each failure; saved checkpoint2/moment counters remain
+verifiable alongside confirmed update3, without claiming an unsaved resume state.
+Full actual fallback0 CPU/MPS suite: **307 passed in7.84s**, no failures/skips.
+No research rerun; measured source remains2e89e74 and original artifacts unchanged.
+Complete durable [Task11 report](reports/structural_oracle.md) now owns full
+protocol/TDD/provenance/timing/results and fix evidence. Scratch report untracked
+with its ignored working copy preserved; historical Git/raw evidence retained.
+Fresh WP04 hashes append for durable report and later fix code/tests. WP04 stays
+inconclusive, WP02 online stop unchanged, next WP09 synthesis after review.

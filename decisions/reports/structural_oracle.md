@@ -412,3 +412,74 @@ focused19 passed in2.15s. Final actual fallback0 CPU/MPS suite:
 clock above, with unchanged test count and unchanged study source/results.
 No research experiment, fitting, threshold or coverage changed. Refreshed
 WP04 inconclusive evidence hashes append without rewriting previous records.
+
+
+## Task11 review fix1 — partial failure retention and durable report
+
+Read both Important findings in `task-11-fix-1-findings.md`. No new research
+collection, fitting/grid or scope changes. Measured study remains committed
+source **2e89e742131eb5eebaeb7a028d8e8f2e4fc50e07**, with retained result commit
+dc56170; this later failure-retention/test/documentation code is not retroactive
+research provenance. Original raw study/pilot/aggregate/checkpoint artifacts
+and their historical Git versions remain unchanged.
+
+Register each condition/seed/LR attempt before bootstrap, for both pilot and
+study phases. Its mutable progress record receives finite learning curves and
+saved checkpoint metadata immediately, last confirmed committed-update count,
+status, exception type/message and synchronized elapsed native cost. Worker
+finally paths drain partial curves and checkpoint indices on failure as well
+as success. Generic numerical failures preserve incomplete coverage and row
+counts before propagating the original exception; budget stops remain valid
+incomplete/inconclusive results. Nonfinite development MSE is rejected before
+JSON encoding, preserving prior finite observations.
+
+The last selected persisted checkpoint is explicitly distinct from later
+confirmed updates: failure may occur after update3 with latest saved checkpoint2.
+The record retains both counts/next training-source ordinal and the checkpoint
+path/hash; it does not claim a resumable raw snapshot at the unsaved step3.
+Checkpoint payload/selection uses existing native state and basis encoders;
+no general trainer or checkpoint-lifecycle completion is implied.
+
+TDD regression uses real tiny CPU training and saves checkpoint2, then confirms
+three native updates before either a budget stop or a nonfinite-gradient error.
+The budget test advances only the injected oracle clock after real update2's
+batch replay; it does not wait or claim synthetic elapsed seconds as hardware
+research measurements. The numerical case injects a NaN target at source3;
+the real existing finite-gradient basis guard raises ValueError. Neither test
+replaces the native training/optimizer/checkpoint operations with mocks.
+
+Exact red/green commands and results:
+
+- `.venv/bin/python -m pytest tests/test_oracle.py -q -k inside_bootstrap_failure`
+  before the fix: **2 failed,19 deselected in1.37s**. Budget case lost the entire
+  attempt; numerical case omitted `coverage_complete` (and all partial records).
+  An earlier test draft expected clipping RuntimeError, corrected to the actual
+  earlier basis finite-gradient ValueError before assessing the missing evidence.
+- The same covering command after the fix: **2 passed,19 deselected in1.91s**.
+  Both verify partial curves at0/2, committed update3, next-source ordinal3,
+  latest checkpoint2's real native moment counters, byte hash/path, failure
+  reason/status and positive elapsed cost. No query rows were fabricated.
+- `.venv/bin/python -m pytest tests/test_oracle.py -q`:
+  **21 passed in1.40s**, including existing success/temporal/RNG/guard/control tests.
+
+Complete durable report moved to **decisions/reports/structural_oracle.md**.
+Current progress and analysis README link here. The old ignored scratch report
+is kept as a synchronized working copy solely for the task report contract,
+and removed from the Git index with `git rm --cached`; no historical raw or
+Git evidence is deleted. Fresh WP04 evidence binds this durable report rather
+than disposable scratch. WP04 stays inconclusive, WP02 online stop retained,
+NumericalPolicy unresolved and next permitted action WP09 synthesis after review.
+
+Final full-suite and migration/hash verification follows below.
+
+Fix1 full verification command:
+`PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python -m pytest -q`:
+**307 passed in7.84s**, zero failures/skips, actual CPU/MPS with fallback disabled.
+No research collector was running. This validates later failure-retention code;
+it does not relabel the2e89e74 measured study source or rerun its six histories.
+Migration checks confirm the complete public and ignored scratch copies match,
+the scratch path is absent from `git ls-files` but still exists/ignored locally,
+and latest WP04 hashes name the durable report and retain unchanged raw study
+artifact hashes. Normal WP04/WP05 prerequisites remain blocked by WP02; narrow
+synthetic reproduction permission remains unchanged. No broader hardening or
+new research collection was performed in this fix round.
