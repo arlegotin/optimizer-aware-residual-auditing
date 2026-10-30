@@ -1,0 +1,871 @@
+{
+  "decision": "audit_cost_failure_candidate_potential",
+  "limits": "p=0 is conditional pricing, not measured acceptance. NumericalPolicy remains unresolved. No learning, training throughput, power, finite-step loss, or generalization claim. Forecasts use direct complete exact replay blocks and paired extra refresh work; they are local arithmetic sensitivity estimates, not observed cycles. Rejected-minus-conditional means cannot identify replay cost because independent journals age differently; raw per-pair reservation counts are retained. Bootstrap intervals describe within-study blocks under recorded system pressure, not independent runs. Fresh journals understate long-run reference costs; aged measurements are retained without extrapolating beyond 256 reservations.",
+  "next_permitted_action": "Prepare a bounded structural oracle information study using synthetic inputs and copied optimizer states; record its narrow branch/scope amendment before execution because normal WP03/WP04 prerequisites remain blocked. Do not build a full trainer/controller or ingest datasets. No online branch until useful proposals/discrimination, numerical policy and plausible inclusive cost jointly pass an explicit amended gate.",
+  "rows": [
+    {
+      "candidate_headroom": "observed_negative",
+      "candidate_measurement_qualified": true,
+      "candidate_saving_95_s": [
+        -0.00047208484902512283,
+        -0.00028637534694280473
+      ],
+      "conditional_attempt_s": 0.02315380652435124,
+      "conditional_full_headroom": "observed_negative",
+      "conditional_full_saving_95_s": [
+        -0.021744680526433514,
+        -0.02045163844106719
+      ],
+      "dense_s": 0.002071996578015387,
+      "direct_exact_replay_s": 0.0018049832433462143,
+      "fastest_native": "single",
+      "forced_reject_total_s": 0.023879844998009502,
+      "forecasts": [
+        {
+          "cycle_mean_s": 0.018452866172883657,
+          "interval": 4,
+          "local_break_even_p": -11.995303646871191,
+          "rejection_probability": 0.0
+        },
+        {
+          "cycle_mean_s": 0.018588239916134626,
+          "interval": 4,
+          "local_break_even_p": -11.995303646871191,
+          "rejection_probability": 0.1
+        },
+        {
+          "cycle_mean_s": 0.019806603605393318,
+          "interval": 4,
+          "local_break_even_p": -11.995303646871191,
+          "rejection_probability": 1.0
+        },
+        {
+          "cycle_mean_s": 0.021978571436484344,
+          "interval": 16,
+          "local_break_even_p": -11.758662058694762,
+          "rejection_probability": 0.0
+        },
+        {
+          "cycle_mean_s": 0.02214778861554805,
+          "interval": 16,
+          "local_break_even_p": -11.758662058694762,
+          "rejection_probability": 0.1
+        },
+        {
+          "cycle_mean_s": 0.02367074322712142,
+          "interval": 16,
+          "local_break_even_p": -11.758662058694762,
+          "rejection_probability": 1.0
+        },
+        {
+          "cycle_mean_s": 0.022859997752384516,
+          "interval": 64,
+          "local_break_even_p": -11.699501661650654,
+          "rejection_probability": 0.0
+        },
+        {
+          "cycle_mean_s": 0.02303767579040141,
+          "interval": 64,
+          "local_break_even_p": -11.699501661650654,
+          "rejection_probability": 0.1
+        },
+        {
+          "cycle_mean_s": 0.024636778132553445,
+          "interval": 64,
+          "local_break_even_p": -11.699501661650654,
+          "rejection_probability": 1.0
+        }
+      ],
+      "journal_age_ms": [
+        {
+          "mean_ms": 5.166041664779186,
+          "prior_reservations": 0
+        },
+        {
+          "mean_ms": 8.878749640037617,
+          "prior_reservations": 64
+        },
+        {
+          "mean_ms": 25.217777971799176,
+          "prior_reservations": 256
+        }
+      ],
+      "key": [
+        "mps",
+        "float32",
+        128,
+        128,
+        512,
+        8,
+        8
+      ],
+      "local_break_even_p_K16_bootstrap_95": [
+        -13.082918380697933,
+        -10.530779805471896
+      ],
+      "named_reference_costs_ms": {
+        "generation_journal_transfer_capture": 3.9318613708019257,
+        "preview_including_raw_alignment": 13.554916678306958,
+        "preview_input_validation": 9.788555364745358,
+        "raw_alignment_cpu_fp64_transfer": 1.006666609706978
+      },
+      "noise_target_met": {
+        "candidate": true,
+        "conditional": false,
+        "reject": false,
+        "replay_only": false
+      },
+      "paired_refresh_extra_s": 0.002278048540465534,
+      "rejected_minus_conditional_s_not_replay_cost": 0.0007260384736582637,
+      "shape": {
+        "accumulation": 1,
+        "di": 128,
+        "do": 512,
+        "n": 128,
+        "noncontiguous": false,
+        "q": 8,
+        "rank": 8
+      },
+      "source": "analysis/timing_calibration.json",
+      "warmup_stable": {
+        "candidate": {
+          "dense": true,
+          "other": true
+        },
+        "conditional": {
+          "dense": true,
+          "other": true
+        },
+        "reject": {
+          "dense": true,
+          "other": true
+        },
+        "replay_only": {
+          "dense": true,
+          "other": true
+        }
+      }
+    },
+    {
+      "candidate_headroom": "unresolved",
+      "candidate_measurement_qualified": false,
+      "candidate_saving_95_s": [
+        -2.7394796838052568e-05,
+        0.0003704484773334114
+      ],
+      "conditional_attempt_s": 0.02075699172448367,
+      "conditional_full_headroom": "observed_negative",
+      "conditional_full_saving_95_s": [
+        -0.019076446038321593,
+        -0.01742284937785007
+      ],
+      "dense_s": 0.002547834925353527,
+      "direct_exact_replay_s": 0.002389966766349971,
+      "fastest_native": "single",
+      "forced_reject_total_s": 0.02378141487017274,
+      "forecasts": [
+        {
+          "cycle_mean_s": 0.01697490088059567,
+          "interval": 4,
+          "local_break_even_p": -7.941263210120079,
+          "rejection_probability": 0.0
+        },
+        {
+          "cycle_mean_s": 0.01715414838807192,
+          "interval": 4,
+          "local_break_even_p": -7.941263210120079,
+          "rejection_probability": 0.1
+        },
+        {
+          "cycle_mean_s": 0.018767375955358146,
+          "interval": 4,
+          "local_break_even_p": -7.941263210120079,
+          "rejection_probability": 1.0
+        },
+        {
+          "cycle_mean_s": 0.019811469013511673,
+          "interval": 16,
+          "local_break_even_p": -7.699565804510082,
+          "rejection_probability": 0.0
+        },
+        {
+          "cycle_mean_s": 0.02003552839785698,
+          "interval": 16,
+          "local_break_even_p": -7.699565804510082,
+          "rejection_probability": 0.1
+        },
+        {
+          "cycle_mean_s": 0.022052062856964767,
+          "interval": 16,
+          "local_break_even_p": -7.699565804510082,
+          "rejection_probability": 1.0
+        },
+        {
+          "cycle_mean_s": 0.02052061104674067,
+          "interval": 64,
+          "local_break_even_p": -7.639141453107583,
+          "rejection_probability": 0.0
+        },
+        {
+          "cycle_mean_s": 0.020755873400303246,
+          "interval": 64,
+          "local_break_even_p": -7.639141453107583,
+          "rejection_probability": 0.1
+        },
+        {
+          "cycle_mean_s": 0.02287323458236642,
+          "interval": 64,
+          "local_break_even_p": -7.639141453107583,
+          "rejection_probability": 1.0
+        }
+      ],
+      "journal_age_ms": [
+        {
+          "mean_ms": 3.1033469907318554,
+          "prior_reservations": 0
+        },
+        {
+          "mean_ms": 9.087013623987636,
+          "prior_reservations": 64
+        },
+        {
+          "mean_ms": 25.64027796809872,
+          "prior_reservations": 256
+        }
+      ],
+      "key": [
+        "mps",
+        "float32",
+        512,
+        256,
+        1024,
+        8,
+        8
+      ],
+      "local_break_even_p_K16_bootstrap_95": [
+        -8.371105630571945,
+        -7.123118378078138
+      ],
+      "named_reference_costs_ms": {
+        "generation_journal_transfer_capture": 3.173403015049795,
+        "preview_including_raw_alignment": 11.191402290326854,
+        "preview_input_validation": 4.990277656664451,
+        "raw_alignment_cpu_fp64_transfer": 0.6152219527090589
+      },
+      "noise_target_met": {
+        "candidate": false,
+        "conditional": false,
+        "reject": false,
+        "replay_only": false
+      },
+      "paired_refresh_extra_s": 0.003080793423578143,
+      "rejected_minus_conditional_s_not_replay_cost": 0.0030244231456890702,
+      "shape": {
+        "accumulation": 1,
+        "di": 256,
+        "do": 1024,
+        "n": 512,
+        "noncontiguous": true,
+        "q": 8,
+        "rank": 8
+      },
+      "source": "analysis/timing_calibration.json",
+      "warmup_stable": {
+        "candidate": {
+          "dense": false,
+          "other": true
+        },
+        "conditional": {
+          "dense": false,
+          "other": true
+        },
+        "reject": {
+          "dense": false,
+          "other": true
+        },
+        "replay_only": {
+          "dense": false,
+          "other": true
+        }
+      }
+    },
+    {
+      "candidate_headroom": "observed_positive",
+      "candidate_measurement_qualified": true,
+      "candidate_saving_95_s": [
+        0.000867540857871063,
+        0.0013277874570339916
+      ],
+      "conditional_attempt_s": 0.026556969908997415,
+      "conditional_full_headroom": "observed_negative",
+      "conditional_full_saving_95_s": [
+        -0.020154778328491378,
+        -0.018733462312608026
+      ],
+      "dense_s": 0.007112300046719611,
+      "direct_exact_replay_s": 0.007149426625110209,
+      "fastest_native": "default",
+      "forced_reject_total_s": 0.03321468663867563,
+      "forecasts": [
+        {
+          "cycle_mean_s": 0.02347875269013457,
+          "interval": 4,
+          "local_break_even_p": -2.96913601916394,
+          "rejection_probability": 0.0
+        },
+        {
+          "cycle_mean_s": 0.024014959687017837,
+          "interval": 4,
+          "local_break_even_p": -2.96913601916394,
+          "rejection_probability": 0.1
+        },
+        {
+          "cycle_mean_s": 0.02884082265896723,
+          "interval": 4,
+          "local_break_even_p": -2.96913601916394,
+          "rejection_probability": 1.0
+        },
+        {
+          "cycle_mean_s": 0.025787415604281702,
+          "interval": 16,
+          "local_break_even_p": -2.782098267026811,
+          "rejection_probability": 0.0
+        },
+        {
+          "cycle_mean_s": 0.026457674350385783,
+          "interval": 16,
+          "local_break_even_p": -2.782098267026811,
+          "rejection_probability": 0.1
+        },
+        {
+          "cycle_mean_s": 0.03249000306532252,
+          "interval": 16,
+          "local_break_even_p": -2.782098267026811,
+          "rejection_probability": 1.0
+        },
+        {
+          "cycle_mean_s": 0.02636458133281849,
+          "interval": 64,
+          "local_break_even_p": -2.735338828992529,
+          "rejection_probability": 0.0
+        },
+        {
+          "cycle_mean_s": 0.027068353016227776,
+          "interval": 64,
+          "local_break_even_p": -2.735338828992529,
+          "rejection_probability": 0.1
+        },
+        {
+          "cycle_mean_s": 0.03340229816691135,
+          "interval": 64,
+          "local_break_even_p": -2.735338828992529,
+          "rejection_probability": 1.0
+        }
+      ],
+      "journal_age_ms": [
+        {
+          "mean_ms": 3.347361033471922,
+          "prior_reservations": 0
+        },
+        {
+          "mean_ms": 9.110458272819718,
+          "prior_reservations": 64
+        },
+        {
+          "mean_ms": 25.919250367830198,
+          "prior_reservations": 256
+        }
+      ],
+      "key": [
+        "mps",
+        "float32",
+        2048,
+        512,
+        2048,
+        16,
+        8
+      ],
+      "local_break_even_p_K16_bootstrap_95": [
+        -2.937800140251938,
+        -2.639158187857018
+      ],
+      "named_reference_costs_ms": {
+        "generation_journal_transfer_capture": 3.4455833568548164,
+        "preview_including_raw_alignment": 14.222736625621716,
+        "preview_input_validation": 4.856541636399925,
+        "raw_alignment_cpu_fp64_transfer": 1.1649170191958547
+      },
+      "noise_target_met": {
+        "candidate": true,
+        "conditional": false,
+        "reject": false,
+        "replay_only": true
+      },
+      "paired_refresh_extra_s": 0.00713180098682642,
+      "rejected_minus_conditional_s_not_replay_cost": 0.006657716729678218,
+      "shape": {
+        "accumulation": 1,
+        "di": 512,
+        "do": 2048,
+        "n": 2048,
+        "noncontiguous": false,
+        "q": 8,
+        "rank": 16
+      },
+      "source": "analysis/timing_calibration.json",
+      "warmup_stable": {
+        "candidate": {
+          "dense": true,
+          "other": true
+        },
+        "conditional": {
+          "dense": true,
+          "other": true
+        },
+        "reject": {
+          "dense": true,
+          "other": true
+        },
+        "replay_only": {
+          "dense": true,
+          "other": true
+        }
+      }
+    },
+    {
+      "candidate_headroom": "observed_positive",
+      "candidate_measurement_qualified": true,
+      "candidate_saving_95_s": [
+        0.002023236555047333,
+        0.002931491801631637
+      ],
+      "conditional_attempt_s": 0.03338965664152056,
+      "conditional_full_headroom": "observed_negative",
+      "conditional_full_saving_95_s": [
+        -0.022053194668260404,
+        -0.02049755112559069
+      ],
+      "dense_s": 0.012151301829144359,
+      "direct_exact_replay_s": 0.012459928356111049,
+      "fastest_native": "single",
+      "forced_reject_total_s": 0.04571277334820479,
+      "forecasts": [
+        {
+          "cycle_mean_s": 0.02979376232859472,
+          "interval": 4,
+          "local_break_even_p": -1.842069115211841,
+          "rejection_probability": 0.0
+        },
+        {
+          "cycle_mean_s": 0.030728256955303047,
+          "interval": 4,
+          "local_break_even_p": -1.842069115211841,
+          "rejection_probability": 0.1
+        },
+        {
+          "cycle_mean_s": 0.03913870859567801,
+          "interval": 4,
+          "local_break_even_p": -1.842069115211841,
+          "rejection_probability": 1.0
+        },
+        {
+          "cycle_mean_s": 0.032490683063289096,
+          "interval": 16,
+          "local_break_even_p": -1.7389167730881572,
+          "rejection_probability": 0.0
+        },
+        {
+          "cycle_mean_s": 0.033658801346674504,
+          "interval": 16,
+          "local_break_even_p": -1.7389167730881572,
+          "rejection_probability": 0.1
+        },
+        {
+          "cycle_mean_s": 0.04417186589714321,
+          "interval": 16,
+          "local_break_even_p": -1.7389167730881572,
+          "rejection_probability": 1.0
+        },
+        {
+          "cycle_mean_s": 0.0331649132469627,
+          "interval": 64,
+          "local_break_even_p": -1.7131286875572365,
+          "rejection_probability": 0.0
+        },
+        {
+          "cycle_mean_s": 0.03439143744451737,
+          "interval": 64,
+          "local_break_even_p": -1.7131286875572365,
+          "rejection_probability": 0.1
+        },
+        {
+          "cycle_mean_s": 0.04543015522250951,
+          "interval": 64,
+          "local_break_even_p": -1.7131286875572365,
+          "rejection_probability": 1.0
+        }
+      ],
+      "journal_age_ms": [
+        {
+          "mean_ms": 3.018708356345693,
+          "prior_reservations": 0
+        },
+        {
+          "mean_ms": 8.925527683459222,
+          "prior_reservations": 64
+        },
+        {
+          "mean_ms": 26.265722000971437,
+          "prior_reservations": 256
+        }
+      ],
+      "key": [
+        "mps",
+        "float32",
+        4096,
+        512,
+        2048,
+        16,
+        8
+      ],
+      "local_break_even_p_K16_bootstrap_95": [
+        -1.875367963706267,
+        -1.6084667095683334
+      ],
+      "named_reference_costs_ms": {
+        "generation_journal_transfer_capture": 2.750583691522479,
+        "preview_including_raw_alignment": 11.814139046085378,
+        "preview_input_validation": 5.102069349959493,
+        "raw_alignment_cpu_fp64_transfer": 1.1279030392567317
+      },
+      "noise_target_met": {
+        "candidate": true,
+        "conditional": true,
+        "reject": false,
+        "replay_only": true
+      },
+      "paired_refresh_extra_s": 0.006854777560672825,
+      "rejected_minus_conditional_s_not_replay_cost": 0.012323116706684227,
+      "shape": {
+        "accumulation": 1,
+        "di": 512,
+        "do": 2048,
+        "n": 4096,
+        "noncontiguous": false,
+        "q": 8,
+        "rank": 16
+      },
+      "source": "analysis/timing_calibration.json",
+      "warmup_stable": {
+        "candidate": {
+          "dense": true,
+          "other": true
+        },
+        "conditional": {
+          "dense": true,
+          "other": true
+        },
+        "reject": {
+          "dense": true,
+          "other": true
+        },
+        "replay_only": {
+          "dense": true,
+          "other": true
+        }
+      }
+    },
+    {
+      "candidate_headroom": "positive_but_unstable_or_noisy",
+      "candidate_measurement_qualified": false,
+      "candidate_saving_95_s": [
+        0.00046470658178441226,
+        0.0020873547870432947
+      ],
+      "conditional_attempt_s": 0.033171338229440156,
+      "conditional_full_headroom": "observed_negative",
+      "conditional_full_saving_95_s": [
+        -0.026541599044576286,
+        -0.022079242361709477
+      ],
+      "dense_s": 0.00898073336109519,
+      "direct_exact_replay_s": 0.008773868274874985,
+      "fastest_native": "default",
+      "forced_reject_total_s": 0.04387438816484064,
+      "forecasts": [
+        {
+          "cycle_mean_s": 0.02876732593302482,
+          "interval": 4,
+          "local_break_even_p": -2.944453116876088,
+          "rejection_probability": 0.0
+        },
+        {
+          "cycle_mean_s": 0.02942536605364044,
+          "interval": 4,
+          "local_break_even_p": -2.944453116876088,
+          "rejection_probability": 0.1
+        },
+        {
+          "cycle_mean_s": 0.03534772713918106,
+          "interval": 4,
+          "local_break_even_p": -2.944453116876088,
+          "rejection_probability": 1.0
+        },
+        {
+          "cycle_mean_s": 0.03207033515533632,
+          "interval": 16,
+          "local_break_even_p": -2.803953037334975,
+          "rejection_probability": 0.0
+        },
+        {
+          "cycle_mean_s": 0.032892885306105846,
+          "interval": 16,
+          "local_break_even_p": -2.803953037334975,
+          "rejection_probability": 0.1
+        },
+        {
+          "cycle_mean_s": 0.040295836663031624,
+          "interval": 16,
+          "local_break_even_p": -2.803953037334975,
+          "rejection_probability": 1.0
+        },
+        {
+          "cycle_mean_s": 0.03289608746091419,
+          "interval": 64,
+          "local_break_even_p": -2.7688280174496973,
+          "rejection_probability": 0.0
+        },
+        {
+          "cycle_mean_s": 0.0337597651192222,
+          "interval": 64,
+          "local_break_even_p": -2.7688280174496973,
+          "rejection_probability": 0.1
+        },
+        {
+          "cycle_mean_s": 0.04153286404399426,
+          "interval": 64,
+          "local_break_even_p": -2.7688280174496973,
+          "rejection_probability": 1.0
+        }
+      ],
+      "journal_age_ms": [
+        {
+          "mean_ms": 4.107333060043554,
+          "prior_reservations": 0
+        },
+        {
+          "mean_ms": 12.7608753197516,
+          "prior_reservations": 64
+        },
+        {
+          "mean_ms": 29.353458317928016,
+          "prior_reservations": 256
+        }
+      ],
+      "key": [
+        "mps",
+        "float32",
+        2048,
+        512,
+        2048,
+        8,
+        8
+      ],
+      "local_break_even_p_K16_bootstrap_95": [
+        -3.1035997494995673,
+        -2.551378227654398
+      ],
+      "named_reference_costs_ms": {
+        "generation_journal_transfer_capture": 3.7858889748652778,
+        "preview_including_raw_alignment": 17.135111692671973,
+        "preview_input_validation": 6.11141665528218,
+        "raw_alignment_cpu_fp64_transfer": 1.2123886262997985
+      },
+      "noise_target_met": {
+        "candidate": false,
+        "conditional": false,
+        "reject": false,
+        "replay_only": true
+      },
+      "paired_refresh_extra_s": 0.006574555682683631,
+      "rejected_minus_conditional_s_not_replay_cost": 0.010703049935400485,
+      "shape": {
+        "accumulation": 4,
+        "di": 512,
+        "do": 2048,
+        "n": 2048,
+        "noncontiguous": false,
+        "q": 8,
+        "rank": 8
+      },
+      "source": "analysis/timing_calibration.json",
+      "warmup_stable": {
+        "candidate": {
+          "dense": false,
+          "other": true
+        },
+        "conditional": {
+          "dense": false,
+          "other": true
+        },
+        "reject": {
+          "dense": false,
+          "other": true
+        },
+        "replay_only": {
+          "dense": false,
+          "other": true
+        }
+      }
+    },
+    {
+      "candidate_headroom": "observed_positive",
+      "candidate_measurement_qualified": true,
+      "candidate_saving_95_s": [
+        0.00838415606542387,
+        0.009792273208020359
+      ],
+      "conditional_attempt_s": 0.05525136556631575,
+      "conditional_full_headroom": "observed_negative",
+      "conditional_full_saving_95_s": [
+        -0.020354056449206025,
+        -0.016801677944345606
+      ],
+      "dense_s": 0.03670910644965867,
+      "direct_exact_replay_s": 0.03697297667774061,
+      "fastest_native": "default",
+      "forced_reject_total_s": 0.09096481497140808,
+      "forecasts": [
+        {
+          "cycle_mean_s": 0.05342975095199007,
+          "interval": 4,
+          "local_break_even_p": -0.5776167136240632,
+          "rejection_probability": 0.0
+        },
+        {
+          "cycle_mean_s": 0.05620272420282062,
+          "interval": 4,
+          "local_break_even_p": -0.5776167136240632,
+          "rejection_probability": 0.1
+        },
+        {
+          "cycle_mean_s": 0.08115948346029553,
+          "interval": 4,
+          "local_break_even_p": -0.5776167136240632,
+          "rejection_probability": 1.0
+        },
+        {
+          "cycle_mean_s": 0.05479596191273433,
+          "interval": 16,
+          "local_break_even_p": -0.5205354934122339,
+          "rejection_probability": 0.0
+        },
+        {
+          "cycle_mean_s": 0.05826217847627251,
+          "interval": 16,
+          "local_break_even_p": -0.5205354934122339,
+          "rejection_probability": 0.1
+        },
+        {
+          "cycle_mean_s": 0.08945812754811616,
+          "interval": 16,
+          "local_break_even_p": -0.5205354934122339,
+          "rejection_probability": 1.0
+        },
+        {
+          "cycle_mean_s": 0.0551375146529204,
+          "interval": 64,
+          "local_break_even_p": -0.5062651883592766,
+          "rejection_probability": 0.0
+        },
+        {
+          "cycle_mean_s": 0.058777042044635484,
+          "interval": 64,
+          "local_break_even_p": -0.5062651883592766,
+          "rejection_probability": 0.1
+        },
+        {
+          "cycle_mean_s": 0.09153278857007131,
+          "interval": 64,
+          "local_break_even_p": -0.5062651883592766,
+          "rejection_probability": 1.0
+        }
+      ],
+      "journal_age_ms": [
+        {
+          "mean_ms": 3.733472394136091,
+          "prior_reservations": 0
+        },
+        {
+          "mean_ms": 9.824972366914153,
+          "prior_reservations": 64
+        },
+        {
+          "mean_ms": 27.675208014746506,
+          "prior_reservations": 256
+        }
+      ],
+      "key": [
+        "mps",
+        "float32",
+        8192,
+        768,
+        3072,
+        16,
+        16
+      ],
+      "local_break_even_p_K16_bootstrap_95": [
+        -0.5673471307400445,
+        -0.47346494301442726
+      ],
+      "named_reference_costs_ms": {
+        "generation_journal_transfer_capture": 6.001569369497399,
+        "preview_including_raw_alignment": 19.41148630188157,
+        "preview_input_validation": 5.265124995882313,
+        "raw_alignment_cpu_fp64_transfer": 1.9039163210739691
+      },
+      "noise_target_met": {
+        "candidate": true,
+        "conditional": true,
+        "reject": true,
+        "replay_only": true
+      },
+      "paired_refresh_extra_s": 0.011255800659354366,
+      "rejected_minus_conditional_s_not_replay_cost": 0.035713449405092336,
+      "shape": {
+        "accumulation": 1,
+        "di": 768,
+        "do": 3072,
+        "n": 8192,
+        "noncontiguous": false,
+        "q": 16,
+        "rank": 16
+      },
+      "source": "analysis/timing_calibration_wide.json",
+      "warmup_stable": {
+        "candidate": {
+          "dense": true,
+          "other": true
+        },
+        "conditional": {
+          "dense": true,
+          "other": true
+        },
+        "reject": {
+          "dense": true,
+          "other": true
+        },
+        "replay_only": {
+          "dense": true,
+          "other": true
+        }
+      }
+    }
+  ],
+  "schema_version": 1,
+  "source_sha256": {
+    "analysis/summarize_headroom.py": "28af5349c41379aaf7b897117354a3fd0a867f9643b8413e2155c513650ee69c",
+    "analysis/timing_calibration.json": "fbdc4962d5ec208db855f61ca1bf5ef06f2e5d8e2fe7e8082267beb0a09c195b",
+    "analysis/timing_calibration_wide.json": "95ca861c643a70408140f7fefafc263a75958ced729947fb239e3e94bdba630e"
+  }
+}

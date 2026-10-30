@@ -5,88 +5,97 @@
   "rows": [
     {
       "candidate_headroom": "observed_negative",
-      "candidate_measurement_qualified": true,
+      "candidate_measurement_qualified": false,
       "candidate_saving_95_s": [
-        -0.00047208484902512283,
-        -0.00028637534694280473
+        -0.0003514709125738591,
+        -0.00015984049020335083
       ],
-      "conditional_attempt_s": 0.02315380652435124,
+      "conditional_attempt_s": 0.016619526604190468,
       "conditional_full_headroom": "observed_negative",
       "conditional_full_saving_95_s": [
-        -0.021744680526433514,
-        -0.02045163844106719
+        -0.016133151304908097,
+        -0.01468288504332304
       ],
-      "dense_s": 0.002071996578015387,
-      "direct_exact_replay_s": 0.0018049832433462143,
-      "fastest_native": "single",
-      "forced_reject_total_s": 0.023879844998009502,
+      "dense_s": 0.0012597365584224463,
+      "direct_exact_replay_s": 0.001105000046081841,
+      "fastest_native": "default",
+      "forced_reject_total_s": 0.01866588674020022,
       "forecasts": [
         {
-          "cycle_mean_s": 0.018452866172883657,
+          "cycle_mean_s": 0.013250204910291358,
+          "has_approximate_segment": true,
           "interval": 4,
-          "local_break_even_p": -11.995303646871191,
+          "local_break_even_p": -14.468136171137436,
           "rejection_probability": 0.0
         },
         {
-          "cycle_mean_s": 0.018588239916134626,
+          "cycle_mean_s": 0.013333079913747497,
+          "has_approximate_segment": true,
           "interval": 4,
-          "local_break_even_p": -11.995303646871191,
+          "local_break_even_p": -14.468136171137436,
           "rejection_probability": 0.1
         },
         {
-          "cycle_mean_s": 0.019806603605393318,
+          "cycle_mean_s": 0.014078954944852739,
+          "has_approximate_segment": true,
           "interval": 4,
-          "local_break_even_p": -11.995303646871191,
+          "local_break_even_p": -14.468136171137436,
           "rejection_probability": 1.0
         },
         {
-          "cycle_mean_s": 0.021978571436484344,
+          "cycle_mean_s": 0.01577719618071569,
+          "has_approximate_segment": true,
           "interval": 16,
-          "local_break_even_p": -11.758662058694762,
+          "local_break_even_p": -14.013836758367479,
           "rejection_probability": 0.0
         },
         {
-          "cycle_mean_s": 0.02214778861554805,
+          "cycle_mean_s": 0.015880789935035864,
+          "has_approximate_segment": true,
           "interval": 16,
-          "local_break_even_p": -11.758662058694762,
+          "local_break_even_p": -14.013836758367479,
           "rejection_probability": 0.1
         },
         {
-          "cycle_mean_s": 0.02367074322712142,
+          "cycle_mean_s": 0.016813133723917417,
+          "has_approximate_segment": true,
           "interval": 16,
-          "local_break_even_p": -11.758662058694762,
+          "local_break_even_p": -14.013836758367479,
           "rejection_probability": 1.0
         },
         {
-          "cycle_mean_s": 0.022859997752384516,
+          "cycle_mean_s": 0.016408943998321775,
+          "has_approximate_segment": true,
           "interval": 64,
-          "local_break_even_p": -11.699501661650654,
+          "local_break_even_p": -13.927303536887488,
           "rejection_probability": 0.0
         },
         {
-          "cycle_mean_s": 0.02303767579040141,
+          "cycle_mean_s": 0.016517717440357956,
+          "has_approximate_segment": true,
           "interval": 64,
-          "local_break_even_p": -11.699501661650654,
+          "local_break_even_p": -13.927303536887488,
           "rejection_probability": 0.1
         },
         {
-          "cycle_mean_s": 0.024636778132553445,
+          "cycle_mean_s": 0.017496678418683586,
+          "has_approximate_segment": true,
           "interval": 64,
-          "local_break_even_p": -11.699501661650654,
+          "local_break_even_p": -13.927303536887488,
           "rejection_probability": 1.0
         }
       ],
       "journal_age_ms": [
         {
-          "mean_ms": 5.166041664779186,
+          "mean_ms": 2.807861310429871,
           "prior_reservations": 0
         },
         {
-          "mean_ms": 8.878749640037617,
+          "mean_ms": 8.333041681908071,
           "prior_reservations": 64
         },
         {
-          "mean_ms": 25.217777971799176,
+          "mean_ms": 25.363611329036456,
           "prior_reservations": 256
         }
       ],
@@ -100,23 +109,23 @@
         8
       ],
       "local_break_even_p_K16_bootstrap_95": [
-        -13.082918380697933,
-        -10.530779805471896
+        -15.211632980153402,
+        -12.909145065014233
       ],
       "named_reference_costs_ms": {
-        "generation_journal_transfer_capture": 3.9318613708019257,
-        "preview_including_raw_alignment": 13.554916678306958,
-        "preview_input_validation": 9.788555364745358,
-        "raw_alignment_cpu_fp64_transfer": 1.006666609706978
+        "generation_journal_transfer_capture": 2.714555671749016,
+        "preview_including_raw_alignment": 8.667194633744657,
+        "preview_input_validation": 3.7666530115529895,
+        "raw_alignment_cpu_fp64_transfer": 0.4128336828822891
       },
       "noise_target_met": {
-        "candidate": true,
+        "candidate": false,
         "conditional": false,
         "reject": false,
         "replay_only": false
       },
-      "paired_refresh_extra_s": 0.002278048540465534,
-      "rejected_minus_conditional_s_not_replay_cost": 0.0007260384736582637,
+      "paired_refresh_extra_s": 0.0018825032701715826,
+      "rejected_minus_conditional_s_not_replay_cost": 0.0020463601360097526,
       "shape": {
         "accumulation": 1,
         "di": 128,
@@ -148,88 +157,97 @@
     },
     {
       "candidate_headroom": "unresolved",
-      "candidate_measurement_qualified": false,
+      "candidate_measurement_qualified": true,
       "candidate_saving_95_s": [
-        -2.7394796838052568e-05,
-        0.0003704484773334114
+        -0.00019978607958182692,
+        7.2590044001117314e-06
       ],
-      "conditional_attempt_s": 0.02075699172448367,
+      "conditional_attempt_s": 0.017118931752629577,
       "conditional_full_headroom": "observed_negative",
       "conditional_full_saving_95_s": [
-        -0.019076446038321593,
-        -0.01742284937785007
+        -0.016109394435072318,
+        -0.014720922859036364
       ],
-      "dense_s": 0.002547834925353527,
-      "direct_exact_replay_s": 0.002389966766349971,
-      "fastest_native": "single",
-      "forced_reject_total_s": 0.02378141487017274,
+      "dense_s": 0.0017066566599532962,
+      "direct_exact_replay_s": 0.0016215850738808513,
+      "fastest_native": "default",
+      "forced_reject_total_s": 0.019956076717935502,
       "forecasts": [
         {
-          "cycle_mean_s": 0.01697490088059567,
+          "cycle_mean_s": 0.013913670581121765,
+          "has_approximate_segment": true,
           "interval": 4,
-          "local_break_even_p": -7.941263210120079,
+          "local_break_even_p": -10.037104326944405,
           "rejection_probability": 0.0
         },
         {
-          "cycle_mean_s": 0.01715414838807192,
+          "cycle_mean_s": 0.014035289461662829,
+          "has_approximate_segment": true,
           "interval": 4,
-          "local_break_even_p": -7.941263210120079,
+          "local_break_even_p": -10.037104326944405,
           "rejection_probability": 0.1
         },
         {
-          "cycle_mean_s": 0.018767375955358146,
+          "cycle_mean_s": 0.015129859386532402,
+          "has_approximate_segment": true,
           "interval": 4,
-          "local_break_even_p": -7.941263210120079,
+          "local_break_even_p": -10.037104326944405,
           "rejection_probability": 1.0
         },
         {
-          "cycle_mean_s": 0.019811469013511673,
+          "cycle_mean_s": 0.016317616459752625,
+          "has_approximate_segment": true,
           "interval": 16,
-          "local_break_even_p": -7.699565804510082,
+          "local_break_even_p": -9.610981278431373,
           "rejection_probability": 0.0
         },
         {
-          "cycle_mean_s": 0.02003552839785698,
+          "cycle_mean_s": 0.016469640060428954,
+          "has_approximate_segment": true,
           "interval": 16,
-          "local_break_even_p": -7.699565804510082,
+          "local_break_even_p": -9.610981278431373,
           "rejection_probability": 0.1
         },
         {
-          "cycle_mean_s": 0.022052062856964767,
+          "cycle_mean_s": 0.01783785246651592,
+          "has_approximate_segment": true,
           "interval": 16,
-          "local_break_even_p": -7.699565804510082,
+          "local_break_even_p": -9.610981278431373,
           "rejection_probability": 1.0
         },
         {
-          "cycle_mean_s": 0.02052061104674067,
+          "cycle_mean_s": 0.016918602929410338,
+          "has_approximate_segment": true,
           "interval": 64,
-          "local_break_even_p": -7.639141453107583,
+          "local_break_even_p": -9.52981498347651,
           "rejection_probability": 0.0
         },
         {
-          "cycle_mean_s": 0.020755873400303246,
+          "cycle_mean_s": 0.017078227710120488,
+          "has_approximate_segment": true,
           "interval": 64,
-          "local_break_even_p": -7.639141453107583,
+          "local_break_even_p": -9.52981498347651,
           "rejection_probability": 0.1
         },
         {
-          "cycle_mean_s": 0.02287323458236642,
+          "cycle_mean_s": 0.018514850736511802,
+          "has_approximate_segment": true,
           "interval": 64,
-          "local_break_even_p": -7.639141453107583,
+          "local_break_even_p": -9.52981498347651,
           "rejection_probability": 1.0
         }
       ],
       "journal_age_ms": [
         {
-          "mean_ms": 3.1033469907318554,
+          "mean_ms": 2.516527660191059,
           "prior_reservations": 0
         },
         {
-          "mean_ms": 9.087013623987636,
+          "mean_ms": 8.919333340600133,
           "prior_reservations": 64
         },
         {
-          "mean_ms": 25.64027796809872,
+          "mean_ms": 25.714014035960037,
           "prior_reservations": 256
         }
       ],
@@ -243,23 +261,23 @@
         8
       ],
       "local_break_even_p_K16_bootstrap_95": [
-        -8.371105630571945,
-        -7.123118378078138
+        -10.415372608602,
+        -8.90198925499356
       ],
       "named_reference_costs_ms": {
-        "generation_journal_transfer_capture": 3.173403015049795,
-        "preview_including_raw_alignment": 11.191402290326854,
-        "preview_input_validation": 4.990277656664451,
-        "raw_alignment_cpu_fp64_transfer": 0.6152219527090589
+        "generation_journal_transfer_capture": 2.5490139766285815,
+        "preview_including_raw_alignment": 9.312750034344694,
+        "preview_input_validation": 3.956750306921701,
+        "raw_alignment_cpu_fp64_transfer": 0.5466529789070288
       },
       "noise_target_met": {
-        "candidate": false,
+        "candidate": true,
         "conditional": false,
         "reject": false,
         "replay_only": false
       },
-      "paired_refresh_extra_s": 0.003080793423578143,
-      "rejected_minus_conditional_s_not_replay_cost": 0.0030244231456890702,
+      "paired_refresh_extra_s": 0.0025912304066450283,
+      "rejected_minus_conditional_s_not_replay_cost": 0.0028371449653059252,
       "shape": {
         "accumulation": 1,
         "di": 256,
@@ -272,19 +290,19 @@
       "source": "analysis/timing_calibration.json",
       "warmup_stable": {
         "candidate": {
-          "dense": false,
+          "dense": true,
           "other": true
         },
         "conditional": {
-          "dense": false,
+          "dense": true,
           "other": true
         },
         "reject": {
-          "dense": false,
+          "dense": true,
           "other": true
         },
         "replay_only": {
-          "dense": false,
+          "dense": true,
           "other": true
         }
       }
@@ -293,86 +311,95 @@
       "candidate_headroom": "observed_positive",
       "candidate_measurement_qualified": true,
       "candidate_saving_95_s": [
-        0.000867540857871063,
-        0.0013277874570339916
+        0.0006477894912241027,
+        0.0012986883296398444
       ],
-      "conditional_attempt_s": 0.026556969908997415,
+      "conditional_attempt_s": 0.024965021670795978,
       "conditional_full_headroom": "observed_negative",
       "conditional_full_saving_95_s": [
-        -0.020154778328491378,
-        -0.018733462312608026
+        -0.01963220716395881,
+        -0.01813412595668342
       ],
-      "dense_s": 0.007112300046719611,
-      "direct_exact_replay_s": 0.007149426625110209,
+      "dense_s": 0.006087240041233599,
+      "direct_exact_replay_s": 0.005930690029636025,
       "fastest_native": "default",
-      "forced_reject_total_s": 0.03321468663867563,
+      "forced_reject_total_s": 0.03005275330506265,
       "forecasts": [
         {
-          "cycle_mean_s": 0.02347875269013457,
+          "cycle_mean_s": 0.022000585899312194,
+          "has_approximate_segment": true,
           "interval": 4,
-          "local_break_even_p": -2.96913601916394,
+          "local_break_even_p": -3.57762661198132,
           "rejection_probability": 0.0
         },
         {
-          "cycle_mean_s": 0.024014959687017837,
+          "cycle_mean_s": 0.022445387651534896,
+          "has_approximate_segment": true,
           "interval": 4,
-          "local_break_even_p": -2.96913601916394,
+          "local_break_even_p": -3.57762661198132,
           "rejection_probability": 0.1
         },
         {
-          "cycle_mean_s": 0.02884082265896723,
+          "cycle_mean_s": 0.02644860342153921,
+          "has_approximate_segment": true,
           "interval": 4,
-          "local_break_even_p": -2.96913601916394,
+          "local_break_even_p": -3.57762661198132,
           "rejection_probability": 1.0
         },
         {
-          "cycle_mean_s": 0.025787415604281702,
+          "cycle_mean_s": 0.024223912727925033,
+          "has_approximate_segment": true,
           "interval": 16,
-          "local_break_even_p": -2.782098267026811,
+          "local_break_even_p": -3.2619786403378774,
           "rejection_probability": 0.0
         },
         {
-          "cycle_mean_s": 0.026457674350385783,
+          "cycle_mean_s": 0.02477991491820341,
+          "has_approximate_segment": true,
           "interval": 16,
-          "local_break_even_p": -2.782098267026811,
+          "local_break_even_p": -3.2619786403378774,
           "rejection_probability": 0.1
         },
         {
-          "cycle_mean_s": 0.03249000306532252,
+          "cycle_mean_s": 0.029783934630708806,
+          "has_approximate_segment": true,
           "interval": 16,
-          "local_break_even_p": -2.782098267026811,
+          "local_break_even_p": -3.2619786403378774,
           "rejection_probability": 1.0
         },
         {
-          "cycle_mean_s": 0.02636458133281849,
+          "cycle_mean_s": 0.024779744435078244,
+          "has_approximate_segment": true,
           "interval": 64,
-          "local_break_even_p": -2.735338828992529,
+          "local_break_even_p": -3.201855217167698,
           "rejection_probability": 0.0
         },
         {
-          "cycle_mean_s": 0.027068353016227776,
+          "cycle_mean_s": 0.02536354673487054,
+          "has_approximate_segment": true,
           "interval": 64,
-          "local_break_even_p": -2.735338828992529,
+          "local_break_even_p": -3.201855217167698,
           "rejection_probability": 0.1
         },
         {
-          "cycle_mean_s": 0.03340229816691135,
+          "cycle_mean_s": 0.030617767433001205,
+          "has_approximate_segment": true,
           "interval": 64,
-          "local_break_even_p": -2.735338828992529,
+          "local_break_even_p": -3.201855217167698,
           "rejection_probability": 1.0
         }
       ],
       "journal_age_ms": [
         {
-          "mean_ms": 3.347361033471922,
+          "mean_ms": 3.4000143641605973,
           "prior_reservations": 0
         },
         {
-          "mean_ms": 9.110458272819718,
+          "mean_ms": 8.86899970161418,
           "prior_reservations": 64
         },
         {
-          "mean_ms": 25.919250367830198,
+          "mean_ms": 26.753374996284645,
           "prior_reservations": 256
         }
       ],
@@ -386,14 +413,14 @@
         8
       ],
       "local_break_even_p_K16_bootstrap_95": [
-        -2.937800140251938,
-        -2.639158187857018
+        -3.423818978484174,
+        -3.1006571574069373
       ],
       "named_reference_costs_ms": {
-        "generation_journal_transfer_capture": 3.4455833568548164,
-        "preview_including_raw_alignment": 14.222736625621716,
-        "preview_input_validation": 4.856541636399925,
-        "raw_alignment_cpu_fp64_transfer": 1.1649170191958547
+        "generation_journal_transfer_capture": 2.7708473692958555,
+        "preview_including_raw_alignment": 12.502597334484259,
+        "preview_input_validation": 4.161889005141954,
+        "raw_alignment_cpu_fp64_transfer": 0.9422916530941924
       },
       "noise_target_met": {
         "candidate": true,
@@ -401,8 +428,8 @@
         "reject": false,
         "replay_only": true
       },
-      "paired_refresh_extra_s": 0.00713180098682642,
-      "rejected_minus_conditional_s_not_replay_cost": 0.006657716729678218,
+      "paired_refresh_extra_s": 0.007020038543627239,
+      "rejected_minus_conditional_s_not_replay_cost": 0.005087731634266672,
       "shape": {
         "accumulation": 1,
         "di": 512,
@@ -436,86 +463,95 @@
       "candidate_headroom": "observed_positive",
       "candidate_measurement_qualified": true,
       "candidate_saving_95_s": [
-        0.002023236555047333,
-        0.002931491801631637
+        0.0017720292971935123,
+        0.002425795022398233
       ],
-      "conditional_attempt_s": 0.03338965664152056,
+      "conditional_attempt_s": 0.02785359822679311,
       "conditional_full_headroom": "observed_negative",
       "conditional_full_saving_95_s": [
-        -0.022053194668260404,
-        -0.02049755112559069
+        -0.01833134641079232,
+        -0.016744717371300795
       ],
-      "dense_s": 0.012151301829144359,
-      "direct_exact_replay_s": 0.012459928356111049,
+      "dense_s": 0.01031968672759831,
+      "direct_exact_replay_s": 0.010190538349561393,
       "fastest_native": "single",
-      "forced_reject_total_s": 0.04571277334820479,
+      "forced_reject_total_s": 0.03795750673860312,
       "forecasts": [
         {
-          "cycle_mean_s": 0.02979376232859472,
+          "cycle_mean_s": 0.02517134145807682,
+          "has_approximate_segment": true,
           "interval": 4,
-          "local_break_even_p": -1.842069115211841,
+          "local_break_even_p": -1.9431953080434634,
           "rejection_probability": 0.0
         },
         {
-          "cycle_mean_s": 0.030728256955303047,
+          "cycle_mean_s": 0.02593563183429392,
+          "has_approximate_segment": true,
           "interval": 4,
-          "local_break_even_p": -1.842069115211841,
+          "local_break_even_p": -1.9431953080434634,
           "rejection_probability": 0.1
         },
         {
-          "cycle_mean_s": 0.03913870859567801,
+          "cycle_mean_s": 0.03281424522024786,
+          "has_approximate_segment": true,
           "interval": 4,
-          "local_break_even_p": -1.842069115211841,
+          "local_break_even_p": -1.9431953080434634,
           "rejection_probability": 1.0
         },
         {
-          "cycle_mean_s": 0.032490683063289096,
+          "cycle_mean_s": 0.027183034034614036,
+          "has_approximate_segment": true,
           "interval": 16,
-          "local_break_even_p": -1.7389167730881572,
+          "local_break_even_p": -1.7651246522801194,
           "rejection_probability": 0.0
         },
         {
-          "cycle_mean_s": 0.033658801346674504,
+          "cycle_mean_s": 0.028138397004885414,
+          "has_approximate_segment": true,
           "interval": 16,
-          "local_break_even_p": -1.7389167730881572,
+          "local_break_even_p": -1.7651246522801194,
           "rejection_probability": 0.1
         },
         {
-          "cycle_mean_s": 0.04417186589714321,
+          "cycle_mean_s": 0.03673666373732783,
+          "has_approximate_segment": true,
           "interval": 16,
-          "local_break_even_p": -1.7389167730881572,
+          "local_break_even_p": -1.7651246522801194,
           "rejection_probability": 1.0
         },
         {
-          "cycle_mean_s": 0.0331649132469627,
+          "cycle_mean_s": 0.02768595717874834,
+          "has_approximate_segment": true,
           "interval": 64,
-          "local_break_even_p": -1.7131286875572365,
+          "local_break_even_p": -1.7312064321347205,
           "rejection_probability": 0.0
         },
         {
-          "cycle_mean_s": 0.03439143744451737,
+          "cycle_mean_s": 0.028689088297533288,
+          "has_approximate_segment": true,
           "interval": 64,
-          "local_break_even_p": -1.7131286875572365,
+          "local_break_even_p": -1.7312064321347205,
           "rejection_probability": 0.1
         },
         {
-          "cycle_mean_s": 0.04543015522250951,
+          "cycle_mean_s": 0.037717268366597834,
+          "has_approximate_segment": true,
           "interval": 64,
-          "local_break_even_p": -1.7131286875572365,
+          "local_break_even_p": -1.7312064321347205,
           "rejection_probability": 1.0
         }
       ],
       "journal_age_ms": [
         {
-          "mean_ms": 3.018708356345693,
+          "mean_ms": 3.561027619677285,
           "prior_reservations": 0
         },
         {
-          "mean_ms": 8.925527683459222,
+          "mean_ms": 9.289180976338685,
           "prior_reservations": 64
         },
         {
-          "mean_ms": 26.265722000971437,
+          "mean_ms": 25.73709733163317,
           "prior_reservations": 256
         }
       ],
@@ -529,23 +565,23 @@
         8
       ],
       "local_break_even_p_K16_bootstrap_95": [
-        -1.875367963706267,
-        -1.6084667095683334
+        -1.8591275418137718,
+        -1.6833279010209017
       ],
       "named_reference_costs_ms": {
-        "generation_journal_transfer_capture": 2.750583691522479,
-        "preview_including_raw_alignment": 11.814139046085378,
-        "preview_input_validation": 5.102069349959493,
-        "raw_alignment_cpu_fp64_transfer": 1.1279030392567317
+        "generation_journal_transfer_capture": 3.159375007574757,
+        "preview_including_raw_alignment": 13.899264003460607,
+        "preview_input_validation": 5.189902614802122,
+        "raw_alignment_cpu_fp64_transfer": 1.0548057034611702
       },
       "noise_target_met": {
         "candidate": true,
-        "conditional": true,
+        "conditional": false,
         "reject": false,
         "replay_only": true
       },
-      "paired_refresh_extra_s": 0.006854777560672825,
-      "rejected_minus_conditional_s_not_replay_cost": 0.012323116706684227,
+      "paired_refresh_extra_s": 0.006804884424329633,
+      "rejected_minus_conditional_s_not_replay_cost": 0.01010390851181001,
       "shape": {
         "accumulation": 1,
         "di": 512,
@@ -579,86 +615,95 @@
       "candidate_headroom": "positive_but_unstable_or_noisy",
       "candidate_measurement_qualified": false,
       "candidate_saving_95_s": [
-        0.00046470658178441226,
-        0.0020873547870432947
+        0.0005034405728802085,
+        0.0012885382617823778
       ],
-      "conditional_attempt_s": 0.033171338229440156,
+      "conditional_attempt_s": 0.0255876650987193,
       "conditional_full_headroom": "observed_negative",
       "conditional_full_saving_95_s": [
-        -0.026541599044576286,
-        -0.022079242361709477
+        -0.01932866398303304,
+        -0.017005028381943704
       ],
-      "dense_s": 0.00898073336109519,
-      "direct_exact_replay_s": 0.008773868274874985,
-      "fastest_native": "default",
-      "forced_reject_total_s": 0.04387438816484064,
+      "dense_s": 0.007455500122159719,
+      "direct_exact_replay_s": 0.0073000383470207455,
+      "fastest_native": "single",
+      "forced_reject_total_s": 0.03443032331764698,
       "forecasts": [
         {
-          "cycle_mean_s": 0.02876732593302482,
+          "cycle_mean_s": 0.02271034994895351,
+          "has_approximate_segment": true,
           "interval": 4,
-          "local_break_even_p": -2.944453116876088,
+          "local_break_even_p": -2.7862593047006885,
           "rejection_probability": 0.0
         },
         {
-          "cycle_mean_s": 0.02942536605364044,
+          "cycle_mean_s": 0.023257852824980066,
+          "has_approximate_segment": true,
           "interval": 4,
-          "local_break_even_p": -2.944453116876088,
+          "local_break_even_p": -2.7862593047006885,
           "rejection_probability": 0.1
         },
         {
-          "cycle_mean_s": 0.03534772713918106,
+          "cycle_mean_s": 0.02818537870921907,
+          "has_approximate_segment": true,
           "interval": 4,
-          "local_break_even_p": -2.944453116876088,
+          "local_break_even_p": -2.7862593047006885,
           "rejection_probability": 1.0
         },
         {
-          "cycle_mean_s": 0.03207033515533632,
+          "cycle_mean_s": 0.024868336311277852,
+          "has_approximate_segment": true,
           "interval": 16,
-          "local_break_even_p": -2.803953037334975,
+          "local_break_even_p": -2.544327995569988,
           "rejection_probability": 0.0
         },
         {
-          "cycle_mean_s": 0.032892885306105846,
+          "cycle_mean_s": 0.025552714906311048,
+          "has_approximate_segment": true,
           "interval": 16,
-          "local_break_even_p": -2.803953037334975,
+          "local_break_even_p": -2.544327995569988,
           "rejection_probability": 0.1
         },
         {
-          "cycle_mean_s": 0.040295836663031624,
+          "cycle_mean_s": 0.0317121222616098,
+          "has_approximate_segment": true,
           "interval": 16,
-          "local_break_even_p": -2.803953037334975,
+          "local_break_even_p": -2.544327995569988,
           "rejection_probability": 1.0
         },
         {
-          "cycle_mean_s": 0.03289608746091419,
+          "cycle_mean_s": 0.02540783290185894,
+          "has_approximate_segment": true,
           "interval": 64,
-          "local_break_even_p": -2.7688280174496973,
+          "local_break_even_p": -2.4982458414498545,
           "rejection_probability": 0.0
         },
         {
-          "cycle_mean_s": 0.0337597651192222,
+          "cycle_mean_s": 0.02612643042664379,
+          "has_approximate_segment": true,
           "interval": 64,
-          "local_break_even_p": -2.7688280174496973,
+          "local_break_even_p": -2.4982458414498545,
           "rejection_probability": 0.1
         },
         {
-          "cycle_mean_s": 0.04153286404399426,
+          "cycle_mean_s": 0.032593808149707484,
+          "has_approximate_segment": true,
           "interval": 64,
-          "local_break_even_p": -2.7688280174496973,
+          "local_break_even_p": -2.4982458414498545,
           "rejection_probability": 1.0
         }
       ],
       "journal_age_ms": [
         {
-          "mean_ms": 4.107333060043554,
+          "mean_ms": 2.659555641002953,
           "prior_reservations": 0
         },
         {
-          "mean_ms": 12.7608753197516,
+          "mean_ms": 8.868680296776196,
           "prior_reservations": 64
         },
         {
-          "mean_ms": 29.353458317928016,
+          "mean_ms": 26.042430312372744,
           "prior_reservations": 256
         }
       ],
@@ -672,23 +717,23 @@
         8
       ],
       "local_break_even_p_K16_bootstrap_95": [
-        -3.1035997494995673,
-        -2.551378227654398
+        -2.7408603647111307,
+        -2.3492713210195326
       ],
       "named_reference_costs_ms": {
-        "generation_journal_transfer_capture": 3.7858889748652778,
-        "preview_including_raw_alignment": 17.135111692671973,
-        "preview_input_validation": 6.11141665528218,
-        "raw_alignment_cpu_fp64_transfer": 1.2123886262997985
+        "generation_journal_transfer_capture": 2.63423565775156,
+        "preview_including_raw_alignment": 11.932666956757506,
+        "preview_input_validation": 4.231458296999335,
+        "raw_alignment_cpu_fp64_transfer": 1.1579446727409959
       },
       "noise_target_met": {
-        "candidate": false,
+        "candidate": true,
         "conditional": false,
         "reject": false,
         "replay_only": true
       },
-      "paired_refresh_extra_s": 0.006574555682683631,
-      "rejected_minus_conditional_s_not_replay_cost": 0.010703049935400485,
+      "paired_refresh_extra_s": 0.0066229043774964184,
+      "rejected_minus_conditional_s_not_replay_cost": 0.008842658218927678,
       "shape": {
         "accumulation": 4,
         "di": 512,
@@ -722,86 +767,95 @@
       "candidate_headroom": "observed_positive",
       "candidate_measurement_qualified": true,
       "candidate_saving_95_s": [
-        0.00838415606542387,
-        0.009792273208020359
+        0.007394933643323991,
+        0.008604643594784042
       ],
-      "conditional_attempt_s": 0.05525136556631575,
+      "conditional_attempt_s": 0.05440622678078297,
       "conditional_full_headroom": "observed_negative",
       "conditional_full_saving_95_s": [
-        -0.020354056449206025,
-        -0.016801677944345606
+        -0.019052433659413108,
+        -0.015940849807359176
       ],
-      "dense_s": 0.03670910644965867,
-      "direct_exact_replay_s": 0.03697297667774061,
-      "fastest_native": "default",
-      "forced_reject_total_s": 0.09096481497140808,
+      "dense_s": 0.03673832876504295,
+      "direct_exact_replay_s": 0.03736582401001619,
+      "fastest_native": "fused",
+      "forced_reject_total_s": 0.0914013933442119,
       "forecasts": [
         {
-          "cycle_mean_s": 0.05342975095199007,
+          "cycle_mean_s": 0.052786964053262234,
+          "has_approximate_segment": true,
           "interval": 4,
-          "local_break_even_p": -0.5776167136240632,
+          "local_break_even_p": -0.5726671618042312,
           "rejection_probability": 0.0
         },
         {
-          "cycle_mean_s": 0.05620272420282062,
+          "cycle_mean_s": 0.05558940085401344,
+          "has_approximate_segment": true,
           "interval": 4,
-          "local_break_even_p": -0.5776167136240632,
+          "local_break_even_p": -0.5726671618042312,
           "rejection_probability": 0.1
         },
         {
-          "cycle_mean_s": 0.08115948346029553,
+          "cycle_mean_s": 0.08081133206077437,
+          "has_approximate_segment": true,
           "interval": 4,
-          "local_break_even_p": -0.5776167136240632,
+          "local_break_even_p": -0.5726671618042312,
           "rejection_probability": 1.0
         },
         {
-          "cycle_mean_s": 0.05479596191273433,
+          "cycle_mean_s": 0.05400141109890278,
+          "has_approximate_segment": true,
           "interval": 16,
-          "local_break_even_p": -0.5205354934122339,
+          "local_break_even_p": -0.4928020451125202,
           "rejection_probability": 0.0
         },
         {
-          "cycle_mean_s": 0.05826217847627251,
+          "cycle_mean_s": 0.057504457099841796,
+          "has_approximate_segment": true,
           "interval": 16,
-          "local_break_even_p": -0.5205354934122339,
+          "local_break_even_p": -0.4928020451125202,
           "rejection_probability": 0.1
         },
         {
-          "cycle_mean_s": 0.08945812754811616,
+          "cycle_mean_s": 0.08903187110829297,
+          "has_approximate_segment": true,
           "interval": 16,
-          "local_break_even_p": -0.5205354934122339,
+          "local_break_even_p": -0.4928020451125202,
           "rejection_probability": 1.0
         },
         {
-          "cycle_mean_s": 0.0551375146529204,
+          "cycle_mean_s": 0.054305022860312926,
+          "has_approximate_segment": true,
           "interval": 64,
-          "local_break_even_p": -0.5062651883592766,
+          "local_break_even_p": -0.47758964193314657,
           "rejection_probability": 0.0
         },
         {
-          "cycle_mean_s": 0.058777042044635484,
+          "cycle_mean_s": 0.05798322116129889,
+          "has_approximate_segment": true,
           "interval": 64,
-          "local_break_even_p": -0.5062651883592766,
+          "local_break_even_p": -0.47758964193314657,
           "rejection_probability": 0.1
         },
         {
-          "cycle_mean_s": 0.09153278857007131,
+          "cycle_mean_s": 0.09108700587017261,
+          "has_approximate_segment": true,
           "interval": 64,
-          "local_break_even_p": -0.5062651883592766,
+          "local_break_even_p": -0.47758964193314657,
           "rejection_probability": 1.0
         }
       ],
       "journal_age_ms": [
         {
-          "mean_ms": 3.733472394136091,
+          "mean_ms": 3.120569007781645,
           "prior_reservations": 0
         },
         {
-          "mean_ms": 9.824972366914153,
+          "mean_ms": 9.437569378254315,
           "prior_reservations": 64
         },
         {
-          "mean_ms": 27.675208014746506,
+          "mean_ms": 27.93433334833632,
           "prior_reservations": 256
         }
       ],
@@ -815,14 +869,14 @@
         16
       ],
       "local_break_even_p_K16_bootstrap_95": [
-        -0.5673471307400445,
-        -0.47346494301442726
+        -0.5350468991297499,
+        -0.44732254684257744
       ],
       "named_reference_costs_ms": {
-        "generation_journal_transfer_capture": 6.001569369497399,
-        "preview_including_raw_alignment": 19.41148630188157,
-        "preview_input_validation": 5.265124995882313,
-        "raw_alignment_cpu_fp64_transfer": 1.9039163210739691
+        "generation_journal_transfer_capture": 3.2574446328605213,
+        "preview_including_raw_alignment": 19.666888712284464,
+        "preview_input_validation": 6.484403003317614,
+        "raw_alignment_cpu_fp64_transfer": 2.07109694990019
       },
       "noise_target_met": {
         "candidate": true,
@@ -830,8 +884,8 @@
         "reject": true,
         "replay_only": true
       },
-      "paired_refresh_extra_s": 0.011255800659354366,
-      "rejected_minus_conditional_s_not_replay_cost": 0.035713449405092336,
+      "paired_refresh_extra_s": 0.011190847105657063,
+      "rejected_minus_conditional_s_not_replay_cost": 0.03699516656342894,
       "shape": {
         "accumulation": 1,
         "di": 768,
@@ -864,8 +918,8 @@
   ],
   "schema_version": 1,
   "source_sha256": {
-    "analysis/summarize_headroom.py": "28af5349c41379aaf7b897117354a3fd0a867f9643b8413e2155c513650ee69c",
-    "analysis/timing_calibration.json": "fbdc4962d5ec208db855f61ca1bf5ef06f2e5d8e2fe7e8082267beb0a09c195b",
-    "analysis/timing_calibration_wide.json": "95ca861c643a70408140f7fefafc263a75958ced729947fb239e3e94bdba630e"
+    "analysis/summarize_headroom.py": "5cf53dbeef8772dbc3520de926d0f2f583d16561a9610d93fd5ca41d9b88aa4a",
+    "analysis/timing_calibration.json": "66f698a25c2ca414bb6eca13e541a70dc8ec6ede70cc77ae2831cc5e05f9c0fa",
+    "analysis/timing_calibration_wide.json": "04a0157a7c5c0b4821a1ebabdb157237e185e21a154199f3d52dad38def2b0e6"
   }
 }

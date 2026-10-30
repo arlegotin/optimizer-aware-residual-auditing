@@ -22,8 +22,77 @@ def test_refresh_transfers_and_replay_are_additional_costs():
     result = cycle_forecast(dense=10., attempt=6., replay=11., refresh_extra=8.,
                             interval=4, rejection_probability=.25)
     assert result['cycle_mean_s'] == 11.0625  # (10+8+3*(6+.25*11))/4
-    assert result['local_break_even_p'] == pytest.approx(2/11)
+    assert result['local_break_even_p'] == pytest.approx(4/33)
+    at_threshold = cycle_forecast(10., 6., 11., 8., 4, 4/33)
+    assert at_threshold['cycle_mean_s'] == pytest.approx(10.)
+    assert cycle_forecast(10., 6., 11., 8., 4, 0.)['cycle_mean_s'] < 10.
+    assert cycle_forecast(10., 6., 11., 8., 4, .25)['cycle_mean_s'] > 10.
     assert cycle_forecast(10., 12., 11., 0., 4, 0.)['local_break_even_p'] < 0
+
+
+def test_all_dense_cycle_has_no_approximate_segment_or_rejection_threshold():
+    result = cycle_forecast(10., 6., 11., 8., 1, .25)
+    assert result['cycle_mean_s'] == 18.
+    assert result['has_approximate_segment'] is False
+    assert result['local_break_even_p'] is None
+
+
+def test_worker_request_preserves_resolved_seed_streams(monkeypatch):
+    from types import SimpleNamespace
+    from oar.bench import benchmark
+    from oar.config import SeedStreams
+    config = replace(load_benchmark_config(Path('configs/operator.yaml')),
+                     seeds=SeedStreams(11, 22, 33, 44))
+    def worker(command, **kwargs):
+        request = json.loads(Path(command[-2]).read_text())
+        assert request['seeds'] == {'construction':11,'audit':22,'data':33,'model':44}
+        Path(command[-1]).write_text(json.dumps({'rows':[], 'metadata':{'seeds':request['seeds']}}))
+        return SimpleNamespace(returncode=0)
+    monkeypatch.setattr('oar.bench.subprocess.run', worker)
+    assert benchmark(config).metadata['seeds']['model'] == 44
+
+
+def test_data_shape_layout_and_seed_do_not_shift_model_initialization():
+    from oar.bench import _initialize_inputs_and_parameters
+    from oar.config import SeedStreams
+    shape = load_benchmark_config(Path('configs/operator.yaml')).benchmark.shapes[0]
+    seeds = SeedStreams(11, 22, 33, 44)
+    x, parameters = _initialize_inputs_and_parameters(shape, seeds, 'cpu')
+    variants = [(replace(shape,n=256),seeds), (replace(shape,noncontiguous=True),seeds),
+                (shape,replace(seeds,data=34)), (shape,replace(seeds,construction=12,audit=23))]
+    for variant, streams in variants:
+        _, actual = _initialize_inputs_and_parameters(variant, streams, 'cpu')
+        for name in parameters:
+            torch.testing.assert_close(actual[name],parameters[name],rtol=0,atol=0)
+    same_x, changed_model = _initialize_inputs_and_parameters(shape,replace(seeds,model=45),'cpu')
+    torch.testing.assert_close(x,same_x,rtol=0,atol=0)
+    assert not torch.equal(parameters['w1'],changed_model['w1'])
+
+
+def test_summary_bootstrap_uses_the_same_scheduled_mixture_threshold(tmp_path,monkeypatch):
+    import runpy
+    repo = Path(__file__).resolve().parents[1]
+    table = json.loads((repo/'analysis/timing_calibration.json').read_text())
+    row = table['rows'][0]
+    row['headline']['conditional']['dense']['mean_s'] = 10.
+    row['headline']['conditional']['dense']['raw_s'] = [10.]*3
+    row['headline']['conditional']['other']['mean_s'] = 6.
+    row['headline']['conditional']['other']['raw_s'] = [6.]*3
+    row['headline']['replay_only']['other']['mean_s'] = 11.
+    row['headline']['replay_only']['other']['raw_s'] = [11.]*3
+    row['refresh']['dense']['mean_s'] = 10.
+    row['refresh']['other']['mean_s'] = 18.
+    row['refresh']['pairs'] = [{'seconds':{'dense':10.,'other':18.}}]*3
+    table['rows'] = [row]
+    (tmp_path/'analysis').mkdir()
+    for name in ('timing_calibration.json','timing_calibration_wide.json'):
+        (tmp_path/'analysis'/name).write_text(json.dumps(table))
+    monkeypatch.chdir(tmp_path)
+    runpy.run_path(str(repo/'analysis/summarize_headroom.py'))
+    result = json.loads((tmp_path/'analysis/headroom_decision.json').read_text())['rows'][0]
+    assert result['local_break_even_p_K16_bootstrap_95'] == pytest.approx([52/165,52/165])
+    at_four = next(f for f in result['forecasts'] if f['interval']==4)
+    assert at_four['local_break_even_p'] == pytest.approx(4/33)
 
 
 @pytest.mark.parametrize('kwargs', [{'preview': -1.}, {'preview': float('nan')}])

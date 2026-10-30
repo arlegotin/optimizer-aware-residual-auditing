@@ -418,3 +418,34 @@ Final actual-device verification after these layout checks:
 passed2 tests in1.90s. The original280-test result above is superseded. WP02
 still stops online engineering and permits only bounded-oracle preparation
 with an explicit narrow branch/protocol amendment before execution.
+
+
+### Task 6 review fix1 — exact mixture threshold and separate RNG streams
+
+Corrected scheduled-mixture break-even to `(D-A-C/(K-1))/R` for K>1;
+K1 explicitly has no approximate segment or rejection threshold. Bootstrap K16
+uses15 approximate steps. Hand-derived equality and constant-bootstrap tests
+reproduce and cover the arithmetic error.
+
+Worker requests now preserve resolved construction/audit/data/model seeds.
+Independent data/model generators make initial weights invariant to input batch
+size/layout and data-seed consumption; construction and audit retain their own
+resolved streams. Metadata records61001/61002/61003/61004 and the separation
+policy. Prior timing/derived/source bytes are archived unchanged and explicitly
+labeled coupled initialization; they were not retroactively relabeled.
+
+Reran only the same bounded main/wide configurations exclusively and serially.
+Qualified n2048/r16 candidate5.314ms vs6.285ms native (saving95%[.648,1.299]ms),
+n4096 candidate8.138ms vs10.239ms ([1.772,2.426]ms), and wide candidate28.875ms
+vs36.882ms ([7.395,8.605]ms). Full attempts24.965/27.854/54.406ms remain slower
+than paired native6.087/10.320/36.738ms. Wide forced-reject total91.401ms,
+direct replay37.366ms. Corrected wide K16 p*=-.492802,
+bootstrap95%[-.535047,-.447323], outside feasible[0,1]. Raw current files and
+regenerated summaries retain uncertainty, seed policy and resource facts.
+No new shapes/policy/optimization/calibration study was added.
+
+TDD red5 failed,15 passed,1 skipped; actual-device covering tests21 passed
+in1.51s. Final fallback0 actual CPU/MPS suite **286 passed in6.08s**.
+WP02 stop/oracle-preparation outcome is unchanged; NumericalPolicy remains
+unresolved and no online/training/learning claim follows. Exact commands,
+current data and historical limitations append to the same Task6 report.

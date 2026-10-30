@@ -23,7 +23,7 @@ import time
 import numpy as np
 import yaml
 
-from .config import RunConfig, RunPaths, SeedStreams, _fields, _UniqueLoader
+from .config import RunConfig, RunPaths, SeedStreams, resolve_config, _fields, _UniqueLoader
 from .timing import ActiveClock, measure_blocks, paired_blocks, warmup
 
 
@@ -115,7 +115,8 @@ def cycle_forecast(dense, attempt, replay, refresh_extra, interval, rejection_pr
             or replay <= 0 or type(interval) is not int or interval < 1 or not 0 <= rejection_probability <= 1):
         raise ValueError('invalid cycle costs')
     return dict(cycle_mean_s=(dense + refresh_extra + (interval-1)*(attempt+rejection_probability*replay))/interval,
-                local_break_even_p=(dense-attempt-refresh_extra/interval)/replay)
+                has_approximate_segment=interval > 1,
+                local_break_even_p=(dense-attempt-refresh_extra/(interval-1))/replay if interval > 1 else None)
 
 
 def candidate_linear(x, weight, bias, basis):
@@ -152,6 +153,20 @@ def _make_input(shape, generator, device):
     if shape.noncontiguous:
         x = x[:, ::2]
     return x.requires_grad_()
+
+
+def _initialize_inputs_and_parameters(shape, seeds, device):
+    """Data consumption and layout cannot advance the model initialization RNG."""
+    import torch
+    data = torch.Generator().manual_seed(seeds.data)
+    model = torch.Generator().manual_seed(seeds.model)
+    x = _make_input(shape, data, device)
+    parameters = {name:torch.nn.Parameter(value.to(device)) for name,value in {
+        'w1':torch.randn(shape.do,shape.di,generator=model)/math.sqrt(shape.di),
+        'b1':torch.zeros(shape.do),
+        'w2':torch.randn(shape.di,shape.do,generator=model)/math.sqrt(shape.do),
+        'b2':torch.zeros(shape.di)}.items()}
+    return x,parameters
 
 
 def _summary(raw, seed, replicates):
@@ -221,8 +236,8 @@ def benchmark(config: RunConfig) -> CostTable:
     """One fresh worker for the complete study; fallback=0 precedes Torch import."""
     if not isinstance(config.benchmark, BenchmarkConfig):
         raise ValueError('benchmark configuration required')
-    _parse_benchmark(dict(schema_version=config.schema_version, device=config.device, **asdict(config.benchmark)))
-    payload = dict(device=config.device, benchmark=asdict(config.benchmark))
+    resolve_config(config)
+    payload = dict(device=config.device, seeds=asdict(config.seeds), benchmark=asdict(config.benchmark))
     with tempfile.TemporaryDirectory(prefix='oar-bench-') as directory:
         request, response = Path(directory)/'request.json', Path(directory)/'response.json'
         request.write_text(json.dumps(payload))
@@ -266,6 +281,7 @@ def _run_worker(request):
     b = request['benchmark']
     b['shapes'] = tuple(Shape(**s) for s in b['shapes'])
     config = BenchmarkConfig(**b)
+    seeds = SeedStreams(**request['seeds'])
     if device == 'mps' and not torch.backends.mps.is_available():
         raise RuntimeError('actual MPS unavailable; sandbox absence is not a hardware finding')
     synchronize = torch.mps.synchronize if device == 'mps' else lambda: None
@@ -291,27 +307,21 @@ def _run_worker(request):
             self.version = (0, 0)
             self.state = {}
             self.group = (AdamWGroup(('w1', 'b1', 'w2', 'b2'), 1e-4, (.9, .999), 1e-8, .01),)
-            g = torch.Generator().manual_seed(config.seed)
-            # A view with stride 2 exercises the noncontiguous input path.
-            self.x = _make_input(shape, g, device)
-            self.parameters = {name: torch.nn.Parameter(value.to(device)) for name, value in {
-                'w1': torch.randn(shape.do, shape.di, generator=g)/math.sqrt(shape.di),
-                'b1': torch.zeros(shape.do),
-                'w2': torch.randn(shape.di, shape.do, generator=g)/math.sqrt(shape.do),
-                'b2': torch.zeros(shape.di)}.items()}
+            self.x,self.parameters = _initialize_inputs_and_parameters(shape,seeds,device)
+            self.construction_generator = torch.Generator().manual_seed(seeds.construction)
             kwargs = dict(foreach=variant == 'foreach', fused=variant == 'fused')
             if variant == 'default':
                 kwargs = {}
             self.optimizer = torch.optim.AdamW(list(self.parameters.values()), lr=1e-4, weight_decay=.01, **kwargs)
             self.backward('dense')
             self.bases = {name: build_basis(self.parameters[name].grad, shape.rank, 8,
-                           torch.Generator().manual_seed(config.seed+100+i), 0)
+                           self.construction_generator, 0)
                           for i, name in enumerate(('w1', 'w2'))}
             torch.nn.utils.clip_grad_norm_(list(self.parameters.values()), 1., foreach=False, error_if_nonfinite=True)
             self.optimizer.step()  # initial native dense update, basis source 0
             self.state = native_state(self.parameters, self.optimizer)
             self.initialization_s = active.elapsed_s()
-            self.journal = AuditJournal(Path(directory)/'audit.jsonl', .01, 0, audit_seed=config.seed+1)
+            self.journal = AuditJournal(Path(directory)/'audit.jsonl', .01, 0, audit_seed=seeds.audit)
             self.policy = NumericalPolicy(dict(device=device, shape=asdict(shape), dtype='float32'))
             self.decisions = {}
 
@@ -382,7 +392,7 @@ def _run_worker(request):
             self.backward('dense')
             for i, name in enumerate(('w1', 'w2')):
                 self.bases[name] = build_basis(self.parameters[name].grad, self.s.rank, 8,
-                                              torch.Generator().manual_seed(config.seed+900+i), self.step)
+                                              self.construction_generator, self.step)
             torch.nn.utils.clip_grad_norm_(list(self.parameters.values()), 1., foreach=False, error_if_nonfinite=True)
             self.optimizer.step()
             self.state = native_state(self.parameters, self.optimizer)
@@ -475,7 +485,7 @@ def _run_worker(request):
                 'preview_including_raw_alignment': lambda: preview_adamw(p, raw, f.state, f.group, *f.version, 1.),
                 'preview_input_validation': lambda: _validate(p, raw, f.state, f.group, *f.version, 1.),
                 'raw_alignment_cpu_fp64_transfer': lambda: (raw['w1'].detach().cpu().double()*d.detach().cpu().double()).sum().item(),
-                'refresh_cpu_qr_svd_transfers': lambda: build_basis(raw['w1'], shape.rank, 8, torch.Generator().manual_seed(config.seed), 0),
+                'refresh_cpu_qr_svd_transfers': lambda: build_basis(raw['w1'], shape.rank, 8, f.construction_generator, 0),
                 'sampling_gather_scatter': lambda: torch.zeros_like(x).index_add_(0, torch.arange(0, shape.n, 2, device=device), x.index_select(0, torch.arange(0, shape.n, 2, device=device))),
                 'generation_journal_transfer_capture': f.captures,
                 'native_optimizer_only': f.optimizer.step,
@@ -519,6 +529,7 @@ def _run_worker(request):
     return dict(schema_version=1, rows=rows, metadata=dict(
         torch_preimported=preimported, fallback_environment_before_torch_import=fallback,
         backend=device, python=platform.python_version(), torch=torch.__version__, torch_revision=torch.version.git_version,
+        seeds=asdict(seeds), seed_policy='separate_resolved_construction_audit_data_model', measurement_order_seed=config.seed,
         hardware=hardware, thermal_limits_before=thermal_before, thermal_limits_after=thermal_context(),
         resources_before=before, resources_after=resource_snapshot(device),
         engineering_screen_ceiling_bytes=int(ceiling), recommended_metal_working_set_bytes=recommended,

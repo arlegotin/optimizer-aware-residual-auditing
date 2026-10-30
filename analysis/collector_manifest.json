@@ -30,14 +30,15 @@
     },
     {
       "artifact": "analysis/headroom_decision.json",
-      "artifact_sha256": "f1c74cd93b48bccbeff5026b064d21e7838317aca90fd9b7d4464304597f5af4",
+      "artifact_sha256": "490688ee41700aa87adb1d627ecb6e1ff526a66b8a3fe797b22755d11555a059",
       "collector": "analysis/summarize_headroom.py",
-      "collector_sha256": "28af5349c41379aaf7b897117354a3fd0a867f9643b8413e2155c513650ee69c",
+      "collector_sha256": "5cf53dbeef8772dbc3520de926d0f2f583d16561a9610d93fd5ca41d9b88aa4a",
       "command": ".venv/bin/python analysis/summarize_headroom.py"
     }
   ],
-  "current_benchmark_sha256": "4504126115b6bd0515a7c47e6882ce724c185a69dea0ec1f3785577fd8bed43f",
+  "current_benchmark_sha256": "e06035ce04cfceb56074a9b000ceb27230e21d557d88cc80483a6be1c2ddbf39",
   "execution_note": "Run hardware collectors, timing studies and tests sequentially. Numerical artifacts do not resolve NumericalPolicy or authorize online acceptance. The existing Task5 artifact is reused unchanged; Tasks3/4 and Task6 artifacts were actually regenerated in this task.",
   "measurement_source_history": "analysis/evidence_history.json",
-  "schema_version": 1
+  "schema_version": 1,
+  "task6_review_fix1": "Current main/wide timing files were rerun with transported separate resolved SeedStreams. Prior coupled-init timing/derived files and sources remain unchanged in evidence_history. No numerical calibration study was rerun."
 }

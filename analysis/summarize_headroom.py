@@ -51,7 +51,7 @@ for source, measured in measured_rows:
         rr = rng.choice(replay_raw, len(replay_raw)).mean()
         cc = rng.choice(refresh_diff, len(refresh_diff)).mean()
         if rr > 0:
-            bootstrap.append((dd-aa-cc/16)/rr)
+            bootstrap.append((dd-aa-cc/15)/rr)
     rows.append(dict(key=measured['key'], shape=measured['shape'], source=str(source), fastest_native=measured['fastest_native'],
         candidate_headroom=('observed_positive' if candidate_qualified else 'positive_but_unstable_or_noisy') if candidate_ci[0] > 0 else 'observed_negative' if candidate_ci[1] < 0 else 'unresolved',
         candidate_measurement_qualified=candidate_qualified,

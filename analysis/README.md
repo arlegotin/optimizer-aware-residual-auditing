@@ -26,10 +26,32 @@ The six kernel configurations vary batch, rectangular width, rank, probe count, 
 
 Resource readings separate physical/available memory, RSS, Metal allocations, driver allocations and OS-wide swapping. Five fixtures reside in a timing worker; observed 5ms resource maxima describe the study working set and can miss short peaks. They do not establish single-model training or checkpoint peaks. RSS and Metal readings overlap and are never added. Pre-existing swap, swap activity and unavailable thermal limits remain explicit. [Post-study pressure](resource_context.json) records query-only OS observations, not continuous block telemetry. No apps were killed or OS safeguards changed.
 
-[Historical index](evidence_history.json) preserves exact prior gate artifacts and completed exploratory runs. The overlapping pilot is excluded from gate evidence. The clean earlier sequential study is retained with its control-drift/replay-identification limits; only the final interleaved studies support WP02. An initial serialization-failed pilot has aggregate console results in the local Task 6 report, but its temporary raw blocks were lost and are not used for a gate.
+[Historical index](evidence_history.json) preserves exact prior gate artifacts and completed exploratory runs. The overlapping pilot is excluded from gate evidence. The clean earlier sequential study is retained with its control-drift/replay-identification limits; only the current seed-separated interleaved studies support the latest WP02 record. An initial serialization-failed pilot has aggregate console results in the local Task 6 report, but its temporary raw blocks were lost and are not used for a gate.
 
 The WP02 result stops the current online implementation branch. Candidate-only headroom supports preparing a bounded synthetic structural-oracle information study and a narrow gate amendment before execution. Normal WP03/WP04 prerequisites remain blocked. No full trainer/controller, data ingestion, larger-model or MLX retry is authorized by these artifacts. Dataset bodies remain unverified and WikiText remains blocked.
 
-Final interface review added only pre-worker duplicate-key validation after measurements. The exact measured benchmark source is preserved in the historical index; later changes add those input guards and extract the identical initialization input expression into a directly CPU/MPS-tested helper. Both paths slice device storage after transfer. Calibration records/asserts observed strides, including24 stride-2 cases. Timed method operations are unchanged; the snapshot is archival, not a second maintained implementation, and no cost results were relabeled as measured from changed kernels.
+For the original pre-review measurements, final interface review added only pre-worker duplicate-key validation after measurement. That exact older benchmark source is preserved in the historical index; then-current changes added those input guards and extracted the identical initialization input expression into a directly CPU/MPS-tested helper. Both paths slice device storage after transfer. Calibration records/asserts observed strides, including24 stride-2 cases. Timed method operations are unchanged; the snapshot is archival, not a second maintained implementation, and no cost results were relabeled as measured from changed kernels.
 
 The first numerical artifact mislabeled the actual layout for the configured noncontiguous case. It and the intermediate correction are archived explicitly; the final same120-case regeneration records observed post-transfer strides and leaves NumericalPolicy unresolved. Superseded Task6 gate bytes remain recoverable through the historical index.
+
+
+Task6 review fix1 supersedes the earlier headline timing/forecast data. Current
+main/wide files were rerun exclusively at the same six configurations with
+resolved construction/audit/data/model seeds transported into the fresh worker.
+Data and model initialization have separate CPU generators; changing batch
+shape/layout or the data seed cannot advance the model initialization stream.
+Construction uses its own generator and durable audit allocation uses its own
+resolved audit seed. Raw metadata records all four seeds and the policy tag;
+measurement ordering/bootstrap retain the separately declared benchmark seed.
+The earlier files/sources are archived unchanged and explicitly labeled coupled
+initialization in the historical index; they are not retroactively relabeled.
+
+For `[D+C+(K-1)(A+pR)]/K`, the exact scheduled-mixture threshold is
+`p* = (D-A-C/(K-1))/R` for K>1. K=1 has no approximate segment and returns no
+rejection threshold. The K16 bootstrap uses15 approximate steps. Covering tests
+check the hand-derived4/33 threshold, the equality cycle at that threshold, K1,
+worker seed transport and data/model initialization independence. The refreshed
+derived artifacts use this corrected arithmetic. Numerical calibration remains
+unresolved and was not rerun by this review fix.
+
+Current fix1 main/wide source hashes match the current measured implementation. Older source-snapshot/input-only delta notes above describe the superseded pre-review studies, not the rerun with separated seed streams.

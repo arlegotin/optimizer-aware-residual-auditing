@@ -82,6 +82,78 @@
       "sha256": "9d52f632e1aad74e73a22595d838e2995698df3b9020e03d5da9e48db4575e82",
       "archived_path": "analysis/history/collect_numerical_calibration-before-layout-9d52f632e1aa.py",
       "validity": "Exact superseded Task6 gate source bytes, SHA256 verified. Archival evidence only; not a second maintained runtime."
+    },
+    {
+      "original_path": "src/oar/bench.py",
+      "sha256": "4504126115b6bd0515a7c47e6882ce724c185a69dea0ec1f3785577fd8bed43f",
+      "archived_path": "analysis/history/fix1-bench-4504126115b6.py",
+      "validity": "Superseded before Task6 review fix1. Timings used coupled data/model initialization; resolved SeedStreams were dropped before worker launch. Forecast threshold used C/K rather than C/(K-1). Bytes are retained unchanged, not relabeled as compliant seed-separated measurements."
+    },
+    {
+      "original_path": "analysis/summarize_headroom.py",
+      "sha256": "28af5349c41379aaf7b897117354a3fd0a867f9643b8413e2155c513650ee69c",
+      "archived_path": "analysis/history/fix1-summarize_headroom-28af5349c413.py",
+      "validity": "Superseded before Task6 review fix1. Timings used coupled data/model initialization; resolved SeedStreams were dropped before worker launch. Forecast threshold used C/K rather than C/(K-1). Bytes are retained unchanged, not relabeled as compliant seed-separated measurements."
+    },
+    {
+      "original_path": "analysis/timing_calibration.json",
+      "sha256": "fbdc4962d5ec208db855f61ca1bf5ef06f2e5d8e2fe7e8082267beb0a09c195b",
+      "archived_path": "analysis/history/fix1-timing_calibration-fbdc4962d5ec.json",
+      "validity": "Superseded before Task6 review fix1. Timings used coupled data/model initialization; resolved SeedStreams were dropped before worker launch. Forecast threshold used C/K rather than C/(K-1). Bytes are retained unchanged, not relabeled as compliant seed-separated measurements."
+    },
+    {
+      "original_path": "analysis/timing_calibration.csv",
+      "sha256": "7da3fd8be160593603008c480fd92b599bf19fa63ee11abd8607cfcba848fe39",
+      "archived_path": "analysis/history/fix1-timing_calibration-7da3fd8be160.csv",
+      "validity": "Superseded before Task6 review fix1. Timings used coupled data/model initialization; resolved SeedStreams were dropped before worker launch. Forecast threshold used C/K rather than C/(K-1). Bytes are retained unchanged, not relabeled as compliant seed-separated measurements."
+    },
+    {
+      "original_path": "analysis/timing_calibration_wide.json",
+      "sha256": "95ca861c643a70408140f7fefafc263a75958ced729947fb239e3e94bdba630e",
+      "archived_path": "analysis/history/fix1-timing_calibration_wide-95ca861c643a.json",
+      "validity": "Superseded before Task6 review fix1. Timings used coupled data/model initialization; resolved SeedStreams were dropped before worker launch. Forecast threshold used C/K rather than C/(K-1). Bytes are retained unchanged, not relabeled as compliant seed-separated measurements."
+    },
+    {
+      "original_path": "analysis/timing_calibration_wide.csv",
+      "sha256": "9200e6ff994445fb951ee3419ad3e711fa9f787986560b697e019cf4fb398ca3",
+      "archived_path": "analysis/history/fix1-timing_calibration_wide-9200e6ff9944.csv",
+      "validity": "Superseded before Task6 review fix1. Timings used coupled data/model initialization; resolved SeedStreams were dropped before worker launch. Forecast threshold used C/K rather than C/(K-1). Bytes are retained unchanged, not relabeled as compliant seed-separated measurements."
+    },
+    {
+      "original_path": "analysis/headroom_decision.json",
+      "sha256": "f1c74cd93b48bccbeff5026b064d21e7838317aca90fd9b7d4464304597f5af4",
+      "archived_path": "analysis/history/fix1-headroom_decision-f1c74cd93b48.json",
+      "validity": "Superseded before Task6 review fix1. Timings used coupled data/model initialization; resolved SeedStreams were dropped before worker launch. Forecast threshold used C/K rather than C/(K-1). Bytes are retained unchanged, not relabeled as compliant seed-separated measurements."
+    },
+    {
+      "original_path": "analysis/headroom_summary.csv",
+      "sha256": "a9c559b0f18b547c44d62f20ae9856641549af52341d80981ef8d294dec24dc7",
+      "archived_path": "analysis/history/fix1-headroom_summary-a9c559b0f18b.csv",
+      "validity": "Superseded before Task6 review fix1. Timings used coupled data/model initialization; resolved SeedStreams were dropped before worker launch. Forecast threshold used C/K rather than C/(K-1). Bytes are retained unchanged, not relabeled as compliant seed-separated measurements."
+    },
+    {
+      "original_path": "analysis/collector_manifest.json",
+      "sha256": "82c5b13aa1a2ca0c612f9e2782c516fb78b252f1489ec9252169357eaf2a26dd",
+      "archived_path": "analysis/history/fix1-collector_manifest-82c5b13aa1a2.json",
+      "validity": "Superseded before Task6 review fix1. Timings used coupled data/model initialization; resolved SeedStreams were dropped before worker launch. Forecast threshold used C/K rather than C/(K-1). Bytes are retained unchanged, not relabeled as compliant seed-separated measurements."
+    },
+    {
+      "original_path": "analysis/evidence_history.json",
+      "sha256": "32dcdd7a2a01688f4d10c95c5f3590356af96b26503f3b32333b941372aa6712",
+      "archived_path": "analysis/history/fix1-evidence_history-32dcdd7a2a01.json",
+      "validity": "Superseded before Task6 review fix1. Timings used coupled data/model initialization; resolved SeedStreams were dropped before worker launch. Forecast threshold used C/K rather than C/(K-1). Bytes are retained unchanged, not relabeled as compliant seed-separated measurements."
+    },
+    {
+      "original_path": "analysis/README.md",
+      "sha256": "2e6b5100d97868a8e59dda5d5e1822d505b1246a76ac95117b0e1ecafa628f3d",
+      "archived_path": "analysis/history/fix1-README-2e6b5100d978.md",
+      "validity": "Superseded before Task6 review fix1. Timings used coupled data/model initialization; resolved SeedStreams were dropped before worker launch. Forecast threshold used C/K rather than C/(K-1). Bytes are retained unchanged, not relabeled as compliant seed-separated measurements."
+    },
+    {
+      "original_path": "tests/test_bench_accounting.py",
+      "sha256": "83c112ad2c890ea4ab8df8cbc46d9b8c62fab757f56415a1d7350ebeaa274ef8",
+      "archived_path": "analysis/history/fix1-test_bench_accounting-83c112ad2c89.py",
+      "validity": "Superseded before Task6 review fix1. Timings used coupled data/model initialization; resolved SeedStreams were dropped before worker launch. Forecast threshold used C/K rather than C/(K-1). Bytes are retained unchanged, not relabeled as compliant seed-separated measurements."
     }
   ]
 }
