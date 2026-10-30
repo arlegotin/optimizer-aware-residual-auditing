@@ -171,3 +171,55 @@ self-review are in `.superpowers/sdd/2026-10-30-oar-implementation/task-3-report
 dependent experiment authorization was written. Existing dataset and workload
 blocks remain in force. Standard `.DS_Store` exclusion was added while
 preserving the local Finder file's bytes.
+
+## 2026-10-30 — Task 4: independent Gaussian audits and durable spending
+
+Implemented CPU FP64 log-domain confidence roots, scaled residual reductions and
+margin decisions that preserve the raw numerical allowance in inner-product
+units. Invalid/unrepresentable roots, malformed sketches, nonfinite totals and
+unresolved/mismatched calibration fail closed. `NumericalPolicy` remains
+**unresolved by default**: tiny Task 3 errors do not determine a shape-specific
+allowance, and no production coefficient was invented.
+
+`AuditJournal` durably appends and fsyncs per-layer allocations before exposing
+reservations/probes, persists checkpoint floors, takes the monotone maximum on
+resume and never refunds rejected, zero or interrupted tests. Locked writers,
+strict versioned readers and a SHA-256 record chain reject malformed/truncated
+evidence. Reopened instances cannot draw old reservations; retry requires a new
+allocation. Resume callers use `require_existing=True` even at checkpoint zero;
+a missing ledger cannot be recreated from a stale checkpoint. Positive
+checkpoint counters always require an existing journal. Candidate metadata checks enforce past-only construction, no use of
+any current-step probes, frozen rank/version and next-step-only changes. Real
+online lifecycle integration remains Task 12.
+
+Actual Torch 2.15 CPU normal generators repeated probes for seeds separated by
+`2**32`. The audit therefore uses the full persisted seed with a versioned
+**NumPy PCG64** stream, domain-separated by the durable run identity and audit
+label, and checks the NumPy version on resume. FP32/FP64 arrays are created on
+CPU before explicit device transfer; model RNG streams remain untouched.
+
+Verification included observed TDD failures for missing modules, subnormal
+allocation rounding, invalid calibration contexts, high-bit seed reuse and
+cross-layer current-probe dependence. A real subprocess exits during reservation
+fsync; recovery consumes its complete appended test. The final fresh-process
+full suite with `PYTORCH_ENABLE_MPS_FALLBACK=0` passed **211 tests in 6.03s** on
+actual CPU/MPS. [Numerical evidence](../analysis/audit_confidence.json) records
+scalar residuals, Task 3 error envelopes, high-bit seed behavior and 20,000
+replicates per rank-one/flat/decaying spectrum (`q=8`, `delta=0.1`, seed 8401),
+with failure fractions 0.02425 / 0 / 0.0024 and Wilson intervals. Those finite
+simulations make no tiny-probability certification claim.
+
+A cancellation stress case on both CPU and MPS produced a zero FP32 residual
+while the CPU FP64 reference on stored inputs was nonzero, including absolute
+errors up to `1e8` under the tested scaling. This is diagnostic evidence for
+keeping calibration unresolved, not a fitted universal allowance. The journal
+assumes a durable local POSIX filesystem and independent preservation from
+training rollback; it detects partial/edited records, not malicious whole-file
+rollback. Full chain validation is currently linear in ledger size and must be
+charged in later timing.
+
+**Scientific status:** Task 4 implementation is complete; **WP01 remains open
+for Task 5** (functional optimizer preview/commit). Shape-specific numerical
+calibration remains Tasks 6/14. No WP01 pass, training, performance or online
+learning claim was written. Detailed TDD commands/output, interfaces and
+self-review: `.superpowers/sdd/2026-10-30-oar-implementation/task-4-report.md`.

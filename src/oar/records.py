@@ -90,6 +90,39 @@ class LayerAudit:
 
 
 @dataclass(frozen=True)
+class AuditReservation:
+    """A spent test allocation, durably recorded before probes are available."""
+
+    index: int
+    layer_id: LayerId
+    logical_step: int
+    delta: float
+    probe_id: str
+    seed: int
+    stream: str = "oar.audit.pcg64.gaussian.v1"
+    schema_version: int = field(default=1, init=False)
+
+
+@dataclass(frozen=True)
+class AuditCandidate:
+    """Pre-probe metadata; callers must truthfully record construction inputs.
+
+    These declarations check provenance boundaries, not statistical independence
+    of arbitrary caller code. Prior audit observations may affect later steps.
+    Current probes must never enter construction of this candidate.
+    """
+
+    layer_id: LayerId
+    logical_step: int
+    rank: int
+    basis_version: int
+    basis_source_step: int
+    construction_stream: str = "construction"
+    probe_ids_used: tuple[str, ...] = ()
+    schema_version: int = field(default=1, init=False)
+
+
+@dataclass(frozen=True)
 class AdamWParamState:
     step: int
     exp_avg: Tensor
@@ -163,7 +196,7 @@ class GateRecord:
 
 
 _RECORDS = {cls.__name__: cls for cls in (
-    ReplayableBatch, StepContext, LayerAudit, AdamWParamState, AdamWGroup,
+    ReplayableBatch, StepContext, LayerAudit, AuditReservation, AuditCandidate, AdamWParamState, AdamWGroup,
     PendingUpdate, Decision, StepRecord, GateRecord,
 )}
 
