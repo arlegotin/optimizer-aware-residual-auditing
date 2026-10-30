@@ -449,3 +449,16 @@ in1.51s. Final fallback0 actual CPU/MPS suite **286 passed in6.08s**.
 WP02 stop/oracle-preparation outcome is unchanged; NumericalPolicy remains
 unresolved and no online/training/learning claim follows. Exact commands,
 current data and historical limitations append to the same Task6 report.
+
+## 2026-10-31 — Task 11 bounded structural-oracle preparation
+
+Added strict synthetic exploratory config, hashed narrow scope amendment and
+oracle-only permission check bound to genuine WP02 stop/candidate-potential
+and WP01 correctness evidence. Ordinary WP03/WP04 stay blocked. Durable
+`audit-checkpoints --config` uses the measured residual block and copied native
+AdamW history; no general trainer/controller or corpus use. Fourteen new oracle
+correctness tests include independent original-gradient/native trajectory
+references, leakage/RNG isolation, guard/tamper and unresolved rare-event claims.
+Initial actual fallback0 CPU/MPS full suite: **300 passed in6.93s**. Next permitted
+action is the bounded development-only learning-rate pilot before query study;
+current full online cost stays negative and NumericalPolicy unresolved.
