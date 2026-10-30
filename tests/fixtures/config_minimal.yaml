@@ -1,0 +1,13 @@
+schema_version: 1
+phase: exploratory
+method: dense_adamw
+device: cpu
+seeds:
+  construction: 11
+  audit: 22
+  data: 33
+  model: 44
+paths:
+  data: data
+  runs: runs
+  decisions: decisions
