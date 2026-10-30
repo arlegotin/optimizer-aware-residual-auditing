@@ -98,7 +98,11 @@ def parse_oracle_config(payload) -> OracleConfig:
 
 
 def load_oracle_config(path: Path) -> OracleConfig:
-    return parse_oracle_config(yaml.load(Path(path).read_text(), Loader=_UniqueLoader))
+    try:
+        payload = yaml.load(Path(path).read_text(), Loader=_UniqueLoader)
+    except yaml.YAMLError as exc:
+        raise ValueError('invalid YAML configuration') from exc
+    return parse_oracle_config(payload)
 
 
 def sha(path): return hashlib.sha256(Path(path).read_bytes()).hexdigest()

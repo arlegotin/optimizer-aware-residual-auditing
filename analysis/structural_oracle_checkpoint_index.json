@@ -1,0 +1,253 @@
+{
+  "checkpoints": [
+    {
+      "bytes": 26512815,
+      "condition": "low_rank",
+      "path": "checkpoints/structural_oracle/low_rank-1101/8.pt",
+      "provenance": "native_committed_state_and_actual_pre_update_bases",
+      "seed": 1101,
+      "sha256": "db7f163aa8d74d8a9ac88894035c41cdc3721845d2866e2de81ee6f12588166e",
+      "sources": [
+        4,
+        7
+      ],
+      "step": 8
+    },
+    {
+      "bytes": 27168693,
+      "condition": "low_rank",
+      "path": "checkpoints/structural_oracle/low_rank-1101/32.pt",
+      "provenance": "native_committed_state_and_actual_pre_update_bases",
+      "seed": 1101,
+      "sha256": "f1f43930c5aaf1a481764b43fc60d7d85b9c5ed2e91a31fa5fe1218a98a51c6a",
+      "sources": [
+        16,
+        28,
+        31
+      ],
+      "step": 32
+    },
+    {
+      "bytes": 27168781,
+      "condition": "low_rank",
+      "path": "checkpoints/structural_oracle/low_rank-1101/128.pt",
+      "provenance": "native_committed_state_and_actual_pre_update_bases",
+      "seed": 1101,
+      "sha256": "3952fec5a6eb85eab7c11d7c04073865bdc8509c5d8c2c70eaee48a1c47c1f5e",
+      "sources": [
+        112,
+        124,
+        127
+      ],
+      "step": 128
+    },
+    {
+      "bytes": 26512815,
+      "condition": "low_rank",
+      "path": "checkpoints/structural_oracle/low_rank-2202/8.pt",
+      "provenance": "native_committed_state_and_actual_pre_update_bases",
+      "seed": 2202,
+      "sha256": "8eded9ca305a85a2c278d42f941622af8bbc038c39397fc71e573e62e71c1adb",
+      "sources": [
+        4,
+        7
+      ],
+      "step": 8
+    },
+    {
+      "bytes": 27168693,
+      "condition": "low_rank",
+      "path": "checkpoints/structural_oracle/low_rank-2202/32.pt",
+      "provenance": "native_committed_state_and_actual_pre_update_bases",
+      "seed": 2202,
+      "sha256": "4e82d451662c6a26f8574fef117fa32107a40324ead20c097a54c8f0fd1d489e",
+      "sources": [
+        16,
+        28,
+        31
+      ],
+      "step": 32
+    },
+    {
+      "bytes": 27168781,
+      "condition": "low_rank",
+      "path": "checkpoints/structural_oracle/low_rank-2202/128.pt",
+      "provenance": "native_committed_state_and_actual_pre_update_bases",
+      "seed": 2202,
+      "sha256": "84c05e8cefc7191dca50fba8d48f7c38e7105b3c01fbf7d8a77e84fc6df25572",
+      "sources": [
+        112,
+        124,
+        127
+      ],
+      "step": 128
+    },
+    {
+      "bytes": 26512815,
+      "condition": "full_rank",
+      "path": "checkpoints/structural_oracle/full_rank-1101/8.pt",
+      "provenance": "native_committed_state_and_actual_pre_update_bases",
+      "seed": 1101,
+      "sha256": "3d7e343812f2308728d659750da5b152de6831cd293ecc36cd58d1e4c573eb4e",
+      "sources": [
+        4,
+        7
+      ],
+      "step": 8
+    },
+    {
+      "bytes": 27168693,
+      "condition": "full_rank",
+      "path": "checkpoints/structural_oracle/full_rank-1101/32.pt",
+      "provenance": "native_committed_state_and_actual_pre_update_bases",
+      "seed": 1101,
+      "sha256": "936194d2bd230e77cd1fbad4134acb874c06210b7a94567dbe5351fbe51fe753",
+      "sources": [
+        16,
+        28,
+        31
+      ],
+      "step": 32
+    },
+    {
+      "bytes": 27168781,
+      "condition": "full_rank",
+      "path": "checkpoints/structural_oracle/full_rank-1101/128.pt",
+      "provenance": "native_committed_state_and_actual_pre_update_bases",
+      "seed": 1101,
+      "sha256": "9295db68045ad58f1d5028ab4d36febc86d0bbe2ffe8004167bc142eb47bbf82",
+      "sources": [
+        112,
+        124,
+        127
+      ],
+      "step": 128
+    },
+    {
+      "bytes": 26512815,
+      "condition": "full_rank",
+      "path": "checkpoints/structural_oracle/full_rank-2202/8.pt",
+      "provenance": "native_committed_state_and_actual_pre_update_bases",
+      "seed": 2202,
+      "sha256": "dab1acbfedd9d690f362f4f944dd605cbbdcf98a09cffc90eab95aa5f0958fd4",
+      "sources": [
+        4,
+        7
+      ],
+      "step": 8
+    },
+    {
+      "bytes": 27168693,
+      "condition": "full_rank",
+      "path": "checkpoints/structural_oracle/full_rank-2202/32.pt",
+      "provenance": "native_committed_state_and_actual_pre_update_bases",
+      "seed": 2202,
+      "sha256": "4fa670c3b10348984e4834e05782ca441fd913921135572a57bedcd89163e8ca",
+      "sources": [
+        16,
+        28,
+        31
+      ],
+      "step": 32
+    },
+    {
+      "bytes": 27168781,
+      "condition": "full_rank",
+      "path": "checkpoints/structural_oracle/full_rank-2202/128.pt",
+      "provenance": "native_committed_state_and_actual_pre_update_bases",
+      "seed": 2202,
+      "sha256": "e905060510c657369c20e3aa822d1fe881dc489e4eae71681ccda198fe901803",
+      "sources": [
+        112,
+        124,
+        127
+      ],
+      "step": 128
+    },
+    {
+      "bytes": 26512815,
+      "condition": "direction_shift",
+      "path": "checkpoints/structural_oracle/direction_shift-1101/8.pt",
+      "provenance": "native_committed_state_and_actual_pre_update_bases",
+      "seed": 1101,
+      "sha256": "07feb06b6166605e8c4ae03b59002f4420302d42a1c271ae9cc9a08f514fc3f0",
+      "sources": [
+        4,
+        7
+      ],
+      "step": 8
+    },
+    {
+      "bytes": 27168693,
+      "condition": "direction_shift",
+      "path": "checkpoints/structural_oracle/direction_shift-1101/32.pt",
+      "provenance": "native_committed_state_and_actual_pre_update_bases",
+      "seed": 1101,
+      "sha256": "d734db1ef9cc44c97288dea07299ba9f1db4d2c8017f37181b7a7fc7bf623d60",
+      "sources": [
+        16,
+        28,
+        31
+      ],
+      "step": 32
+    },
+    {
+      "bytes": 27168781,
+      "condition": "direction_shift",
+      "path": "checkpoints/structural_oracle/direction_shift-1101/128.pt",
+      "provenance": "native_committed_state_and_actual_pre_update_bases",
+      "seed": 1101,
+      "sha256": "7c001230a365d3306d35bfa14d2baeea57e2a0c04010685d40021df012cd42de",
+      "sources": [
+        112,
+        124,
+        127
+      ],
+      "step": 128
+    },
+    {
+      "bytes": 26512815,
+      "condition": "direction_shift",
+      "path": "checkpoints/structural_oracle/direction_shift-2202/8.pt",
+      "provenance": "native_committed_state_and_actual_pre_update_bases",
+      "seed": 2202,
+      "sha256": "2c299ea8d59816487fd821eb1204762f463ccb2ffb4579ac41265e5235a77901",
+      "sources": [
+        4,
+        7
+      ],
+      "step": 8
+    },
+    {
+      "bytes": 27168693,
+      "condition": "direction_shift",
+      "path": "checkpoints/structural_oracle/direction_shift-2202/32.pt",
+      "provenance": "native_committed_state_and_actual_pre_update_bases",
+      "seed": 2202,
+      "sha256": "1570deceb1f40cd5701b121653a9a63b223eea05f81ed145f2ab57331eb2cffc",
+      "sources": [
+        16,
+        28,
+        31
+      ],
+      "step": 32
+    },
+    {
+      "bytes": 27168781,
+      "condition": "direction_shift",
+      "path": "checkpoints/structural_oracle/direction_shift-2202/128.pt",
+      "provenance": "native_committed_state_and_actual_pre_update_bases",
+      "seed": 2202,
+      "sha256": "f4a658853547981956afea9aa10e100048e0c78606a0f3de7ac581709904c942",
+      "sources": [
+        112,
+        124,
+        127
+      ],
+      "step": 128
+    }
+  ],
+  "raw_tensors_ignored": true,
+  "regeneration": "PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python -m oar.cli audit-checkpoints --config configs/structural_oracle.yaml",
+  "schema_version": 1
+}

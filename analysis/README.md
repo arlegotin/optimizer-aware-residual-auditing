@@ -55,3 +55,79 @@ derived artifacts use this corrected arithmetic. Numerical calibration remains
 unresolved and was not rerun by this review fix.
 
 Current fix1 main/wide source hashes match the current measured implementation. Older source-snapshot/input-only delta notes above describe the superseded pre-review studies, not the rerun with separated seed streams.
+
+## Bounded synthetic structural oracle (Task 11)
+
+The public command is:
+
+```sh
+PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python -m oar.cli audit-checkpoints --config configs/structural_oracle.yaml
+.venv/bin/python analysis/summarize_structural_oracle.py
+```
+
+Run MPS work exclusively; the command launches a fresh fallback0 worker and
+validates the latest hashed synthetic-only amendment plus genuine WP02 stop /
+qualified candidate-potential artifacts and passed WP00/WP01 numerical evidence.
+Ordinary WP03/WP04 remain blocked; there is no general training command.
+The pilot was run at commit `a100d5c` with that revision's stage-pilot config.
+The full query study ran at `2e89e742131eb5eebaeb7a028d8e8f2e4fc50e07` with
+locked LR.003 and shift120 before inspecting query outcomes. The later YAML
+syntax-error normalization changes no valid-config experiment operation.
+
+`structural_oracle_audit.jsonl` retains all792 layer rows: paired weight rows
+share one simultaneous proposal. `structural_oracle_summary.json` contains the
+30 native-learning curve observations, all six condition/seed attempts,
+18-checkpoint raw artifact index, tuning-only policies and per-seed/stage
+summaries. Postprocessing produces `structural_oracle_learning.csv`, a separate
+small `structural_oracle_checkpoint_index.json`, and
+`structural_oracle_aggregate.json` with the full unfitted acceptance envelope,
+per-condition/seed/stage/rank/age strata and exact algebraic margin ranges.
+`structural_oracle_schema.json` declares fields/units. JSONL replaces broad
+Task11's Parquet within this explicit narrow amendment.
+
+All losses/deltas are **mean squared error per output element**. Counts are
+synthetic observations. Model is the qualified two-linear GELU residual block,
+n2048/di512/do2048. Gaussian inputs and independent teacher/student initializers
+come from deterministic CPU generators; domain seeds derive by SHA256 of
+`[seed, domain, *ids]`, with the first8 bytes modulo `2**63-1`. See
+`domain_seed` and `replay_synthetic` in `src/oar/oracle.py` for complete descriptor
+reconstruction, including teacher low-rank and query/development IDs. Stored
+`rng_domains` are base-domain anchors; per-step/index/name seeds derive from
+the same durable rule. No learner stream advances during diagnostics.
+
+Past bases use actual pre-update, pre-clipping source gradients; current exact
+SVD is separately labeled paid oracle. Native default AdamW parameters/moments
+continue across the teacher shift. Tensor checkpoints (~485MB total) are ignored
+and regenerate from the command; the small versioned index retains byte hashes
+and exact source steps. Counterfactuals never alter the native history.
+
+The score uses `a = sum(g_hat * actual_displacement)` across all parameters.
+`ordinary_bound = sum(||G-G_hat|| * ||d||)` and
+`complement_bound = sum(||G-G_hat|| * ||d-U(U.T d)||)` over two weight matrices.
+An algebraic margin at tau is `tau*a-bound`, with positive `a` required.
+The relative score is `sqrt(sum ||G-G_hat||^2 / sum ||G_hat||^2)` over weights.
+Probe q8/delta.01 scores are offline diagnostics, with no run-wide allocation or
+validated numerical allowance. NumericalPolicy remains unresolved.
+
+`oracle_cost_s` repeats on two layer rows; shared query and exact-SVD times also
+repeat across proposals. Do not sum these fields as a total. The worker's
+60.959s clock includes initialization, native histories, basis construction,
+explicit CPU FP64 SVD/transfers, previews, scoring, row/schema output and policy
+summaries up to its final summary write. Process import/startup and the last
+small summary serialization tail are outside that clock; it is not a fully
+inclusive invocation benchmark. The pilot clock is26.046s on its documented
+older root-input boundary. Postprocessing is separate CPU work. Endpoint RSS /
+Metal snapshots overlap and are not peaks. Existing matched-rank16 costs are
+historical benchmark references; no runtime evidence is invented for ranks4/64
+or for the current-SVD construction oracle, and none yields deployable savings.
+
+All144 past evaluation proposals lose development progress relative to dense;
+ordinary/complement bounds accept none at every declared tau. Fitted policies
+reject all and match a constant exact-fallback control. Scores have nontrivial
+but correlated descriptive AUCs; this is not proof of no geometric information.
+Current-SVD/r64 complement has only two algebraic accepts at tau.75, both still
+worse than dense. Lost-progress AUC is unresolved because its label is constant.
+Early full-rank/shift stages share inputs and trajectories, and dense updates
+also harm the six stage8 evaluation queries. No inference from proposal counts
+to independent-run prevalence, real-task quality or online utility follows.
+Keep WP02's online stop; the next permitted action after review is WP09 synthesis.

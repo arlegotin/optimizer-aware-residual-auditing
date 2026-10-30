@@ -263,3 +263,31 @@ def test_constant_and_unconditional_projection_controls_share_proposals():
     summary=o.summarize_policies(rows,(.25,.5,.75),(.1,.5,1.))
     assert summary['evaluation']['always_project']['accepted']==1
     assert summary['evaluation']['constant']['accepted']==0
+
+
+def test_descriptive_postprocessor_deduplicates_layer_rows_and_keeps_dense_harm():
+    import runpy
+    helpers=runpy.run_path('analysis/summarize_structural_oracle.py')
+    base=dict(schema_version=1,proposal_id='p',split='evaluation',condition='full_rank',seed=1,
+        query_step=8,basis_kind='past',rank=4,basis_age=1,query_id='q',development_id='d',
+        proposal_true_alignment=-1.,same_batch_delta=.2,development_delta=.3,
+        dense_same_batch_delta=.1,dense_development_delta=.1,lost_progress=.2,
+        energy=.5,proposal_raw_alignment=1.,proposal_ordinary_bound=.5,
+        proposal_complement_bound=.2,proposal_probe_complement_bound=.8,
+        oracle_cost_s=2.,query_shared_cost_s=3.,current_svd_cost_s=1.)
+    rows=[dict(base,layer=layer) for layer in ('w1','w2')]
+    result=helpers['aggregate_rows'](rows,(.25,.5,.75))
+    assert result['evaluation_proposals']==1 and result['evaluation_layer_rows']==2
+    assert result['bound_distributions']['past']['complement_over_a']['median']==pytest.approx(.2)
+    assert result['acceptance_envelope']['past']['complement']['0.25']['accepted']==1
+    assert result['acceptance_envelope']['past']['ordinary']['0.25']['accepted']==0
+    item=result['strata'][0]
+    assert item['first_order_harm']==1 and item['dense_development_harm']==1
+    assert item['ordinary_margin_ranges']['0.25']==[-.25,-.25]
+    assert item['complement_margin_ranges']['0.25']==pytest.approx([.05,.05])
+
+
+def test_cli_rejects_syntactically_invalid_oracle_yaml(tmp_path):
+    from oar.cli import main
+    path=tmp_path/'bad.yaml';path.write_text('shape: [\n')
+    assert main(['audit-checkpoints','--config',str(path)])==2

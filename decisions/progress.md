@@ -475,3 +475,42 @@ without adding cases so q128 age16 straddles shift; native moments continuous.
 First-query measured forecast controls conservative600s engineering ceiling;
 partial coverage becomes incomplete/inconclusive. Actual fallback0 full suite:
 **303 passed in6.85s**. No online gate reopens; next is bounded query collection.
+
+### Task 11 bounded result — online stop retained
+
+The committed study source2e89e74 ran fresh/exclusive actual MPS fallback0 and
+completed all792 layer rows,18 checkpoints and six learnable synthetic histories
+in60.959s on its documented worker boundary (startup/final summary tail outside;
+not an invocation throughput benchmark). First-checkpoint forecast95.30s fit the
+conservative600s ceiling.30 curve points and every attempt retained; checkpoint
+index binds~485MB of ignored regenerable tensors. All loss units MSE/output
+element, all counts synthetic observations; no language or real-task claim.
+
+Past proposals carry some signal, but all144 evaluation proposals lose
+independent-development progress relative to native dense. Exact ordinary and
+complement bounds accept0/144 at *every* tau.25/.5/.75, independent of fitting.
+Complement median B/Bordinary=.854 but minimum B/a=.991, still outside grid.
+Nontrivial correlated score AUCs remain descriptive (same-batch.8805 complement
+vs.8750 ordinary); no claim that geometric information is absent. Paid exact
+current-SVD/r64 has just two harmless tau.75 accepts, both still worse than
+dense. Fitted complement/ordinary/relative reject all, matching a constant exact
+fallback; fixed rank64/age16 accepts12 and is slightly worse. Full unfitted
+acceptance envelope and condition/seed/stage/rank/age strata preserved.
+Lost-progress AUC unresolved because every label is positive. Dense itself harms
+stage8 queries; early full/shift stages duplicate history, so proposal counts
+are not independent runs or prevalence estimates.
+
+No ordinary WP03/WP04 pass, controller/trainer/data ingestion, NumericalPolicy
+resolution or online reopening. WP02 stop unchanged; broad WP04 inconclusive.
+Next permitted action after Task11 review: **WP09 synthesis**. No new cost remedy,
+shape/grid/optimization or collection authorized by these synthetic results.
+Full protocol/TDD/provenance/timing/interpretation/self-review is in
+`.superpowers/sdd/2026-10-30-oar-implementation/task-11-report.md`;
+durable public and postprocessor commands are in `analysis/README.md`.
+
+Final Task11 verification: actual fallback0 CPU/MPS full suite **305 passed
+in6.71s**, no failures/skips;19 bounded oracle/derived-analysis tests.
+Independent raw-row rank-sum AUC checks reproduce stored pairwise AUCs;
+all18 raw-checkpoint byte hashes and792 finite unit/temporal-labeled rows pass
+independent checks. Final derived-only postprocessor invocation.0584s.
+WP04 append is inconclusive for broad unmet requirements; WP02 remains stop.
