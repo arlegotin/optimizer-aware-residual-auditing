@@ -8,6 +8,7 @@ import platform
 import re
 import shutil
 import subprocess
+import sys
 import time
 
 import psutil
@@ -75,16 +76,37 @@ def _backend_state():
 
 
 def check_operations(device: str) -> list[dict[str, object]]:
+    """Check MPS in a fresh worker; its fallback policy precedes any Torch import."""
+    if device not in ("cpu", "mps"):
+        raise ValueError("device must be cpu or mps")
+    if device == "cpu":
+        return _check_operations(device)
+    blocked = {"name": "fallback_policy", "critical": True, "status": "blocked"}
+    if os.environ.get("PYTORCH_ENABLE_MPS_FALLBACK", "0") != "0":
+        return [{**blocked, "reason": "request MPS checks with PYTORCH_ENABLE_MPS_FALLBACK=0"}]
+    try:
+        worker = subprocess.run(
+            [sys.executable, "-m", "oar.hardware", "--mps-worker"],
+            env={**os.environ, "PYTORCH_ENABLE_MPS_FALLBACK": "0"},
+            capture_output=True, text=True, timeout=60, check=False,
+        )
+        if worker.returncode != 0:
+            return [{**blocked, "reason": "isolated MPS worker failed", "worker_returncode": worker.returncode}]
+        payload = json.loads(worker.stdout)
+        if payload["fallback_environment_before_torch_import"] != "0" or payload["torch_preimported"]:
+            return [{**blocked, "reason": "isolated worker fallback policy unverified"}]
+        return [{**row, "execution_isolation": "fresh_process",
+                 "fallback_environment_before_torch_import": "0"} for row in payload["rows"]]
+    except (OSError, subprocess.TimeoutExpired, ValueError, KeyError, TypeError) as exc:
+        return [{**blocked, "reason": "isolated MPS worker unavailable or invalid", "error_type": type(exc).__name__}]
+
+
+def _check_operations(device: str) -> list[dict[str, object]]:
     """Run tiny FP32 checks; CPU FP64 decomposition is explicit and separately charged.
 
     Unsupported operations publish only exception classes. Shape-specific capability,
     custom OAR autograd and replay/checkpoint equivalence belong to later gates.
     """
-    if device not in ("cpu", "mps"):
-        raise ValueError("device must be cpu or mps")
-    if device == "mps" and os.environ.get("PYTORCH_ENABLE_MPS_FALLBACK", "0") != "0":
-        return [{"name": "fallback_policy", "critical": True, "status": "blocked",
-                 "reason": "start a fresh process with PYTORCH_ENABLE_MPS_FALLBACK=0"}]
     import torch
     import torch.nn.functional as F
     rows = []
@@ -242,14 +264,16 @@ def discover_environment(device: str = "auto") -> dict[str, object]:
     hardware = redact_hardware(_collect_hardware())
     backend = _backend_state()
     fallback_value = os.environ.get("PYTORCH_ENABLE_MPS_FALLBACK")
-    fallback_disabled = fallback_value in (None, "0")
     cpu = check_operations("cpu")
     mps = check_operations("mps") if backend["available"] and device != "cpu" else []
+    fallback_verified = bool(mps) and all(
+        row.get("execution_isolation") == "fresh_process"
+        and row.get("fallback_environment_before_torch_import") == "0" for row in mps)
     def passed(rows):
         critical = [row for row in rows if row["critical"]]
         return bool(critical) and all(row["status"] == "pass" for row in critical)
     native = hardware["architecture"] == hardware["python_architecture"] == "arm64"
-    gpu_eligible = native and bool(backend["available"]) and fallback_disabled and passed(cpu) and passed(mps)
+    gpu_eligible = native and bool(backend["available"]) and fallback_verified and passed(cpu) and passed(mps)
     packages = {}
     for dist in metadata.distributions():
         name = dist.metadata["Name"]
@@ -260,11 +284,34 @@ def discover_environment(device: str = "auto") -> dict[str, object]:
             "packages": dict(sorted(packages.items())),
             "accelerator": {**backend, "absence_is_hardware_limitation": False,
                             "visibility_note": "unavailable may reflect process restrictions; verify outside sandbox before hardware conclusions"},
-            "fallback": {"environment_value": fallback_value, "enabled": not fallback_disabled,
-                         "policy": "disabled_required_for_critical_paths"},
+            "fallback": {"environment_value": fallback_value,
+                         "environment_value_is_effective_policy": False,
+                         "enabled": False if fallback_verified else None,
+                         "verified_for_mps_checks": fallback_verified,
+                         "policy": "fresh_worker_environment_0_before_torch_import"},
             "native_arm64": native, "operations": {"cpu": cpu, "mps": mps},
             "cpu_reference_eligible": passed(cpu), "gpu_claim_eligible": gpu_eligible,
             "scope": "exploratory_gpu" if gpu_eligible else "correctness_only" if passed(cpu) else "blocked",
             "capability_scope": "tiny shapes only; no OAR, checkpoint, shape-headroom or speedup qualification",
             "memory": {"available_bytes": psutil.virtual_memory().available, "process_rss_bytes": psutil.Process().memory_info().rss},
             "discovery_wall_s": time.perf_counter() - start}
+
+
+def _mps_worker():
+    # The parent supplies this variable before spawning the interpreter. Refuse
+    # unexpected startup imports instead of inferring registered policy from text.
+    preimported = "torch" in sys.modules
+    fallback = os.environ.get("PYTORCH_ENABLE_MPS_FALLBACK")
+    if preimported or fallback != "0":
+        raise SystemExit(2)
+    rows = (_check_operations("mps") if _backend_state()["available"] else
+            [{"name": "mps_availability", "critical": True, "status": "blocked",
+              "reason": "MPS unavailable in isolated worker"}])
+    print(json.dumps({"rows": rows, "torch_preimported": preimported,
+                      "fallback_environment_before_torch_import": fallback}, allow_nan=False))
+
+
+if __name__ == "__main__":
+    if sys.argv[1:] != ["--mps-worker"]:
+        raise SystemExit(2)
+    _mps_worker()

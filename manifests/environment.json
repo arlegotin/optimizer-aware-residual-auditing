@@ -7,17 +7,19 @@
   },
   "capability_scope": "tiny shapes only; no OAR, checkpoint, shape-headroom or speedup qualification",
   "cpu_reference_eligible": true,
-  "discovery_wall_s": 1.42233920795843,
+  "discovery_wall_s": 3.192973457975313,
   "fallback": {
     "enabled": false,
     "environment_value": "0",
-    "policy": "disabled_required_for_critical_paths"
+    "environment_value_is_effective_policy": false,
+    "policy": "fresh_worker_environment_0_before_torch_import",
+    "verified_for_mps_checks": true
   },
   "gpu_claim_eligible": true,
   "hardware": {
     "architecture": "arm64",
     "chip": "Apple M3 Max",
-    "disk_free_bytes": 75916759040,
+    "disk_free_bytes": 75798339584,
     "gpu_models": [
       "Apple M3 Max"
     ],
@@ -33,11 +35,11 @@
     "vm_stat_available": true
   },
   "memory": {
-    "available_bytes": 9721102336,
-    "process_rss_bytes": 468762624
+    "available_bytes": 9662382080,
+    "process_rss_bytes": 312033280
   },
   "native_arm64": true,
-  "observed_at_utc": "2026-10-30T21:12:43.389259+00:00",
+  "observed_at_utc": "2026-10-30T21:22:25.620296+00:00",
   "operations": {
     "cpu": [
       {
@@ -51,7 +53,7 @@
         "name": "gemm",
         "noncontiguous": true,
         "status": "pass",
-        "wall_s": 0.2347592920414172
+        "wall_s": 0.29276162502355874
       },
       {
         "critical": true,
@@ -59,7 +61,7 @@
         "dtype": "float32",
         "name": "autograd",
         "status": "pass",
-        "wall_s": 0.0008973749936558306
+        "wall_s": 0.0013434580178000033
       },
       {
         "critical": true,
@@ -69,19 +71,19 @@
         "fused": false,
         "name": "adamw",
         "status": "pass",
-        "wall_s": 0.23260979098267853
+        "wall_s": 0.27498575003119186
       },
       {
         "critical": true,
         "device": "cpu",
         "dtype": "float32",
         "generation_device": "cpu",
-        "generation_s": 2.9499991796910763e-05,
+        "generation_s": 2.762500662356615e-05,
         "independent_streams": true,
         "name": "cpu_gaussian_transfer",
         "status": "pass",
-        "transfer_s": 2.333021257072687e-06,
-        "wall_s": 8.13750084489584e-05
+        "transfer_s": 1.9170111045241356e-06,
+        "wall_s": 7.895799353718758e-05
       },
       {
         "critical": true,
@@ -90,7 +92,7 @@
         "name": "model_rng_restore",
         "replayed_equal": true,
         "status": "pass",
-        "wall_s": 2.675002906471491e-05
+        "wall_s": 2.6374997105449438e-05
       },
       {
         "critical": true,
@@ -99,33 +101,33 @@
         "execution_device": "cpu",
         "name": "reference_fp64",
         "status": "pass",
-        "wall_s": 6.562500493600965e-05
+        "wall_s": 6.366596790030599e-05
       },
       {
         "critical": false,
         "device": "cpu",
         "dtype": "float32",
         "execution_device": "cpu",
-        "input_transfer_s": 1.333013642579317e-06,
+        "input_transfer_s": 1.3750395737588406e-06,
         "name": "qr",
         "policy": "native",
-        "return_transfer_s": 2.208980731666088e-06,
+        "return_transfer_s": 2.374988980591297e-06,
         "status": "pass",
-        "transfer_s": 3.541994374245405e-06,
-        "wall_s": 0.0003000410506501794
+        "transfer_s": 3.7500285543501377e-06,
+        "wall_s": 0.0002994579845108092
       },
       {
         "critical": false,
         "device": "cpu",
         "dtype": "float32",
         "execution_device": "cpu",
-        "input_transfer_s": 1.04197533801198e-06,
+        "input_transfer_s": 1.0830117389559746e-06,
         "name": "svd",
         "policy": "native",
-        "return_transfer_s": 1.5830155462026596e-06,
+        "return_transfer_s": 1.4159595593810081e-06,
         "status": "pass",
-        "transfer_s": 2.6249908842146397e-06,
-        "wall_s": 0.0001051250146701932
+        "transfer_s": 2.4989712983369827e-06,
+        "wall_s": 0.00011141604045405984
       },
       {
         "critical": true,
@@ -133,7 +135,7 @@
         "dtype": "float32",
         "name": "norm_gelu_masked_loss_backward",
         "status": "pass",
-        "wall_s": 0.0005104579613544047
+        "wall_s": 0.0006362079875543714
       },
       {
         "critical": true,
@@ -141,7 +143,7 @@
         "dtype": "float32",
         "name": "attention_backward",
         "status": "pass",
-        "wall_s": 0.00019916699966415763
+        "wall_s": 0.0003761249827221036
       },
       {
         "critical": false,
@@ -149,7 +151,7 @@
         "dtype": "float32",
         "name": "gather_scatter_sampling",
         "status": "pass",
-        "wall_s": 0.00011566700413823128
+        "wall_s": 0.00015808397438377142
       }
     ],
     "mps": [
@@ -157,6 +159,8 @@
         "critical": true,
         "device": "mps",
         "dtype": "float32",
+        "execution_isolation": "fresh_process",
+        "fallback_environment_before_torch_import": "0",
         "input_shape": [
           4,
           3
@@ -164,131 +168,155 @@
         "name": "gemm",
         "noncontiguous": true,
         "status": "pass",
-        "wall_s": 0.03676329099107534
+        "wall_s": 0.33290133299306035
       },
       {
         "critical": true,
         "device": "mps",
         "dtype": "float32",
+        "execution_isolation": "fresh_process",
+        "fallback_environment_before_torch_import": "0",
         "name": "autograd",
         "status": "pass",
-        "wall_s": 0.06428083300124854
+        "wall_s": 0.07425937498919666
       },
       {
         "critical": true,
         "device": "mps",
         "dtype": "float32",
+        "execution_isolation": "fresh_process",
+        "fallback_environment_before_torch_import": "0",
         "foreach": false,
         "fused": false,
         "name": "adamw",
         "status": "pass",
-        "wall_s": 0.006398500001523644
+        "wall_s": 0.2869056250201538
       },
       {
         "critical": true,
         "device": "mps",
         "dtype": "float32",
+        "execution_isolation": "fresh_process",
+        "fallback_environment_before_torch_import": "0",
         "generation_device": "cpu",
-        "generation_s": 1.4249992091208696e-05,
+        "generation_s": 3.6874960642308e-05,
         "independent_streams": true,
         "name": "cpu_gaussian_transfer",
         "status": "pass",
-        "transfer_s": 0.00015179195906966925,
-        "wall_s": 0.0003451249795034528
+        "transfer_s": 0.0002638330333866179,
+        "wall_s": 0.0006333329947665334
       },
       {
         "critical": true,
         "device": "mps",
         "dtype": "float32",
+        "execution_isolation": "fresh_process",
+        "fallback_environment_before_torch_import": "0",
         "name": "model_rng_restore",
         "replayed_equal": true,
         "status": "pass",
-        "wall_s": 0.0003720419481396675
+        "wall_s": 0.0005480840336531401
       },
       {
         "critical": true,
         "device": "mps",
         "dtype": "float64",
         "execution_device": "cpu",
+        "execution_isolation": "fresh_process",
+        "fallback_environment_before_torch_import": "0",
         "name": "reference_fp64",
         "status": "pass",
-        "wall_s": 7.120799273252487e-05
+        "wall_s": 0.00013262499123811722
       },
       {
         "critical": false,
         "device": "mps",
         "dtype": "float32",
         "execution_device": "mps",
-        "input_transfer_s": 3.3339601941406727e-06,
+        "execution_isolation": "fresh_process",
+        "fallback_environment_before_torch_import": "0",
+        "input_transfer_s": 3.2499665394425392e-06,
         "name": "qr",
         "policy": "native",
-        "return_transfer_s": 7.2499969974160194e-06,
+        "return_transfer_s": 1.3832992408424616e-05,
         "status": "pass",
-        "transfer_s": 1.0583957191556692e-05,
-        "wall_s": 0.0043232080060988665
+        "transfer_s": 1.7082958947867155e-05,
+        "wall_s": 0.005235416989307851
       },
       {
         "critical": false,
         "device": "mps",
         "dtype": "float32",
         "execution_device": "mps",
-        "input_transfer_s": 2.8329668566584587e-06,
+        "execution_isolation": "fresh_process",
+        "fallback_environment_before_torch_import": "0",
+        "input_transfer_s": 4.708010237663984e-06,
         "name": "svd",
         "policy": "native",
-        "return_transfer_s": 3.4580007195472717e-06,
+        "return_transfer_s": 5.374953616410494e-06,
         "status": "pass",
-        "transfer_s": 6.2909675762057304e-06,
-        "wall_s": 0.001291458960622549
+        "transfer_s": 1.0082963854074478e-05,
+        "wall_s": 0.0021661670180037618
       },
       {
         "critical": true,
         "device": "mps",
         "dtype": "float64",
         "execution_device": "cpu",
-        "input_transfer_s": 0.00019591697491705418,
+        "execution_isolation": "fresh_process",
+        "fallback_environment_before_torch_import": "0",
+        "input_transfer_s": 0.00022729195188730955,
         "name": "qr_cpu_fp64",
         "policy": "explicit_cpu_calibration",
-        "return_transfer_s": 0.00016449997201561928,
+        "return_transfer_s": 0.00019624998094514012,
         "status": "pass",
-        "transfer_s": 0.00036041694693267345,
-        "wall_s": 0.000709415995515883
+        "transfer_s": 0.0004235419328324497,
+        "wall_s": 0.0011440420057624578
       },
       {
         "critical": true,
         "device": "mps",
         "dtype": "float64",
         "execution_device": "cpu",
-        "input_transfer_s": 0.00015979103045538068,
+        "execution_isolation": "fresh_process",
+        "fallback_environment_before_torch_import": "0",
+        "input_transfer_s": 0.00020587502513080835,
         "name": "svd_cpu_fp64",
         "policy": "explicit_cpu_calibration",
-        "return_transfer_s": 0.00016779202269390225,
+        "return_transfer_s": 0.0002489170292392373,
         "status": "pass",
-        "transfer_s": 0.00032758305314928293,
-        "wall_s": 0.0005802920204587281
+        "transfer_s": 0.00045479205437004566,
+        "wall_s": 0.0008174999966286123
       },
       {
         "critical": true,
         "device": "mps",
         "dtype": "float32",
+        "execution_isolation": "fresh_process",
+        "fallback_environment_before_torch_import": "0",
         "name": "norm_gelu_masked_loss_backward",
         "status": "pass",
-        "wall_s": 0.011737583961803466
+        "wall_s": 0.016712000011466444
       },
       {
         "critical": true,
         "device": "mps",
         "dtype": "float32",
+        "execution_isolation": "fresh_process",
+        "fallback_environment_before_torch_import": "0",
         "name": "attention_backward",
         "status": "pass",
-        "wall_s": 0.011441415990702808
+        "wall_s": 0.012976582976989448
       },
       {
         "critical": false,
         "device": "mps",
         "dtype": "float32",
+        "execution_isolation": "fresh_process",
+        "fallback_environment_before_torch_import": "0",
         "name": "gather_scatter_sampling",
         "status": "pass",
-        "wall_s": 0.0013367499923333526
+        "wall_s": 0.0026549999602138996
       }
     ]
   },

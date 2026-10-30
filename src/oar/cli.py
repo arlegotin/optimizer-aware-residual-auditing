@@ -3,6 +3,7 @@
 import argparse
 import json
 from pathlib import Path
+import sys
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -15,7 +16,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "doctor":
         from oar.config import DiscoveryConfig, load_discovery_config
         from oar.hardware import discover_environment
-        config = load_discovery_config(args.config) if args.config else DiscoveryConfig()
+        try:
+            config = load_discovery_config(args.config) if args.config else DiscoveryConfig()
+        except (ValueError, OSError) as exc:
+            print(f"doctor: invalid configuration: {exc}", file=sys.stderr)
+            return 2
         report = discover_environment(config.device)
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")

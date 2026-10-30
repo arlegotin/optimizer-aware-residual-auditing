@@ -98,3 +98,23 @@ shape-specific speed, thermal budget, training, learning or speedup claim has
 been established. WP01 numerical/transaction verification is the next action;
 WP02 headroom still depends on WP01. `doctor` reports actual capability scope
 and never writes a gate pass itself.
+
+### Task 2 review correction — fix round 1
+
+CLI discovery configuration errors now return status 2 with a concise diagnostic
+and no traceback. Effective PyTorch fallback policy is registered at import;
+changing the environment later cannot prove that policy. MPS checks therefore
+run in a fresh worker whose environment is set to `0` before interpreter startup
+and whose pre-import state is verified. GPU eligibility requires worker policy
+evidence. The manifest marks caller environment text as non-authoritative and
+leaves effective fallback unknown when it has not been verified.
+
+The import-order regression first imports Torch with fallback 1, changes the
+variable to 0, and forbids MPS RNG access in that process; the real worker then
+executes independently. Verification: **76 passed in 5.93s** on actual MPS,
+**75 passed, 1 skipped in 3.01s** in the sandbox. A module CLI smoke test confirmed
+exit 2 for fallback-enabled configuration. Actual `doctor` again classified
+`exploratory_gpu`, with 11 CPU and 13 isolated MPS-context rows passing; the
+fresh-process overhead is included in discovery wall time. Refreshed the
+environment manifest and appended WP00 evidence with updated hashes. Dataset
+limits and the WikiText block remain unchanged.

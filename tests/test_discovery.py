@@ -47,12 +47,13 @@ def test_environment_classifies_actual_backend(monkeypatch, available, arch, fai
     monkeypatch.setattr(hardware, "_collect_hardware", lambda: raw)
     monkeypatch.setattr(hardware, "_backend_state", lambda: {"built": True, "available": available})
     monkeypatch.setattr(hardware, "check_operations", lambda device: [
-        {"name": "gemm", "critical": True, "status": "unsupported" if failed and device == "mps" else "pass"}])
+        {"name": "gemm", "critical": True, "status": "unsupported" if failed and device == "mps" else "pass",
+         "execution_isolation": "fresh_process", "fallback_environment_before_torch_import": "0"}])
     monkeypatch.delenv("PYTORCH_ENABLE_MPS_FALLBACK", raising=False)
     report = hardware.discover_environment()
     assert report["scope"] == scope
     assert report["gpu_claim_eligible"] is (scope == "exploratory_gpu")
-    assert report["fallback"]["enabled"] is False
+    assert report["fallback"]["enabled"] is (False if available else None)
     if not available:
         assert report["accelerator"]["available"] is False
         assert report["accelerator"]["absence_is_hardware_limitation"] is False
@@ -249,3 +250,43 @@ def test_unresolved_license_cannot_be_approved(tmp_path, license_id):
     from oar.provenance import inspect_asset
     asset = write_asset(tmp_path, (license_id,))
     assert inspect_asset(str(asset), 'a' * 40)['approval_status'] == 'blocked'
+
+
+@pytest.mark.parametrize('config_text', [
+    'schema_version: 1\ndevice: auto\nallow_mps_fallback: true\n',
+    'schema_version: [\n',
+])
+def test_doctor_invalid_config_returns_usage_error_without_traceback(tmp_path, capsys, config_text):
+    from oar.cli import main
+    path = tmp_path / 'invalid.yaml'
+    path.write_text(config_text)
+    out = tmp_path / 'environment.json'
+    assert main(['doctor', '--config', str(path), '--out', str(out)]) == 2
+    diagnostic = capsys.readouterr().err
+    assert 'doctor:' in diagnostic
+    assert 'Traceback' not in diagnostic
+    assert not out.exists()
+
+
+def test_mps_import_order_uses_fresh_fallback_disabled_worker():
+    import os
+    import subprocess
+    import sys
+    script = '''
+import json, os
+os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
+import torch
+os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '0'
+def forbidden_parent_rng(*args, **kwargs):
+    raise AssertionError('MPS checks must not touch an already imported Torch process')
+torch.mps.get_rng_state = forbidden_parent_rng
+from oar.hardware import check_operations
+print(json.dumps(check_operations('mps')))
+'''
+    result = subprocess.run([sys.executable, '-c', script], capture_output=True, text=True,
+                            env={**os.environ, 'PYTORCH_ENABLE_MPS_FALLBACK': '1'}, timeout=60)
+    assert result.returncode == 0, result.stderr
+    rows = json.loads(result.stdout)
+    assert rows
+    assert all(row['execution_isolation'] == 'fresh_process' for row in rows)
+    assert all(row['fallback_environment_before_torch_import'] == '0' for row in rows)
