@@ -1,0 +1,8 @@
+{
+  "attempt": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/dw_sampling/20261031T120154Z-reopened/cost/attempt-0001",
+  "config": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/configs/dw_sampling.yaml",
+  "deadline_s": null,
+  "kind": "diagnostic",
+  "out": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/dw_sampling/20261031T120154Z-reopened",
+  "variant": "foreach"
+}

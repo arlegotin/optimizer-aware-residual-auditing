@@ -1,0 +1,51 @@
+{
+  "automatic_replacement_sessions": 0,
+  "deadline_s": null,
+  "diagnostic_allowance_s": 300,
+  "forecast_s": 13384.017742643133,
+  "includes": "two sessions, 3x component allowance, histories, warmup, reset, variants, startup and serialization; advisory without a configured deadline",
+  "kind": "cost",
+  "per_shape": [
+    {
+      "bound_block_s": 0.5394958388060331,
+      "bound_blocks": 744,
+      "forecast_s": 1224.0872455984354,
+      "minimum_block_s": 0.5,
+      "shape": "middle4096",
+      "updates_per_block": 14
+    },
+    {
+      "bound_block_s": 0.5235208518570289,
+      "bound_blocks": 744,
+      "forecast_s": 1186.1789681063965,
+      "minimum_block_s": 0.5,
+      "shape": "middle2048",
+      "updates_per_block": 25
+    },
+    {
+      "bound_block_s": 0.5689845577580854,
+      "bound_blocks": 744,
+      "forecast_s": 1288.1400556722656,
+      "minimum_block_s": 0.5,
+      "shape": "middle2048_accum4_stride2",
+      "updates_per_block": 23
+    },
+    {
+      "bound_block_s": 0.6538768317550421,
+      "bound_blocks": 744,
+      "forecast_s": 1495.3771470934153,
+      "minimum_block_s": 0.5,
+      "shape": "wide",
+      "updates_per_block": 4
+    },
+    {
+      "bound_block_s": 0.5838094308273867,
+      "bound_blocks": 744,
+      "forecast_s": 1318.2254548510537,
+      "minimum_block_s": 0.5,
+      "shape": "tiny",
+      "updates_per_block": 459
+    }
+  ],
+  "sessions": 2
+}

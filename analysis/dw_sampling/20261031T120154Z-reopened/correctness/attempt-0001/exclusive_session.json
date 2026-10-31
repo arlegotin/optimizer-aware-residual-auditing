@@ -1,0 +1,11 @@
+{
+  "blockers": [],
+  "external_policy": "No other agent tests/collectors/benchmarks scheduled; advisory lock excludes other driver sessions. External applications remain running, are not controlled or killed.",
+  "pid": 73757,
+  "start_utc": "2026-10-31T12:59:45.487552+00:00",
+  "storage": {
+    "free_disk_bytes": 43796959232,
+    "run_output_bytes": 3141799
+  },
+  "unavailable_processes": 0
+}
