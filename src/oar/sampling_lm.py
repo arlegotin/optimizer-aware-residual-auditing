@@ -814,6 +814,35 @@ def train_budget(state, data, request, charged_clock):
     device = next(state.model.parameters()).device
     sync = torch.mps.synchronize if device.type == 'mps' else lambda: None
     steps, monitors, missed, checkpoints = [], [], [], []
+    history = request.get('checkpoint_history', [])
+    if request.get('checkpoint_history_sha256') is not None:
+        encoded = json.dumps(history, sort_keys=True, separators=(',', ':'), ensure_ascii=True, allow_nan=False).encode('ascii')
+        if hashlib.sha256(encoded).hexdigest() != request['checkpoint_history_sha256']:
+            raise ValueError('incoming checkpoint history hash mismatch')
+    for row in history:
+        path = Path(row['path'])
+        if path.is_symlink() or path.resolve().parent != checkpoint_dir.resolve() or row['kind'] not in ('initial', 'periodic', 'final'):
+            raise ValueError('incoming checkpoint history is not owned by this logical trial')
+        if not row.get('pruned'):
+            with path.open('rb') as stream:
+                if _file_sha256(stream) != row['sha256']:
+                    raise ValueError('incoming live checkpoint hash mismatch')
+        checkpoints.append(dict(row))
+    if len([r for r in checkpoints if not r.get('pruned') and r['kind'] != 'final']) > 2:
+        raise ValueError('incoming checkpoint history exceeds two live resumes')
+    secondary_history = [dict(r) for r in request.get('secondary_history', [])]
+    for row in secondary_history:
+        path = Path(row['path'])
+        if path.is_symlink() or path.resolve().parent != checkpoint_dir.resolve() or row['kind'] != 'secondary':
+            raise ValueError('secondary history is not owned by this logical trial')
+        if not row.get('pruned'):
+            with path.open('rb') as stream:
+                if _file_sha256(stream) != row['sha256']:
+                    raise ValueError('secondary checkpoint history hash mismatch')
+    secondary = None
+    secondary_update = request.get('secondary_update')
+    if secondary_update is not None and (type(secondary_update) is not int or secondary_update <= 0):
+        raise ValueError('secondary update must be a fixed positive integer')
     schedule = {k: request[k] for k in ('H', 'Delta', 'T_budget', 'block_updates', 'peak_lr', 'overshoot_limit_s')}
     initial_full = initial_monitor = None
     t0, next_index = None, 1
@@ -822,6 +851,7 @@ def train_budget(state, data, request, charged_clock):
         with path.open('a') as stream:
             stream.write(json.dumps(row, allow_nan=False, sort_keys=True)+'\n')
             stream.flush()
+            os.fsync(stream.fileno())
     def event(kind, **row):
         append(event_path, {'kind': kind, **row})
     def measure_evaluation(windows, kind, **extra):
@@ -839,7 +869,9 @@ def train_budget(state, data, request, charged_clock):
                    'clock': charged_clock.state_dict(), 't0_s': t0, 'scheduler_rule': schedule,
                    'initial_full': initial_full, 'initial_monitor': initial_monitor,
                    'monitors': monitors, 'missed_deadlines': missed, 'next_deadline_index': next_index,
-                   'optimization_frozen': kind == 'final'}
+                   'optimization_frozen': kind in ('final', 'secondary'),
+                   'clock_implementation': request.get('clock_implementation'),
+                   'secondary_checkpoint': secondary}
         receipt = {'path': str(path), **save_checkpoint(path, payload), 'kind': kind,
                    'logical_updates': state.logical_updates, 'completed_s': charged_clock.elapsed()}
         append(receipt_path, receipt)
@@ -847,6 +879,10 @@ def train_budget(state, data, request, charged_clock):
         with receipt_path.open('a') as stream:
             stream.flush()
             os.fsync(stream.fileno())
+        if kind == 'secondary':
+            secondary_history.append(receipt)
+            event('secondary_checkpoint', checkpoint=receipt)
+            return receipt
         checkpoints.append(receipt)
         event('checkpoint', checkpoint=receipt)
         live = [r for r in checkpoints if r['kind'] != 'final' and not r.get('pruned')]
@@ -866,14 +902,49 @@ def train_budget(state, data, request, charged_clock):
     resumed = request.get('resume')
     if resumed:
         payload = load_checkpoint(resumed['path'], resumed['sha256'], expected_bindings=request['bindings'])
+        if payload.get('optimization_frozen'):
+            raise ValueError('final/frozen checkpoint cannot resume optimization')
+        if payload.get('clock_implementation') != request.get('clock_implementation'):
+            raise ValueError('checkpoint host clock implementation mismatch')
         if payload['scheduler_rule'] != schedule or payload['t0_s'] is None:
             raise ValueError('resume cannot change the original scheduler or restart warmup')
         if charged_clock.prior_elapsed_s < payload['clock']['elapsed_s']:
             raise ValueError('restart ledger omits previously charged work')
+        if (type(payload.get('next_deadline_index')) is not int or payload['next_deadline_index']<1
+                or not isinstance(payload.get('monitors'),list) or not isinstance(payload.get('missed_deadlines'),list)):
+            raise ValueError('resume controller/deadline metadata invalid')
+        previous_completion = -1.
+        for observation in [payload.get('initial_full'),payload.get('initial_monitor'),*payload['monitors']]:
+            if (not isinstance(observation,dict) or type(observation.get('nll')) not in (int,float)
+                    or not math.isfinite(observation['nll']) or type(observation.get('completed_s')) not in (int,float)
+                    or not previous_completion <= observation['completed_s'] <= payload['clock']['elapsed_s']):
+                raise ValueError('resume controller evaluation/clock history invalid')
+            previous_completion = observation['completed_s']
+        if not payload['initial_monitor']['completed_s'] <= payload['t0_s'] < horizon:
+            raise ValueError('resume controller original t0 invalid')
+        saved_secondary=payload.get('secondary_checkpoint')
+        if saved_secondary is not None and not any(r['path']==saved_secondary['path'] and r['sha256']==saved_secondary['sha256'] and not r.get('pruned') for r in secondary_history):
+            raise ValueError('resumed secondary pointer has no own live receipt')
+        if secondary_update is not None and payload['training_state']['logical_updates'] >= secondary_update and saved_secondary is None:
+            raise ValueError('resume would lose a previously required equal-step capture')
         state.restore(payload['training_state'])
         t0, initial_full, initial_monitor = payload['t0_s'], payload['initial_full'], payload['initial_monitor']
         monitors, missed = list(payload['monitors']), list(payload['missed_deadlines'])
         next_index = payload['next_deadline_index']
+        secondary = payload.get('secondary_checkpoint')
+        if secondary is not None and not any(r['path']==secondary['path'] and r['sha256']==secondary['sha256'] and not r.get('pruned') for r in secondary_history):
+            raise ValueError('resumed secondary pointer has no own live receipt')
+        # A secondary captured after the selected recovery boundary belongs to
+        # discarded work. Retire only those proved own files; capture again if
+        # the resumed canonical trajectory reaches the declared update.
+        for old in secondary_history:
+            if not old.get('pruned') and (secondary is None or old['path'] != secondary['path']):
+                Path(old['path']).unlink()
+                old['pruned'] = True
+                event('secondary_checkpoint_pruned', path=old['path'], sha256=old['sha256'],
+                      reason='discarded work after explicitly selected recovery boundary')
+        if secondary_update is not None and state.logical_updates >= secondary_update and secondary is None:
+            raise ValueError('resume would lose a previously required equal-step capture')
         restart = {'checkpoint': resumed, 'prior_charged_s': charged_clock.prior_elapsed_s,
                    'loading_completed_s': charged_clock.elapsed(), 'original_t0_s': t0}
         event('restart', **restart)
@@ -907,6 +978,8 @@ def train_budget(state, data, request, charged_clock):
         try:
             for _ in range(request['block_updates']):
                 raw.append(state.step(lr))
+                if secondary_update is not None and state.logical_updates == secondary_update and secondary is None:
+                    secondary = checkpoint('secondary')
             sync()
             # One small host transfer after the synchronized block, never after
             # each optimizer step. Device scalar references are then released.
@@ -979,12 +1052,16 @@ def train_budget(state, data, request, charged_clock):
               'logical_updates': state.logical_updates, 'valid_tokens': state.valid_tokens,
               'physical_tokens': state.physical_tokens, 'final_checkpoint': final,
               'checkpoint_manifest': checkpoints, 'restart': restart,
+              'secondary_checkpoint': secondary,
+              'secondary_status': 'captured' if secondary else ('unavailable_not_reached' if secondary_update else 'not_requested'),
               'resolved_seeds': {**state.model.resolved_seeds, 'data': state.stream.seed},
               'initial_parameters_sha256': state.model.initial_parameters_sha256,
               'sampling_final_state_hashes': {name: hashlib.sha256(bytes(s.generator.get_state().tolist())).hexdigest()
                                               for name, s in state.model.sampling_states.items()}}
     with (run_dir/'result.json').open('x') as stream:
         json.dump(result, stream, allow_nan=False, indent=2, sort_keys=True)
+        stream.flush()
+        os.fsync(stream.fileno())
     return result
 
 
@@ -1005,3 +1082,227 @@ def run_training_worker(request):
     fixture = ModelFixture(data, base_seed=request['seed'], variant=request['variant'],
                            sampler=arm['sampler'], rho=arm.get('rho') or .25, batch_size=arm['batch'])
     return train_budget(fixture.training, data, request, charged)
+
+
+class NativePrecisionUnsupported(RuntimeError):
+    """Explicit installed native autocast/scaler capability failure."""
+
+
+class NativePrecisionState(TrainingState):
+    """Isolated dense native autocast control, retaining FP32 model/Adam states."""
+
+    def __init__(self, model, optimizer, stream, *, precision, scaler=None, scaler_qualification=None):
+        if model.sampler is not None or model.sampling_states:
+            raise ValueError('precision control requires a native unsampled model')
+        if precision not in ('bf16', 'fp16'):
+            raise ValueError('unknown native precision')
+        device = next(model.parameters()).device.type
+        if precision == 'fp16':
+            if (device != 'mps' or type(scaler) is not torch.amp.GradScaler or not scaler.is_enabled()
+                    or getattr(scaler, '_device', None) != 'mps'
+                    or scaler_qualification != {'backend': 'mps', 'native_grad_scaler': True}):
+                raise ValueError('FP16 requires qualified installed native MPS GradScaler')
+        elif scaler is not None:
+            raise ValueError('BF16 control does not use a scaler')
+        super().__init__(model, optimizer, stream)
+        self.precision, self.scaler = precision, scaler
+        self._bindings['native_precision'] = precision
+        self.skipped_updates = 0
+
+    def step(self, lr):
+        if self._failed:
+            raise RuntimeError('failed precision state requires whole-state restore')
+        _require_all_trainable(self.model)
+        if type(lr) not in (int,float) or not math.isfinite(lr) or lr < 0:
+            raise ValueError('learning rate must be finite and nonnegative')
+        self._failed = True
+        for group in self.optimizer.param_groups:
+            group['lr'] = lr
+        self.model.train(); self.optimizer.zero_grad(set_to_none=True)
+        device = next(self.model.parameters()).device
+        batch = self.stream.next_batch(device=device)
+        valid, physical = batch['valid_targets'], batch['physical_rows']
+        if type(valid) is not int or valid <= 0:
+            raise ValueError('precision batch requires positive valid targets')
+        dtype = torch.bfloat16 if self.precision == 'bf16' else torch.float16
+        with torch.autocast(device_type=device.type, dtype=dtype):
+            if not torch.is_autocast_enabled(device.type):
+                raise NativePrecisionUnsupported('native autocast is disabled for selected precision/backend')
+            logits = self.model(batch['input_ids'])
+            loss = F.cross_entropy(logits.reshape(-1,self.model.config.vocab_size),batch['target_ids'].reshape(-1),
+                                   reduction='sum',ignore_index=-100)/valid
+        if self.scaler is None:
+            loss.backward()
+        else:
+            self.scaler.scale(loss).backward()
+            self.scaler.unscale_(self.optimizer)
+        norm = nn.utils.clip_grad_norm_(self._parameters,1.,error_if_nonfinite=True)
+        if not bool(torch.isfinite(loss)):
+            raise RuntimeError('precision loss must be finite')
+        if self.scaler is None:
+            self.optimizer.step()
+        else:
+            before = float(self.scaler.get_scale())
+            self.scaler.step(self.optimizer); self.scaler.update()
+            if float(self.scaler.get_scale()) < before:
+                self.skipped_updates += 1
+                raise RuntimeError('native scaler skipped update; trajectory is numerically invalid')
+            # A native fused scaler can suppress a step. Verify the native
+            # counters before committing this update to the training ledger.
+            if any(float(s['step']) != self.logical_updates+1 for s in self.optimizer.state.values()):
+                self.skipped_updates += 1
+                raise RuntimeError('native scaler optimizer counters show skipped update')
+        self.logical_updates += 1; self.valid_tokens += valid; self.physical_tokens += physical
+        self._failed = False
+        return {'loss':loss.detach(),'norm':norm.detach(),'valid_targets':valid,'physical_rows':physical,
+                'logical_update':self.logical_updates}
+
+    def snapshot(self):
+        value = super().snapshot()
+        value['precision_state'] = {'precision':self.precision,'skipped_updates':self.skipped_updates,
+                                    'scaler':_cpu_tree(self.scaler.state_dict()) if self.scaler else None}
+        return value
+
+    def restore(self, snapshot):
+        precision = snapshot.get('precision_state')
+        if (not isinstance(precision,dict) or set(precision) != {'precision','skipped_updates','scaler'}
+                or precision['precision'] != self.precision or precision['skipped_updates'] != 0):
+            raise ValueError('precision snapshot metadata/skipped update mismatch')
+        if self.scaler is None:
+            if precision['scaler'] is not None:
+                raise ValueError('BF16 precision snapshot cannot contain scaler')
+        else:
+            scaler = precision['scaler']
+            if (not isinstance(scaler,dict) or set(scaler) != set(self.scaler.state_dict())
+                    or any(type(v) not in (int,float) or not math.isfinite(v) or v < 0 for v in scaler.values())
+                    or scaler.get('scale',0) <= 0 or scaler.get('growth_factor',0)<=1
+                    or not 0<scaler.get('backoff_factor',0)<1
+                    or type(scaler.get('growth_interval')) is not int or scaler['growth_interval']<=0
+                    or type(scaler.get('_growth_tracker')) is not int
+                    or not 0<=scaler['_growth_tracker']<scaler['growth_interval']):
+                raise ValueError('invalid native precision scaler state')
+            probe = torch.amp.GradScaler('mps'); probe.load_state_dict(scaler)
+        super().restore(snapshot)
+        if self.scaler is not None:
+            self.scaler.load_state_dict(precision['scaler'])
+        self.skipped_updates = 0
+
+
+def precision_backend_unsupported(exc):
+    """Only explicit backend capability failures qualify for FP16 fallback."""
+    text = str(exc).lower()
+    return isinstance(exc,NativePrecisionUnsupported) or isinstance(exc,(RuntimeError,TypeError,NotImplementedError)) and any(
+        fragment in text for fragment in ('bfloat16 is not supported','bfloat16 is not yet supported',
+            'does not support bfloat16','autocast is not supported','not implemented for \'bfloat16\'',
+            "gradscaler does not support mps","not implemented for mps",
+            "not currently implemented for the mps device","not implemented for 'mps'"))
+
+
+def validate_native_precision_replay(expected, actual, *, device_type):
+    """MPS native tolerance only for model and Adam moment floats; rest exact.
+
+    This is the existing prospective FP32 native MPS tolerance, applied before
+    any AMP backend outcome. Stored CPU snapshots from CPU execution stay exact.
+    """
+    if device_type not in ('cpu','mps'):
+        raise ValueError('unknown native precision replay device')
+    maxima={'model':0.,'moment':0.}
+    def compare(a,b,path=()):
+        label='/'.join(map(str,path))
+        if isinstance(a,Tensor):
+            if not isinstance(b,Tensor) or a.shape!=b.shape or a.dtype!=b.dtype or a.device!=b.device:
+                raise RuntimeError('native precision replay tensor metadata mismatch: '+label)
+            model = len(path)==2 and path[0]=='model'
+            moment = (len(path)==4 and path[:2]==('optimizer','state')
+                      and path[-1] in ('exp_avg','exp_avg_sq','max_exp_avg_sq'))
+            permitted = device_type=='mps' and a.is_floating_point() and (model or moment)
+            if (model or moment) and a.is_floating_point():
+                if not bool(torch.isfinite(a).all()) or not bool(torch.isfinite(b).all()):
+                    raise RuntimeError('native precision replay nonfinite model/moment: '+label)
+                delta=float((a-b).abs().max()) if a.numel() else 0.
+                key='model' if model else 'moment';maxima[key]=max(maxima[key],delta)
+            matched=torch.allclose(a,b,rtol=1e-4,atol=1e-6) if permitted else torch.equal(a,b)
+            if not matched:
+                raise RuntimeError('native precision checkpoint replay mismatch: '+label)
+            return
+        if isinstance(a,dict):
+            if not isinstance(b,dict) or a.keys()!=b.keys():
+                raise RuntimeError('native precision replay mapping mismatch: '+label)
+            for key in a:compare(a[key],b[key],(*path,key))
+        elif isinstance(a,(list,tuple)):
+            if type(a) is not type(b) or len(a)!=len(b):
+                raise RuntimeError('native precision replay sequence mismatch: '+label)
+            for i,(x,y) in enumerate(zip(a,b)):compare(x,y,(*path,i))
+        elif type(a) is not type(b) or a!=b:
+            raise RuntimeError('native precision replay exact metadata mismatch: '+label)
+    compare(expected,actual)
+    return {'policy':{'device_type':device_type,'rtol':1e-4 if device_type=='mps' else 0.,
+                      'atol':1e-6 if device_type=='mps' else 0.,
+                      'tolerated_fields':'floating model tensors and Adam exp_avg/exp_avg_sq/max_exp_avg_sq on MPS only',
+                      'all_other_fields':'exact; includes RNG/data/sampler, optimizer step, scaler, counters and group hyperparameters'},
+            'max_model_absolute_deviation':maxima['model'],'max_adam_moment_absolute_deviation':maxima['moment']}
+
+
+def qualify_native_precision(request):
+    """Guarded backend probe; caller validates authority before importing Torch."""
+    if not torch.backends.mps.is_available():
+        return {'status':'unsupported','reason':'MPS unavailable; no native precision claim','attempts':[]}
+    started = time.perf_counter(); attempts = []
+    prefix = Path(request['run_dir'])/'precision_attempts.jsonl' if request.get('run_dir') else None
+    if prefix is not None:
+        prefix.parent.mkdir(parents=True,exist_ok=True)
+        with prefix.open('x'):
+            pass
+    def retain(row):
+        attempts.append(row)
+        if prefix is not None:
+            with prefix.open('a') as stream:
+                stream.write(json.dumps(row,sort_keys=True,allow_nan=False)+'\n')
+                stream.flush();os.fsync(stream.fileno())
+    data = load_worker_data(request['data_path'],request['data_sha256'],phase='development')
+    for precision in ('bf16','fp16'):
+        try:
+            fixture = ModelFixture(data,base_seed=request['seed'],variant=request['variant'],batch_size=request['arm']['batch'])
+            if precision=='fp16' and not hasattr(torch.amp,'GradScaler'):
+                raise NativePrecisionUnsupported('installed native MPS GradScaler unavailable')
+            scaler = torch.amp.GradScaler('mps') if precision == 'fp16' else None
+            if scaler is not None and (not scaler.is_enabled() or getattr(scaler,'_device',None)!='mps'):
+                raise NativePrecisionUnsupported('installed native MPS GradScaler is disabled/unavailable')
+            state = NativePrecisionState(fixture.model,fixture.opt,fixture.stream,precision=precision,scaler=scaler,
+                scaler_qualification={'backend':'mps','native_grad_scaler':True} if scaler else None)
+            for _ in range(2): state.step(request['arm']['lr'])
+            torch.mps.synchronize(); saved = state.snapshot()
+            state.step(request['arm']['lr']); torch.mps.synchronize(); expected = state.snapshot()
+            state.restore(saved); state.step(request['arm']['lr']); torch.mps.synchronize(); replay = state.snapshot()
+            replay_check = validate_native_precision_replay(expected,replay,device_type=next(state.model.parameters()).device.type)
+            evaluation = evaluate(state.model,data['evaluation_tokens'],data['evaluation_monitor'],batch_size=16)
+            retain({'precision':precision,'status':'pass','fp32_evaluation':evaluation,'replay_check':replay_check})
+            return {'status':'pass','precision':precision,'native_grad_scaler':scaler is not None,
+                    'backend':'mps','attempts':attempts,'replay_check':replay_check,'wall_s':time.perf_counter()-started}
+        except Exception as exc:
+            unsupported = precision_backend_unsupported(exc)
+            retain({'precision':precision,'status':'unsupported' if unsupported else 'numerical_failure',
+                    'reason':str(exc),'exception':type(exc).__name__,'wall_s':time.perf_counter()-started})
+            if not unsupported:
+                raise
+    return {'status':'unsupported','reason':'installed native precision modes unsupported','attempts':attempts,
+            'wall_s':time.perf_counter()-started}
+
+
+def run_precision_worker(request):
+    implementation = time.get_clock_info('perf_counter').implementation
+    if request['clock_implementation'] != implementation:
+        raise ValueError('parent/precision worker clock mismatch')
+    arm = request['arm']
+    if arm['sampler'] is not None or arm['precision'] not in ('bf16','fp16'):
+        raise ValueError('precision worker accepts dense native controls only')
+    evidence = request['precision_qualification']
+    if evidence.get('status') != 'pass' or evidence.get('precision') != arm['precision'] or evidence.get('backend') != 'mps':
+        raise ValueError('precision worker lacks qualified actual backend evidence')
+    charged = ChargedClock(request['launch_perf_s'],prior_elapsed_s=request['prior_elapsed_s'])
+    data = load_worker_data(request['data_path'],request['data_sha256'],phase=request['phase'])
+    fixture = ModelFixture(data,base_seed=request['seed'],variant=request['variant'],batch_size=arm['batch'])
+    scaler = torch.amp.GradScaler('mps') if arm['precision'] == 'fp16' else None
+    state = NativePrecisionState(fixture.model,fixture.opt,fixture.stream,precision=arm['precision'],scaler=scaler,
+        scaler_qualification={'backend':'mps','native_grad_scaler':True} if scaler and evidence.get('native_grad_scaler') else None)
+    return train_budget(state,data,request,charged)

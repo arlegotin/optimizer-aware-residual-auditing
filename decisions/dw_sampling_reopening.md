@@ -264,3 +264,114 @@ decision; reuse only hash-verified private caches and record new preprocessing
 costs. Official-validation loss outcomes and the official-test body remain
 sealed. All prospective quality, target, simpler-control and confirmation
 protections continue to apply.
+
+## Learning pilot implementation, version 8 (prospective)
+
+The sealed v7 model qualification at `pilot/attempt-0002` has record SHA256
+`d01c854daf8eb7f7fbc8505b0879b40bc869bfc469a141fa727ae086757c4209`.
+Its nested qualification is PASS; its overall pilot remains `not_run`.
+All five declared arms passed both full-model cost sessions against the pooled
+native fused AdamW baseline. Preserve that distinction and the original measured
+revision. The append-only model-cost interim report v2 names the exact formal
+429-block calibration ledger and its excluded, retained sizing/warmup records;
+no calibration number changes after seeing candidate outcomes.
+
+The frozen learning cutoff is H=1461.4585008954164 seconds, reserve
+R=29.399479834130034, T_budget=1490.8579807295464, monitoring interval
+Delta=29.229170017908327, r_time=31.627891642889008, block size8,
+overshoot limit14.614585008954164, and epsilon_eval=1e-6. Reuse the exact sealed
+calibration, source/config/data identity and initial evaluation protocol rather
+than recalibrating to an exposed learning outcome. The current eligible grid has
+12 native trials, six importance trials and nine uniform trials, all seed3101.
+Learning/selection/independent development remain unmeasured at this specification.
+
+Complete the existing pilot action through the original endpoint/target
+selection, simpler controls, independent seeds3102/3103/3104 and fixed confirmation
+planning. A separate exact qualification consumer may read only the specifically
+sealed successful nested qualification. It must preserve the overall `not_run`
+status, compare full old/current source/config maps and obtain renewed complete
+exact-diff review of every changed executed helper/initializer. It must not make
+`require_stage(..., 'pilot', ...)` accept an unfinished or failed pilot. Adding
+unconsumed training/orchestration paths does not relabel the old timing code as
+a newly measured revision. Repeat current preparation/correctness after the new
+source/config/amendment freeze; remeasure affected costs if a consumed path changes.
+
+Select the native batch16 secondary control by its best finite full-development
+endpoint grid LR, with epsilon_eval ties preferring lower LR. Select uniform by
+its own fastest endpoint/target-eligible grid result, with r_time ties preferring
+larger rho then lower LR. If none is eligible, retain the best finite endpoint
+uniform arm as a disclosed adverse mandatory control; a censored control is not
+evidence of favorable dominance. If every allowed uniform arm is numerically
+invalid, do not claim that the required control qualified. Freeze these settings
+before independent seeds. Exact role aliases reuse the same run without funding
+additional alternatives. Preserve the specified uniform simplification and the
+native smaller-batch/qualified-precision dominance rules.
+
+The native precision control uses an isolated implementation inside the existing
+model module, keeping the measured FP32 step/model/evaluation helpers unchanged.
+Qualify actual native BF16 autocast first; otherwise qualify native FP16 with a
+supported native MPS GradScaler. Preserve FP32 model/master/moment tensors,
+native clipping/AdamW and FP32 evaluation. Missing implementation is not backend
+unsupported evidence. Numerical/scaler-skipped steps cannot become successful
+logical updates. The one screen and independent reproductions have the same
+frozen budget and selected native hyperparameters; no precision grid or sampler
+precision port is authorized.
+
+The canonical launcher ledger includes every invocation's active time through
+result serialization and worker exit, as well as previously wasted work and
+restart/import/loading costs. Preserve worker observations separately and enforce
+final budget on actual canonical invocation completion. Resume explicitly selects
+a receipted hash-validated committed checkpoint; numerical failure never triggers
+retry-until-acceptable. Parent failure with an unprovable active termination time
+is incomplete evidence, not invented elapsed telemetry. Extend the existing own-run
+two-live-checkpoint/final-only policy across invocation directories and retain all
+creation/pruning hashes. Never prune a user or different-run file.
+
+Prospectively capture logical update1024 on every independent-development arm as
+a descriptive equal-step secondary checkpoint, if reached. Its capture/I/O is
+charged; evaluate it separately as scientific work after the trajectory. Retain
+an explicit unavailable status if not reached. This secondary does not change H,
+primary monitoring, hyperparameter selection or the common-budget endpoint guard.
+Freeze and charge the original bounded synthetic moment-history/distribution-shift,
+context128 cost and component diagnostics separately before executing them; they
+cannot select a model, new sampler or protected threshold.
+
+The inclusive current forecast is52+2*N full-budget equivalents, or about28.16
+M3 Max device-hours at provisional minimum N=8, before deduplicating identical
+controls. Add and disclose diagnostics, engineering, shared assets and separate
+scientific evaluations. This forecast is not completed training or a fixed choice
+of N; refresh actual time/storage with the independently planned N before protected
+confirmation. Current local storage can cover the minimum-N endpoint/secondary
+checkpoint forecast with the existing reserve. Check actual memory/storage before
+each hardware stage, preserve native safeguards and stop for real resource failure.
+No external compute purchase, arbitrary whole-stage timeout or outcome-based grid
+expansion is authorized.
+
+Before any native-precision outcome, apply the existing FP32 MPS replay tolerance
+(rtol1e-4/atol1e-6) narrowly to replayed floating model/master tensors and native
+Adam first/second(/maximum-second) moments. The conditioned CPU replay remains
+exact. RNG/data/sampler bytes, metadata, optimizer step counters, native scaler
+state, hyperparameters and logical/token counts remain exact on every backend.
+Persist the comparison policy and maximum floating deviations. This prospectively
+avoids an invented bitwise-MPS gate: the v7 native-only diagnostic already recorded
+small independent-backward variation. It does not authorize loosening tolerances
+after seeing an AMP failure or broadly comparing arbitrary checkpoint fields with
+allclose. Retain every precision-mode attempt, including unsupported-mode evidence
+preceding a later fatal numerical error. Known numerical failure takes precedence
+over a subsequent signal or cleanup/I/O failure and forbids a numerical retry.
+Validate sealed later-stage records before using their action labels to decide
+whether they supersede qualification. A raw worker pass followed by a failed
+process exit cannot become valid training evidence.
+
+Clarify the original independent-development gate before outcomes: only primary
+candidate/native pairs must have observed uncensored target times. Every required
+secondary control must still complete with finite, budget-valid evidence. A valid
+secondary control that misses the target retains its censoring and an explicit
+`dominance_not_evaluable` result, without H substitution, a favorable subset
+comparison or a claim of superiority over that control. Its target censoring
+alone does not add a new veto on otherwise valid primary confirmation planning.
+Missing, failed, numerical or budget-invalid controls still block. An alias of a
+primary arm retains the primary uncensored requirement; uniform can replace
+importance only after its own complete independent comparison passes. This follows
+the original primary-pair gate and the prospectively declared adverse uniform
+control; no training outcome has been used to change a protected threshold.

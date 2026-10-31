@@ -1,0 +1,43 @@
+{
+  "files": {
+    "analysis/run_dw_sampling.py": {
+      "artifact": "run_dw_sampling.py",
+      "sha256": "ccd8490f6048905ffa5f48864143ab1df6e12ed77af146a7877b47ab2230d5bd"
+    },
+    "configs/dw_sampling.yaml": {
+      "artifact": "dw_sampling.yaml",
+      "sha256": "7411e08b4430d06152c4c93a0c588660eedb9f6a27577ab002721b28284fe368"
+    },
+    "decisions/dw_sampling_amendment.json": {
+      "artifact": "dw_sampling_amendment.json",
+      "sha256": "4497f452b9aa5f4020ca99ec187eebbf3519bcc670748a69261449a844bbe036"
+    },
+    "decisions/dw_sampling_reopening.md": {
+      "artifact": "dw_sampling_reopening.md",
+      "sha256": "e5f17839a1e3696793b9adee485c873484f2b91a8ab4880032d0a7d67122e018"
+    },
+    "src/oar/sampled_linear.py": {
+      "artifact": "sampled_linear.py",
+      "sha256": "11398f9340a48b0dcabdc733c74dfa52b53663ea2005989f2ad7b53079827ca3"
+    },
+    "src/oar/sampling_data.py": {
+      "artifact": "sampling_data.py",
+      "sha256": "cfcf4b782eb9a444ce70f29df72e063518f794108020e51a5d12238118f06583"
+    },
+    "src/oar/sampling_lm.py": {
+      "artifact": "sampling_lm.py",
+      "sha256": "b6a0ec4e1b66ccdf542e8d19c6830b897aec9fa4d4d4a77b13265dedb67bb21c"
+    },
+    "tests/test_dw_sampling_protocol.py": {
+      "artifact": "test_dw_sampling_protocol.py",
+      "sha256": "b271586886f1798b06a30c91834c4ceb470a4b3e5133de4f05a953932391f035"
+    },
+    "tests/test_sampled_linear.py": {
+      "artifact": "test_sampled_linear.py",
+      "sha256": "3ed4adbf6f62599172b0322374e84c7552f7fc4b46761f80057053469822eaa9"
+    }
+  },
+  "reason": "Archive exact committed v7 source/config/scope before unconsumed learning implementation, preserving measured qualification attribution.",
+  "recorded_utc": "2026-10-31T17:29:57.875009+00:00",
+  "source_head": "ce4a09ea64b0c2dc1f3663f51e6e0db17e858de9"
+}

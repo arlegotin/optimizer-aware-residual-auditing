@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: CC-BY-4.0
-# Prospective post-cost model/data qualification; earlier versions archived.
+# Prospective post-qualification Stage E pilot; earlier versions archived.
 schema_version: 3
 experiment: fixed_budget_norm_importance_dw
 reviewed_head: 9d8ad069c51b4d0e6c13e9c6e465579e9b44a339
@@ -161,7 +161,10 @@ learning:
   precision_screens_maximum: 1
   secondary_batch16_maximum: 3
   independent_repeat_pairs: 3
-  action: qualification
+  action: learning
+  qualification_record_path: analysis/dw_sampling/20261031T120154Z-reopened/pilot/attempt-0002/record.json
+  qualification_record_sha256: d01c854daf8eb7f7fbc8505b0879b40bc869bfc469a141fa727ae086757c4209
+  learning_manifest_path: analysis/dw_sampling/20261031T120154Z-reopened/prospective/learning-v8.json
   required_time_ratio: 1.0
   overshoot_fraction: 0.01
   checkpoint_live_retention: 2

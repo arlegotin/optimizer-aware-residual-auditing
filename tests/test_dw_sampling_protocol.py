@@ -2404,6 +2404,7 @@ def test_model_cost_fixture_restores_native_history_with_isolated_candidate_stre
 @pytest.mark.parametrize('cost_failure', [False, True])
 def test_controller_freezes_pooled_native_aa_before_all_candidates_and_never_passes_stage_e(tmp_path, monkeypatch, fallback, cost_failure):
     d, cfg = driver(), yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
+    cfg['learning']['action'] = 'qualification'
     arms = [{'arm': name, 'shape': 'middle4096'} for name in
             ('importance-0.125', 'importance-0.25', 'uniform-0.125', 'uniform-0.25', 'uniform-0.5')]
     baseline = {'status': 'pass', 'delta': .2085, 'eligible': arms,
@@ -2546,6 +2547,8 @@ def test_new_model_worker_accepts_only_bound_development_data_and_native_phase(t
     monkeypatch.setattr(d, 'require_stage', lambda *args: {'status': 'pass'})
     monkeypatch.setattr(d, 'assert_language_asset_permission', lambda cfg: {})
     cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
+    cfg['learning']['action'] = 'qualification'
+    monkeypatch.setattr(d, 'load_config', lambda path: copy.deepcopy(cfg))
     request = {'kind': 'model_native', 'phase': 'variants', 'session': 0, 'attempt': str(attempt),
                'out': str(tmp_path), 'config': str(cfg_path), 'result': str(attempt/'native.json'),
                'base_seed': cfg['seed'], 'synchronize_each_update': False, 'block_updates': 8,
@@ -2874,3 +2877,797 @@ def test_actual_cold_worker_rejects_different_parent_monotonic_clock(actual_cpu_
     request['clock_implementation'] = 'different host clock'
     with pytest.raises(ValueError,match='clock'):
         d.model_calibration_session(cfg,request)
+
+# Pilot dispatcher tests use invented metadata/tiny CPU models only.
+def _dispatch_fixture():
+    d=driver();cfg=yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
+    q={'status':'not_run','learning_success':False,'measurement_hashes':{'old':'a'*64},
+       'qualification':{'status':'pass','native_variant':'fused','eligible':[
+           {'sampler':s,'rho':r,'arm':f'{s}-{r}'} for s,rs in [('importance',[.125,.25]),('uniform',[.125,.25,.5])] for r in rs],
+           'calibration':{'status':'pass','epsilon_eval':1e-6,'horizon':{'status':'pass','H':100.,'Delta':5.,'R':20.,'T_budget':120.,'r_time':6.,'B_max':1.,'block_updates':1,'overshoot_limit_s':1.}}},
+       'data':{'manifest_path':'invented-manifest.json','manifest_sha256':'b'*64,'files':{
+           'fitting-development':{'path':'invented-development.pt','sha256':'c'*64,'size_bytes':10},
+           'validation-sealed-loss':{'path':'never-open.pt','sha256':'d'*64,'size_bytes':10}}}}
+    return d,cfg,q
+
+
+def test_learning_grid_dispatch_declares_exact_survivors_and_stable_named_order():
+    d,cfg,q=_dispatch_fixture();grid=d.build_learning_grid(cfg,q['qualification'])
+    assert len(grid)==27 and len({r['id'] for r in grid})==27
+    assert sum(r['arm']['sampler'] is None for r in grid)==12
+    assert sum(r['arm']['sampler']=='importance' for r in grid)==6
+    assert sum(r['arm']['sampler']=='uniform' for r in grid)==9
+    assert {r['seed'] for r in grid}=={3101}
+    assert all(r['arm']['batch']==16 for r in grid if r['arm']['sampler'])
+    assert grid==d.build_learning_grid(cfg,q['qualification'])
+    assert {tuple(r['arm']) for r in grid}=={('sampler','rho','batch','lr','precision')}
+
+
+def test_learning_dispatch_manifest_is_pure_and_keeps_protected_cache_sealed():
+    d,cfg,q=_dispatch_fixture()
+    manifest=d.build_learning_manifest(cfg,q,qualification_reference={'path':'qualified.json','sha256':'e'*64,'source_manifest_sha256':'f'*64,'measured_head':'1'*40},measurement_hashes={'current':'2'*64},config_sha256='3'*64)
+    assert len(manifest['grid'])==27
+    assert manifest['data']==q['data']['files']['fitting-development']
+    assert 'validation-sealed-loss' not in manifest
+    assert manifest['calibration']==q['qualification']['calibration']
+    assert manifest['diagnostics']['secondary_update']==1024
+    assert manifest['forecast']['trial_count']==68 # 52+2*8
+    assert manifest['forecast']['stage_deadline_s'] is None
+    assert manifest['diagnostics']['shift']['history_updates']==8
+    assert manifest['diagnostics']['shift']['shift_updates']==32
+
+
+def test_development_dispatch_controls_use_own_endpoint_and_adverse_uniform():
+    d,cfg,q=_dispatch_fixture()
+    rows=[_learning_grid_record('b16slow',16,.0001,2.50,[(65,2.9),(70,2.8)]),
+          _learning_grid_record('b16fast',16,.001,2.55,[(10,2.9),(15,2.8)]),
+          _learning_grid_record('u',16,.0003,2.7,[(10,3.5)],sampler='uniform',rho=.25)]
+    selection={'status':'pass','q_star':3.,'epsilon_q':.01,'R0':rows[0],'dense':rows[1],'candidate':rows[1]}
+    controls=d.select_learning_controls(rows,selection,epsilon_eval=1e-6,r_time=6.,cutoff=100.)
+    assert controls['native_b16']['id']=='b16slow'
+    assert controls['uniform']['id']=='u' and controls['uniform_adverse'] is True
+    matrix=d.build_development_trials(selection,controls,cfg)
+    assert len(matrix)==9
+    assert all(row['secondary_update']==1024 for row in matrix)
+    assert sum('candidate' in r['roles'] and 'dense' in r['roles'] for r in matrix)==3
+    rows[-1]['status']='NUMERICAL_FAILURE'
+    assert d.select_learning_controls(rows,selection,epsilon_eval=1e-6,r_time=6.,cutoff=100.)['status']=='STOP_CONTROL'
+
+
+def test_learning_ledger_rejects_missing_terminal_instead_of_fabricating_downtime(tmp_path):
+    d=driver();trial=tmp_path/'trial';a=trial/'attempt-0001';a.mkdir(parents=True)
+    d.durable_json(a/'launch.json',{'bindings':{'trial':'x'},'prior_elapsed_s':0.,'launch_perf_s':1.,'attempt_id':'attempt-0001','previous_exit_sha256':None})
+    with pytest.raises(d.MeasurementInvalid,match='terminal|death|interval'):
+        d.read_trial_ledger(trial,{'trial':'x'})
+
+
+def test_learning_ledger_charges_all_ended_work_and_rejects_numeric_resume(tmp_path):
+    d=driver();trial=tmp_path/'trial';a=trial/'attempt-0001';a.mkdir(parents=True)
+    launch={'bindings':{'trial':'x'},'prior_elapsed_s':0.,'launch_perf_s':10.,'attempt_id':'attempt-0001','previous_exit_sha256':None}
+    d.durable_json(a/'launch.json',launch)
+    d.durable_json(a/'exit.json',{'launch_sha256':d.digest(a/'launch.json'),'ended_perf_s':17.,'active_s':7.,'cumulative_elapsed_s':7.,'classification':'numerical_failure','exit_code':1})
+    ledger=d.read_trial_ledger(trial,{'trial':'x'})
+    assert ledger['prior_elapsed_s']==7.
+    with pytest.raises(ValueError,match='environmental'):
+        d.validate_resume_selection({'path':'x','sha256':'1'*64},ledger,{'trial':'x'})
+
+
+def test_learning_resume_frozen_final_rejected_before_state_mutation(tmp_path,monkeypatch):
+    lm,state,data,request,clock,source,calls=_budget_case(tmp_path,monkeypatch,horizon=100.)
+    first=lm.train_budget(state,data,request,clock)
+    request={**request,'run_dir':str(tmp_path/'restart'),'resume':first['final_checkpoint']}
+    resume_clock=lm.ChargedClock(source.now,prior_elapsed_s=clock.elapsed(),clock=source)
+    with pytest.raises(ValueError,match='frozen|final'):
+        lm.train_budget(state,data,request,resume_clock)
+
+
+def test_budget_worker_secondary_checkpoint_is_separate_from_two_live_resumes(tmp_path,monkeypatch):
+    lm,state,data,request,clock,source,calls=_budget_case(tmp_path,monkeypatch,horizon=100.)
+    request['secondary_update']=3
+    result=lm.train_budget(state,data,request,clock)
+    secondary=result['secondary_checkpoint']
+    assert secondary['logical_updates']==3 and Path(secondary['path']).is_file()
+    assert secondary not in result['checkpoint_manifest']
+    assert [r['kind'] for r in result['checkpoint_manifest'] if not r.get('pruned')]==['final']
+
+
+def test_native_precision_cpu_bf16_keeps_master_moments_and_atomic_replay():
+    import torch
+    import oar.sampling_lm as lm
+    state=_byte_recovery_fixture(sampler=None)
+    precision=lm.NativePrecisionState(state.model,state.optimizer,state.stream,precision='bf16')
+    precision.step(.001);snapshot=precision.snapshot();precision.step(.001)
+    expected=precision.snapshot();precision.restore(snapshot);precision.step(.001)
+    assert precision.logical_updates==2
+    assert all(p.dtype==torch.float32 for p in precision.model.parameters())
+    assert all(v['exp_avg'].dtype==torch.float32 for v in precision.optimizer.state.values())
+    assert all(torch.equal(v,expected['model'][k]) for k,v in precision.snapshot()['model'].items())
+    bad=copy.deepcopy(snapshot);bad['precision_state']['precision']='fp16'
+    before=precision.snapshot()
+    with pytest.raises(ValueError,match='precision'):
+        precision.restore(bad)
+    assert all(torch.equal(v,before['model'][k]) for k,v in precision.snapshot()['model'].items())
+
+
+def test_native_precision_rejects_sampler_and_unqualified_fp16():
+    import oar.sampling_lm as lm
+    state=_byte_recovery_fixture()
+    with pytest.raises(ValueError,match='native|sampl'):
+        lm.NativePrecisionState(state.model,state.optimizer,state.stream,precision='bf16')
+    state=_byte_recovery_fixture(sampler=None)
+    with pytest.raises(ValueError,match='GradScaler|MPS'):
+        lm.NativePrecisionState(state.model,state.optimizer,state.stream,precision='fp16')
+
+
+def test_learning_dispatch_worker_rejects_unfrozen_authority_and_protected_data(tmp_path):
+    d,cfg,q=_dispatch_fixture();freeze=d.build_learning_manifest(cfg,q,qualification_reference={'path':'q','sha256':'a'*64},measurement_hashes={'fixture':'b'*64},config_sha256='c'*64)
+    attempt=tmp_path/'pilot'/'attempt-0001';attempt.mkdir(parents=True)
+    trial=freeze['grid'][0];run=attempt/'trials'/trial['id']/'attempt-0001'
+    request=d.make_learning_request(cfg,Path('config'),tmp_path,attempt,trial,freeze,run,
+        prior_elapsed_s=0.,checkpoint_history=[],resume=None,launch_perf_s=10.)
+    identity={'measurement_hashes':freeze['measurement_hashes'],'config_sha256':'c'*64}
+    d.validate_learning_worker_request(request,cfg,'pilot',attempt,identity,freeze)
+    for change in [{'phase':'confirmation'},{'seed':5001},{'peak_lr':.5},{'H':101.},{'device':'cpu'},
+                   {'evaluation_path':'protected.pt'},{'kind':'model_cost'},{'run_dir':str(tmp_path/'elsewhere')},
+                   {'arm':{**trial['arm'],'precision':'fp16'}},{'prior_elapsed_s':-1.}]:
+        with pytest.raises(ValueError):
+            d.validate_learning_worker_request({**request,**change},cfg,'pilot',attempt,identity,freeze)
+
+
+def test_development_dispatch_stops_failed_controls_and_plans_only_matched_pairs():
+    d,cfg,q=_dispatch_fixture();freeze=d.build_learning_manifest(cfg,q,qualification_reference={},measurement_hashes={},config_sha256='x')
+    rows=[]
+    for seed in (3102,3103,3104):
+        for role,t,end in [('candidate',40.,2.50),('dense',60.,2.51),('native_b16',65.,2.52),('uniform',65.,2.53)]:
+            row=_learning_grid_record(f'{seed}-{role}',16,.001,end,[(t-5,2.8),(t,2.8)])
+            row.update(seed=seed,roles=[role],canonical_completion_s=110.)
+            rows.append(row)
+    selection={'q_star':3.,'epsilon_q':.02}
+    result=d.finish_development(rows,selection,freeze)
+    assert result['status']=='pass' and result['confirmation_plan']['N']==8
+    broken=copy.deepcopy(rows);broken[-1]['status']='NUMERICAL_FAILURE'
+    assert d.finish_development(broken,selection,freeze)['status']=='INCONCLUSIVE_MEASUREMENT'
+    broken=copy.deepcopy(rows);broken[0]['canonical_completion_s']=121.
+    assert d.finish_development(broken,selection,freeze)['status']=='INCONCLUSIVE_MEASUREMENT'
+
+
+def test_learning_diagnostic_shift_has_native_moments_and_prespecified_arms():
+    d=driver();result=d.synthetic_shift_diagnostic()
+    assert result['status']=='pass' and result['descriptive_only'] is True
+    assert result['seed']==62003 and result['history_updates']==8 and result['shift_updates']==32
+    assert result['native_moment_norm']>0
+    assert set(result['arms'])=={'dense','importance','uniform'}
+    assert all(len(r['losses'])==32 and math.isfinite(r['endpoint_mse']) for r in result['arms'].values())
+
+
+@pytest.mark.parametrize('end,code,raw,expected',[(119.,0,True,'pass'),(131.,0,True,'INCONCLUSIVE_MEASUREMENT'),
+    (15.,1,False,'NUMERICAL_FAILURE'),(15.,1,True,'NUMERICAL_FAILURE'),(15.,-15,False,'INCOMPLETE_RESOURCE')])
+def test_learning_ledger_real_child_exit_charged_without_rewriting_raw(tmp_path,monkeypatch,end,code,raw,expected):
+    d,cfg,q=_dispatch_fixture();freeze=d.build_learning_manifest(cfg,q,qualification_reference={},measurement_hashes={},config_sha256='a')
+    attempt=d.allocate_attempt(tmp_path,'pilot');d.durable_json(attempt/'source_manifest.json',{'measurement_hashes':{},'config_sha256':'a'})
+    trial=freeze['grid'][0]
+    # A separate invented worker stands in for actual MPS work. Real Popen,
+    # process exit, serialization, receipts and interval reconstruction remain.
+    script="import pathlib,json,sys,os,signal; r=json.load(open(sys.argv[1])); p=pathlib.Path(r['result']); p.parent.mkdir(parents=True); "
+    if raw: script+="p.write_text(json.dumps({'status':'pass','completion_s':1.,'reason':'fixture'})); "
+    if code<0: script+=f'os.kill(os.getpid(),{-code})'
+    else: script+=f'sys.exit({code})'
+    monkeypatch.setattr(d,'worker_args',lambda stage,config,out,request:[sys.executable,'-c',script,str(request)])
+    times=iter([10.,end]);monkeypatch.setattr(d.time,'perf_counter',lambda:next(times))
+    result=d.launch_learning_worker(cfg,ROOT/'configs/dw_sampling.yaml',tmp_path,attempt,trial,freeze)
+    assert result['status']==expected and result['canonical_completion_s']==end-10.
+    ledger=d.read_trial_ledger(attempt/'trials'/trial['id'],d.learning_bindings(freeze,trial))
+    assert ledger['prior_elapsed_s']==end-10.
+    if raw:
+        payload=json.loads(Path(result['result_path']).read_text())
+        assert payload['status']=='pass' and payload['completion_s']==1.
+
+
+def test_learning_ledger_malformed_worker_result_still_has_terminal_interval(tmp_path,monkeypatch):
+    d,cfg,q=_dispatch_fixture();freeze=d.build_learning_manifest(cfg,q,qualification_reference={},measurement_hashes={},config_sha256='a')
+    attempt=d.allocate_attempt(tmp_path,'pilot');d.durable_json(attempt/'source_manifest.json',{'measurement_hashes':{},'config_sha256':'a'})
+    trial=freeze['grid'][0]
+    script="import pathlib,json,sys;r=json.load(open(sys.argv[1]));p=pathlib.Path(r['result']);p.parent.mkdir(parents=True);p.write_text('{broken')"
+    monkeypatch.setattr(d,'worker_args',lambda stage,config,out,request:[sys.executable,'-c',script,str(request)])
+    result=d.launch_learning_worker(cfg,ROOT/'configs/dw_sampling.yaml',tmp_path,attempt,trial,freeze)
+    assert result['status']=='NUMERICAL_FAILURE'
+    ledger=d.read_trial_ledger(attempt/'trials'/trial['id'],d.learning_bindings(freeze,trial))
+    assert ledger['prior_elapsed_s']>0
+
+
+def test_learning_dispatch_worker_rejects_unreceipted_restart_charge_and_request_path(tmp_path):
+    d,cfg,q=_dispatch_fixture();freeze=d.build_learning_manifest(cfg,q,qualification_reference={},measurement_hashes={},config_sha256='a')
+    attempt=d.allocate_attempt(tmp_path,'pilot');identity={'measurement_hashes':{},'config_sha256':'a'}
+    trial=freeze['grid'][0];run=attempt/'trials'/trial['id']/'attempt-0001'
+    request=d.make_learning_request(cfg,ROOT/'configs/dw_sampling.yaml',tmp_path,attempt,trial,freeze,run,
+        prior_elapsed_s=5.,checkpoint_history=[],resume=None,launch_perf_s=1.)
+    with pytest.raises(ValueError,match='ledger|charge|prior'):
+        d.validate_learning_worker_request(request,cfg,'pilot',attempt,identity,freeze)
+
+
+def test_development_dispatch_duplicate_pair_and_initial_mismatch_fail_closed():
+    d,cfg,q=_dispatch_fixture();freeze=d.build_learning_manifest(cfg,q,qualification_reference={},measurement_hashes={},config_sha256='x')
+    rows=[]
+    for seed in (3102,3103,3104):
+        for role,t in [('candidate',40.),('dense',60.),('native_b16',65.),('uniform',65.)]:
+            row=_learning_grid_record(f'{seed}-{role}',16,.001,2.5,[(t-5,2.8),(t,2.8)])
+            row.update(seed=seed,roles=[role],canonical_completion_s=110.,initial_parameters_sha256=f'weights-{seed}')
+            rows.append(row)
+    selection={'q_star':3.,'epsilon_q':.02}
+    with pytest.raises(ValueError,match='duplicate'):
+        d.finish_development([*rows,rows[0]],selection,freeze)
+    rows[0]['initial_parameters_sha256']='different'
+    with pytest.raises(ValueError,match='initial'):
+        d.finish_development(rows,selection,freeze)
+
+
+@pytest.fixture
+def qualification_continuity_case(tmp_path,monkeypatch):
+    d,cfg,q=_dispatch_fixture();root=tmp_path/'repo';root.mkdir()
+    files=d.CORE+d.SAMPLED+d.LEARNING
+    original={name:(ROOT/name).read_bytes() for name in files}
+    old_cfg=copy.deepcopy(cfg);old_cfg['learning']['action']='qualification'
+    for k in ('qualification_record_path','qualification_record_sha256','learning_manifest_path'):
+        old_cfg['learning'].pop(k,None)
+    original['configs/dw_sampling.yaml']=yaml.safe_dump(old_cfg).encode()
+    for name in files:
+        p=root/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes((ROOT/name).read_bytes())
+    previous={name:hashlib.sha256(value).hexdigest() for name,value in original.items()}
+    monkeypatch.setattr(d,'ROOT',root)
+    monkeypatch.setattr(d,'qualification_git_blob',lambda head,name:original[name])
+    out=root/'evidence';attempt=d.allocate_attempt(out,'pilot')
+    manifest=attempt/'data_manifest.json'
+    q['data']['manifest_path']=str(manifest)
+    d.write_json(manifest,{'processed_files':q['data']['files']})
+    q['data']['manifest_sha256']=d.digest(manifest)
+    q['measurement_hashes']=previous
+    d.write_json(attempt/'source_manifest.json',{'actual_head':'1'*40,'measurement_hashes':previous})
+    q['source_manifest_sha256']=d.digest(attempt/'source_manifest.json')
+    d.write_json(attempt/'model_qualification.json',q['qualification'])
+    d.seal_record(attempt,{'stage':'pilot',**q})
+    path=attempt/'record.json';current=d.source_hashes('pilot')
+    review=root/'review.txt';review.write_text('invented exact-diff review')
+    entry={'status':'approved','record_path':str(path.relative_to(root)),'record_sha256':d.digest(path),
+        'source_manifest_sha256':d.digest(attempt/'source_manifest.json'),'measured_head':'1'*40,
+        'previous_measurement_hashes':previous,'current_measurement_hashes':current,
+        'changed_files':['configs/dw_sampling.yaml'],'executed_paths_unchanged':True,
+        'initializers_and_transitive_callers_reviewed':True,'reviews':[{'path':'review.txt','sha256':d.digest(review)}]}
+    amendment={'bound_files':current,'model_qualification_continuity':entry}
+    a=root/'decisions/dw_sampling_amendment.json';a.write_text(json.dumps(amendment))
+    return d,out,path,current,amendment,original
+
+
+def test_qualification_continuity_accepts_nested_pass_preserves_enclosing_not_run(qualification_continuity_case):
+    d,out,path,current,amendment,original=qualification_continuity_case
+    result=d.require_model_qualification(out,path,d.digest(path),current)
+    assert result['record']['status']=='not_run' and result['qualification']['status']=='pass'
+    assert result['record']['learning_success'] is False
+    later=d.allocate_attempt(out,'pilot');d.write_json(later/'source_manifest.json',{'learning_action':'learning',
+        'config_sha256':d.digest(d.ROOT/'configs/dw_sampling.yaml'),'measurement_hashes':current,
+        'amendment_sha256':d.digest(d.ROOT/'decisions/dw_sampling_amendment.json'),'bound_files':amendment['bound_files']})
+    assert d.require_model_qualification(out,path,d.digest(path),current)['reference']['measured_head']=='1'*40
+    d.seal_record(later,{'stage':'pilot','status':'INCOMPLETE_RESOURCE','learning_action':'learning',
+        'measurement_hashes':current,'source_manifest_sha256':d.digest(later/'source_manifest.json')})
+    assert d.require_model_qualification(out,path,d.digest(path),current)['record']['status']=='not_run'
+    with pytest.raises(ValueError,match='failed|incomplete'):
+        d.require_stage(out,'pilot',current)
+
+
+@pytest.mark.parametrize('damage',['record_sha','previous_map','current_map','review','transitive','old_blob','changed_function','asset','calibration','selected_native','data'])
+def test_qualification_continuity_rejects_forged_stale_or_changed_proof(qualification_continuity_case,damage):
+    d,out,path,current,amendment,original=qualification_continuity_case
+    if damage=='record_sha':amendment['model_qualification_continuity']['record_sha256']='0'*64
+    elif damage=='previous_map':amendment['model_qualification_continuity']['previous_measurement_hashes']={}
+    elif damage=='current_map':amendment['model_qualification_continuity']['current_measurement_hashes']={}
+    elif damage=='review':(d.ROOT/'review.txt').write_text('changed')
+    elif damage=='transitive':amendment['model_qualification_continuity']['initializers_and_transitive_callers_reviewed']=False
+    elif damage=='old_blob':original['src/oar/sampling_data.py']+=b'\n'
+    elif damage=='changed_function':
+        original['src/oar/sampling_lm.py']=original['src/oar/sampling_lm.py'].replace(b"'training requires native torch.optim.AdamW'",b"'changed executed native core'")
+    elif damage=='asset':
+        cfg=yaml.safe_load((d.ROOT/'configs/dw_sampling.yaml').read_text());cfg['asset']['revision']='changed'
+        (d.ROOT/'configs/dw_sampling.yaml').write_text(yaml.safe_dump(cfg))
+    else:
+        # Retain the original seal and explicit approved SHA; changed selected
+        # native/calibration/data JSON cannot acquire prior qualification.
+        p=path.parent/('data_manifest.json' if damage=='data' else 'model_qualification.json')
+        value=json.loads(p.read_text())
+        if damage=='calibration':value['calibration']['horizon']['H']=99.
+        elif damage=='selected_native':value['native_variant']='single'
+        else:value['processed_files']['fitting-development']['sha256']='0'*64
+        p.write_text(json.dumps(value))
+    (d.ROOT/'decisions/dw_sampling_amendment.json').write_text(json.dumps(amendment))
+    with pytest.raises(ValueError):
+        d.require_model_qualification(out,path,d.digest(path),current)
+
+
+def test_qualification_continuity_later_incomplete_or_failed_qualification_cannot_be_bypassed(qualification_continuity_case):
+    d,out,path,current,amendment,original=qualification_continuity_case
+    later=d.allocate_attempt(out,'pilot');d.write_json(later/'source_manifest.json',{'learning_action':'qualification'})
+    with pytest.raises(ValueError,match='later incomplete'):
+        d.require_model_qualification(out,path,d.digest(path),current)
+    d.seal_record(later,{'stage':'pilot','status':'STOP_COST','measurement_hashes':current})
+    with pytest.raises(ValueError,match='later qualification'):
+        d.require_model_qualification(out,path,d.digest(path),current)
+
+
+def test_learning_resume_cross_attempt_retention_optimizer_streams_and_final(tmp_path,monkeypatch):
+    trial=tmp_path/'trial';bindings={'fixture':'frozen'};previous=None;prior=0.;live=[]
+    final=None
+    for index,stop in [(1,28.),(2,55.),(3,None)]:
+        lm,state,data,request,_,source,calls=_budget_case(tmp_path/f'fixture{index}',monkeypatch,horizon=100.)
+        run=trial/f'attempt-{index:04d}';run.mkdir(parents=True)
+        request.update(run_dir=str(run/'worker'),checkpoint_dir=str(tmp_path/'owned-checkpoints'),checkpoint_history=live)
+        request['checkpoint_history_sha256']=hashlib.sha256(driver().canonical(live)).hexdigest()
+        clock=lm.ChargedClock(0.,prior_elapsed_s=prior,clock=source)
+        if index>1:
+            selected=next(r for r in reversed(live) if not r.get('pruned') and r['kind']!='final')
+            request['resume']={'path':selected['path'],'sha256':selected['sha256']}
+        step=state.step
+        def interrupting_step(lr):
+            if stop is not None and clock.elapsed()>=stop:raise KeyboardInterrupt('invented environmental interruption')
+            return step(lr)
+        state.step=interrupting_step
+        if stop is not None:
+            with pytest.raises(KeyboardInterrupt):lm.train_budget(state,data,request,clock)
+        else:
+            final=lm.train_budget(state,data,request,clock)
+        d=driver();launch={'bindings':bindings,'attempt_id':run.name,'launch_perf_s':0.,'prior_elapsed_s':prior,
+            'previous_exit_sha256':previous,'checkpoint_dir':request['checkpoint_dir']}
+        d.durable_json(run/'launch.json',launch)
+        ended=clock.elapsed();d.durable_json(run/'exit.json',{'launch_sha256':d.digest(run/'launch.json'),
+            'ended_perf_s':source.now,'active_s':source.now,'cumulative_elapsed_s':ended,
+            'classification':'environmental_interruption' if stop else 'complete','exit_code':-2 if stop else 0})
+        ledger=d.read_trial_ledger(trial,bindings);live=ledger['checkpoint_history'];prior=ended;previous=ledger['previous_exit_sha256']
+        assert len([r for r in live if not r.get('pruned') and r['kind']!='final'])<=2
+        assert all(Path(r['path']).is_file() for r in ledger['live_checkpoints'])
+        if index>1:
+            events=[json.loads(line) for line in (run/'worker/events.jsonl').read_text().splitlines()]
+            assert not any(r['kind'] in ('initial_full','initial_monitor') for r in events)
+    assert len(ledger['live_checkpoints'])==1 and ledger['live_checkpoints'][0]['kind']=='final'
+    payload=lm.load_checkpoint(final['final_checkpoint']['path'],final['final_checkpoint']['sha256'],expected_bindings=bindings)
+    assert payload['training_state']['logical_updates']==final['logical_updates']
+    assert all(float(s['step'])==final['logical_updates'] for s in payload['training_state']['optimizer']['state'].values())
+    assert payload['training_state']['sampler'] # sampler and data stream both survive checkpoints
+
+
+def test_learning_resume_foreign_history_never_prunes_user_file(tmp_path,monkeypatch):
+    lm,state,data,request,clock,source,calls=_budget_case(tmp_path,monkeypatch,horizon=100.)
+    victim=tmp_path/'user-final.pt';victim.write_bytes(b'user evidence')
+    request['checkpoint_history']=[{'path':str(victim),'sha256':hashlib.sha256(victim.read_bytes()).hexdigest(),'kind':'periodic'}]
+    with pytest.raises(ValueError,match='owned'):
+        lm.train_budget(state,data,request,clock)
+    assert victim.read_bytes()==b'user evidence' and state.logical_updates==0
+
+
+def test_learning_ledger_cross_stage_attempt_reuses_ended_trial_without_spending_slot(tmp_path,monkeypatch):
+    d,cfg,q=_dispatch_fixture();freeze=d.build_learning_manifest(cfg,q,qualification_reference={},measurement_hashes={},config_sha256='a')
+    first=d.allocate_attempt(tmp_path,'pilot');second=d.allocate_attempt(tmp_path,'pilot');trial=freeze['grid'][0]
+    for p in (first,second):d.durable_json(p/'source_manifest.json',{'measurement_hashes':{},'config_sha256':'a'})
+    script="import pathlib,json,sys;r=json.load(open(sys.argv[1]));p=pathlib.Path(r['result']);p.parent.mkdir(parents=True);p.write_text(json.dumps({'status':'pass','reason':'fixture'}))"
+    monkeypatch.setattr(d,'worker_args',lambda stage,config,out,request:[sys.executable,'-c',script,str(request)])
+    original=d.execute_learning_trial(cfg,ROOT/'configs/dw_sampling.yaml',tmp_path,first,trial,freeze)
+    reused=d.execute_learning_trial(cfg,ROOT/'configs/dw_sampling.yaml',tmp_path,second,trial,freeze)
+    assert reused==original and not (second/'trials').exists()
+
+
+def test_budget_worker_resume_discards_secondary_from_uncommitted_future(tmp_path,monkeypatch):
+    lm,state,data,request,clock,source,calls=_budget_case(tmp_path,monkeypatch,horizon=100.)
+    request['secondary_update']=3
+    real_step=state.step
+    def interrupted(lr):
+        if state.logical_updates>=5:raise KeyboardInterrupt('environmental')
+        return real_step(lr)
+    state.step=interrupted
+    with pytest.raises(KeyboardInterrupt):lm.train_budget(state,data,request,clock)
+    receipts=[json.loads(line) for line in (Path(request['run_dir'])/'checkpoint_receipts.jsonl').read_text().splitlines()]
+    initial=next(r for r in receipts if r['kind']=='initial');oldsecondary=next(r for r in receipts if r['kind']=='secondary')
+    newrequest={**request,'run_dir':str(tmp_path/'resumed'),'resume':{'path':initial['path'],'sha256':initial['sha256']},
+        'checkpoint_history':[initial],'secondary_history':[oldsecondary]}
+    lm,state,data,_,_,newsource,calls=_budget_case(tmp_path/'fresh',monkeypatch,horizon=100.)
+    newclock=lm.ChargedClock(0.,prior_elapsed_s=clock.elapsed(),clock=newsource)
+    result=lm.train_budget(state,data,newrequest,newclock)
+    assert not Path(oldsecondary['path']).exists()
+    assert Path(result['secondary_checkpoint']['path']).is_file()
+    assert len(list((tmp_path/'private-checkpoints').glob('secondary-*')))==1
+
+
+def test_development_dispatch_mandatory_role_missing_and_smaller_dense_dominance():
+    d,cfg,q=_dispatch_fixture();freeze=d.build_learning_manifest(cfg,q,qualification_reference={},measurement_hashes={},config_sha256='x')
+    rows=[]
+    for seed in (3102,3103,3104):
+        for role,t,batch in [('candidate',50.,16),('dense',51.,4),('native_b16',70.,16),('uniform',70.,16)]:
+            row=_learning_grid_record(f'{seed}-{role}',batch,.001,2.5,[(t-5,2.8),(t,2.8)])
+            row.update(seed=seed,roles=[role],canonical_completion_s=110.)
+            rows.append(row)
+    selection={'q_star':3.,'epsilon_q':.02}
+    assert d.finish_development(rows,selection,freeze)['status']=='STOP_DOMINATED'
+    assert d.finish_development([r for r in rows if r['roles']!=['uniform']],selection,freeze)['status']=='INCONCLUSIVE_MEASUREMENT'
+
+
+def test_learning_diagnostic_context128_preserves_inclusive_target_coverage():
+    d=driver();data=data_module()
+    articles=data.normalize_articles(['= Fixture =\n'+'abc'*180],'fixture')
+    original=data.training_chunks(articles);blocks=d.diagnostic_context_blocks(original)
+    old=[(b.article_index,t) for b in original for t in range(b.target_start,b.target_end+1)]
+    new=[(b.article_index,t) for b in blocks for t in range(b.target_start,b.target_end+1)]
+    assert old==new
+    assert all(b.target_end-b.input_start<=128 for b in blocks)
+    assert blocks[-1].target_end==original[-1].target_end
+
+
+def test_learning_grid_dispatch_to_independent_plan_retains_all_trials_and_diagnostics(tmp_path,monkeypatch):
+    d,cfg,q=_dispatch_fixture();freeze=d.build_learning_manifest(cfg,q,qualification_reference={},measurement_hashes={},config_sha256='x')
+    attempt=d.allocate_attempt(tmp_path,'pilot')
+    monkeypatch.setattr(d,'load_learning_freeze',lambda *a:copy.deepcopy(freeze))
+    monkeypatch.setattr(d,'require_stage',lambda *a:{'status':'pass'})
+    monkeypatch.setattr(d,'storage_guard',lambda *a:{'free_disk_bytes':10**15})
+    monkeypatch.setattr(d,'model_resource_guard',lambda *a:{'storage':{'free_disk_bytes':10**15}})
+    launched=[]
+    def fake_hardware(cfg,config,out,attempt,trial,freeze,resume_selections=None,**kw):
+        launched.append(trial)
+        if trial.get('kind')=='learning_precision_qualification':return {'status':'unsupported','reason':'fixture unsupported backend'}
+        if trial.get('kind')=='learning_diagnostic':return {'status':'pass','descriptive_only':True,'id':trial['id']}
+        candidate=trial['arm']['sampler']=='importance'
+        uniform=trial['arm']['sampler']=='uniform'
+        t=30. if candidate else (50. if uniform else 70.)
+        if trial['seed']!=3101:t=40. if candidate else (70. if uniform or trial['arm']['batch']==16 else 60.)
+        row=_learning_grid_record(trial['id'],trial['arm']['batch'],trial['arm']['lr'],2.5,
+            [(t-5,3.),(t,2.9),(max(t+1,60.),2.8),(max(t+2,80.),2.7)],sampler=trial['arm']['sampler'],rho=trial['arm']['rho'])
+        # Native R0 target calibration at >=.6H requires two later crossings.
+        if trial['seed']==3101 and not candidate and not uniform:
+            row['monitors']=[{'completed_s':60.,'nll':3.},{'completed_s':70.,'nll':2.9},{'completed_s':80.,'nll':2.8}]
+        row.update(arm=trial['arm'],seed=trial['seed'],roles=trial['roles'],canonical_completion_s=110.,
+                   initial_parameters_sha256=f'weights-{trial["seed"]}',secondary_checkpoint=None)
+        return row
+    monkeypatch.setattr(d,'execute_learning_trial',fake_hardware)
+    result=d.pilot_learning(cfg,ROOT/'configs/dw_sampling.yaml',tmp_path,attempt)
+    assert result['status']=='pass' and result['learning_success'] is False
+    assert result['confirmation_plan']['N']==8
+    assert len(json.loads((attempt/'grid-results.json').read_text()))==27
+    matrix=json.loads((attempt/'development-matrix.json').read_text())
+    assert len(matrix)==12 and {r['seed'] for r in matrix}=={3102,3103,3104}
+    assert len(json.loads((attempt/'secondary-results.json').read_text()))==12
+    assert len(json.loads((attempt/'diagnostics.json').read_text()))==5
+    plan=json.loads((attempt/'prospective-confirmation-plan.json').read_text())
+    assert plan['N']==8 and 'separate future' in plan['confirmation_dispatch']
+    assert all(r['phase']=='development' for r in launched)
+
+
+@pytest.mark.parametrize('kind',['context128','components'])
+def test_learning_diagnostic_real_tiny_cpu_paths_keep_history_and_separate_cost(tmp_path,monkeypatch,kind):
+    import torch
+    import oar.sampling_lm as lm
+    d,cfg,q=_dispatch_fixture();state=_byte_recovery_fixture(sampler=None)
+    cfg['learning'].update(blocks=1,width=8,heads=2,ffn_width=16)
+    cfg['timing']['minimum_block_s']=.0001
+    cfg['timing']['warmup'].update(minimum=2,maximum=3,window=2)
+    q['qualification']['eligible']=[{'sampler':'importance','rho':.125,'arm':'importance-0.125'}]
+    freeze=d.build_learning_manifest(cfg,q,qualification_reference={},measurement_hashes={},config_sha256='x')
+    data={'training_tokens':state.stream.tokenized_articles,'training_blocks':state.stream.blocks}
+    monkeypatch.setattr(d,'model_data',lambda request:data)
+    monkeypatch.setattr(d,'model_resource_guard',lambda *a:{})
+    monkeypatch.setattr(torch.mps,'synchronize',lambda:None)
+    def fixture(local,data,request,*,variant,sampler=None,rho=.25):
+        config=lm.ModelConfig(**{k:local['learning'][k] for k in ('blocks','width','heads','ffn_width','context')})
+        return lm.ModelFixture(data,base_seed=request['base_seed'],variant='single',sampler=sampler,rho=rho,
+                              batch_size=16,device='cpu',model_config=config)
+    monkeypatch.setattr(d,'model_fixture',fixture)
+    result=d.learning_diagnostic_worker(cfg,{'trial':{'diagnostic':kind},'seed':61001,'variant':'single',
+        'run_dir':str(tmp_path),'out':str(tmp_path)},freeze)
+    assert result['status']=='pass' and result['descriptive_only'] is True
+    assert result['native_history']['history_updates']==8
+    assert result['native_history']['nonzero_native_moments'] is True
+    if kind=='context128':
+        assert len(result['comparisons']['importance-0.125']['pairs'])==30
+        assert result['context']==128 and result['primary_horizon_unchanged'] is True
+    else:
+        assert set(result['comparisons'])=={'dense','importance-0.125'}
+        assert all(r['observed_complete_step_s']>0 and r['component_sum_used'] is False for r in result['comparisons'].values())
+
+
+def test_native_precision_qualification_prefers_bf16_and_numeric_failure_is_fatal(monkeypatch):
+    import torch
+    import oar.sampling_lm as lm
+    state=_byte_recovery_fixture(sampler=None)
+    from oar.sampling_data import TargetBlock
+    data={'training_tokens':state.stream.tokenized_articles,'training_blocks':state.stream.blocks,
+          'evaluation_tokens':state.stream.tokenized_articles,'evaluation_monitor':state.stream.blocks}
+    monkeypatch.setattr(torch.backends.mps,'is_available',lambda:True)
+    monkeypatch.setattr(torch.mps,'synchronize',lambda:None)
+    monkeypatch.setattr(lm,'load_worker_data',lambda *a,**kw:data)
+    fixture_class=lm.ModelFixture
+    def tiny(data,**kwargs):
+        return fixture_class(data,**kwargs,device='cpu',model_config=lm.ModelConfig(blocks=1,width=8,heads=2,ffn_width=16))
+    monkeypatch.setattr(lm,'ModelFixture',tiny)
+    request={'data_path':'invented','data_sha256':'x','seed':3101,'variant':'single','arm':{'batch':16,'lr':.001}}
+    result=lm.qualify_native_precision(request)
+    assert result['status']=='pass' and result['precision']=='bf16'
+    assert len(result['attempts'])==1 and result['native_grad_scaler'] is False
+    def invalid_step(self,lr):raise RuntimeError('nonfinite gradient in precision trajectory')
+    monkeypatch.setattr(lm.NativePrecisionState,'step',invalid_step)
+    with pytest.raises(RuntimeError,match='nonfinite gradient'):
+        lm.qualify_native_precision(request)
+    assert not lm.precision_backend_unsupported(RuntimeError('MPS device error not supported on device'))
+
+
+def test_learning_resume_controller_metadata_rejected_before_live_restore(tmp_path,monkeypatch):
+    lm,state,data,request,clock,source,calls=_budget_case(tmp_path,monkeypatch,horizon=100.)
+    first=lm.train_budget(state,data,request,clock)
+    periodic=next(r for r in first['checkpoint_manifest'] if r['kind']=='periodic')
+    # All ephemeral files were pruned after final. Build a separately saved
+    # invented compatible state carrying a forged controller boundary instead.
+    payload=lm.load_checkpoint(first['final_checkpoint']['path'],first['final_checkpoint']['sha256'],expected_bindings=request['bindings'])
+    payload['optimization_frozen']=False;payload['next_deadline_index']=-1
+    forged=tmp_path/'forged.pt';receipt=lm.save_checkpoint(forged,payload)
+    before=state.snapshot();request.update(run_dir=str(tmp_path/'resume-bad'),resume={'path':str(forged),'sha256':receipt['sha256']})
+    newclock=lm.ChargedClock(source.now,prior_elapsed_s=clock.elapsed(),clock=source)
+    with pytest.raises(ValueError,match='controller|deadline'):
+        lm.train_budget(state,data,request,newclock)
+    assert state.logical_updates==before['logical_updates']
+
+
+def test_learning_ledger_cannot_adopt_unreceipted_orphan_after_terminal(tmp_path,monkeypatch):
+    d,cfg,q=_dispatch_fixture();monkeypatch.setattr(d,'ROOT',tmp_path)
+    freeze=d.build_learning_manifest(cfg,q,qualification_reference={},measurement_hashes={},config_sha256='x')
+    attempt=d.allocate_attempt(tmp_path,'pilot');d.durable_json(attempt/'source_manifest.json',{'measurement_hashes':{},'config_sha256':'x'})
+    trial=freeze['grid'][0]
+    script="import pathlib,json,sys,os,signal;r=json.load(open(sys.argv[1]));p=pathlib.Path(r['run_dir']);p.mkdir(parents=True);(p/'checkpoint_receipts.jsonl').write_text('');c=pathlib.Path(r['checkpoint_dir']);c.mkdir(parents=True);(c/'orphan.pt').write_bytes(b'orphan');os.kill(os.getpid(),signal.SIGTERM)"
+    monkeypatch.setattr(d,'worker_args',lambda stage,config,out,request:[sys.executable,'-c',script,str(request)])
+    d.launch_learning_worker(cfg,ROOT/'configs/dw_sampling.yaml',tmp_path,attempt,trial,freeze)
+    run=attempt/'trials'/trial['id']/'attempt-0001';request=json.loads((run/'request.json').read_text())
+    orphan=Path(request['checkpoint_dir'])/'orphan.pt'
+    receipt={'path':str(orphan),'sha256':d.digest(orphan),'kind':'periodic','logical_updates':1,'completed_s':1.}
+    (run/'worker'/'checkpoint_receipts.jsonl').write_text(json.dumps(receipt)+'\n')
+    with pytest.raises(ValueError,match='artifact|prefix|receipt'):
+        d.read_trial_ledger(run.parent,d.learning_bindings(freeze,trial))
+
+
+def test_native_precision_disabled_autocast_is_unsupported_not_fp32_success(monkeypatch):
+    import torch
+    import oar.sampling_lm as lm
+    state=_byte_recovery_fixture(sampler=None)
+    precision=lm.NativePrecisionState(state.model,state.optimizer,state.stream,precision='bf16')
+    monkeypatch.setattr(torch,'is_autocast_enabled',lambda *args:False)
+    with pytest.raises(RuntimeError,match='autocast.*disabled|disabled.*autocast'):
+        precision.step(.001)
+    assert precision.logical_updates==0
+    assert lm.precision_backend_unsupported(RuntimeError("The operator aten::_amp_foreach_non_finite_check_and_unscale_ is not currently implemented for the MPS device"))
+
+
+def test_learning_secondary_retires_only_after_durable_evaluation(tmp_path,monkeypatch):
+    import oar.sampling_lm as lm
+    d=driver();lm,state,data,request,clock,source,calls=_budget_case(tmp_path,monkeypatch,horizon=100.)
+    request['secondary_update']=3
+    primary=lm.train_budget(state,data,request,clock);checkpoint=primary['secondary_checkpoint']
+    full_data={**data,'training_tokens':state.stream.tokenized_articles,'training_blocks':state.stream.blocks}
+    monkeypatch.setattr(d,'model_data',lambda request:full_data)
+    monkeypatch.setattr(d,'model_resource_guard',lambda *a:{})
+    monkeypatch.setattr(d,'declared_learning_trials',lambda *a:[{'id':'primary-fixture'}])
+    monkeypatch.setattr(d,'learning_bindings',lambda *a:request['bindings'])
+    cls=lm.ModelFixture
+    monkeypatch.setattr(lm,'ModelFixture',lambda data,**kw:cls(data,**kw,device='cpu',model_config=state.model.config))
+    run=tmp_path/'secondary-worker'
+    cfg=yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
+    req={'kind':'learning_secondary','run_dir':str(run),'result':str(run/'result.json'),'out':str(tmp_path),
+         'secondary_checkpoint':checkpoint,'arm':{'sampler':'uniform','rho':.25,'batch':1,'precision':'fp32'},
+         'seed':8,'variant':'single','trial':{'secondary_of':'primary-fixture'},'attempt':str(tmp_path)}
+    result=d.run_learning_session_worker(cfg,req,{})
+    assert result['status']=='pass' and not Path(checkpoint['path']).exists()
+    retirement=json.loads((run/'secondary-retirement.json').read_text())
+    assert retirement['evaluation_result_sha256']==d.digest(run/'result.json')
+    assert retirement['checkpoint']==checkpoint
+    assert Path(primary['final_checkpoint']['path']).is_file()
+
+
+def test_qualification_continuity_cannot_hide_sealed_later_failure_by_editing_action(qualification_continuity_case):
+    d,out,path,current,amendment,original=qualification_continuity_case
+    later=d.allocate_attempt(out,'pilot')
+    identity={'learning_action':'qualification','measurement_hashes':current}
+    d.write_json(later/'source_manifest.json',identity)
+    d.seal_record(later,{'stage':'pilot','status':'STOP_COST','learning_action':'qualification',
+        'measurement_hashes':current,'source_manifest_sha256':d.digest(later/'source_manifest.json')})
+    with pytest.raises(ValueError):d.require_model_qualification(out,path,d.digest(path),current)
+    identity['learning_action']='learning'
+    (later/'source_manifest.json').write_text(json.dumps(identity))
+    with pytest.raises(ValueError,match='hash|seal|artifact'):
+        d.require_model_qualification(out,path,d.digest(path),current)
+
+
+@pytest.mark.mps
+@pytest.mark.parametrize('precision',['bf16','fp16'])
+def test_native_precision_mps_master_moments_and_fp32_evaluation(precision):
+    import torch
+    import oar.sampling_lm as lm
+    if not torch.backends.mps.is_available():pytest.skip('actual MPS device unavailable')
+    original=_byte_recovery_fixture(sampler=None)
+    model=original.model.to('mps');optimizer=lm.make_optimizer(model,'single')
+    try:
+        scaler=torch.amp.GradScaler('mps') if precision=='fp16' else None
+        state=lm.NativePrecisionState(model,optimizer,original.stream,precision=precision,scaler=scaler,
+            scaler_qualification={'backend':'mps','native_grad_scaler':True} if scaler else None)
+        state.step(.001);state.step(.001);torch.mps.synchronize()
+    except Exception as exc:
+        if lm.precision_backend_unsupported(exc):pytest.skip('explicit installed native precision capability: '+str(exc))
+        raise
+    assert state.logical_updates==2 and all(p.dtype==torch.float32 for p in model.parameters())
+    assert all(s['exp_avg'].dtype==torch.float32 and s['exp_avg_sq'].dtype==torch.float32 for s in optimizer.state.values())
+    flags=[]
+    hook=model.register_forward_pre_hook(lambda *args:flags.append(torch.is_autocast_enabled('mps')))
+    try:
+        result=lm.evaluate(model,original.stream.tokenized_articles,original.stream.blocks,batch_size=16)
+    finally:hook.remove()
+    assert math.isfinite(result['nll']) and flags and not any(flags)
+
+
+@pytest.mark.parametrize('marker',['worker-failure.json','failure.json'])
+def test_learning_ledger_known_numeric_failure_wins_over_later_sigterm(tmp_path,monkeypatch,marker):
+    d,cfg,q=_dispatch_fixture();freeze=d.build_learning_manifest(cfg,q,qualification_reference={},measurement_hashes={},config_sha256='x')
+    attempt=d.allocate_attempt(tmp_path,'pilot');d.durable_json(attempt/'source_manifest.json',{'measurement_hashes':{},'config_sha256':'x'})
+    trial=freeze['grid'][0]
+    script="import pathlib,json,sys,os,signal;r=json.load(open(sys.argv[1]));p=pathlib.Path(r['run_dir']);p.mkdir(parents=True);(p/"+repr(marker)+").write_text(json.dumps({'classification':'numerical_failure','exception':'RuntimeError','reason':'nonfinite gradient'}));os.kill(os.getpid(),signal.SIGTERM)"
+    monkeypatch.setattr(d,'worker_args',lambda stage,config,out,request:[sys.executable,'-c',script,str(request)])
+    result=d.launch_learning_worker(cfg,ROOT/'configs/dw_sampling.yaml',tmp_path,attempt,trial,freeze)
+    assert result['status']=='NUMERICAL_FAILURE'
+    ledger=d.read_trial_ledger(attempt/'trials'/trial['id'],d.learning_bindings(freeze,trial))
+    assert ledger['last_classification']=='numerical_failure'
+    with pytest.raises(ValueError,match='environmental'):
+        d.validate_resume_selection({'path':'unused','sha256':'0'*64},ledger,d.learning_bindings(freeze,trial))
+
+
+def test_native_precision_retains_bf16_unsupported_before_fp16_numerical_failure(tmp_path,monkeypatch):
+    import torch
+    import oar.sampling_lm as lm
+    state=_byte_recovery_fixture(sampler=None)
+    data={'training_tokens':state.stream.tokenized_articles,'training_blocks':state.stream.blocks}
+    monkeypatch.setattr(torch.backends.mps,'is_available',lambda:True)
+    monkeypatch.setattr(lm,'load_worker_data',lambda *a,**kw:data)
+    cls=lm.ModelFixture
+    monkeypatch.setattr(lm,'ModelFixture',lambda data,**kw:cls(data,**kw,device='cpu',model_config=state.model.config))
+    def probe(*a,precision,**kw):
+        if precision=='bf16':raise RuntimeError('BFloat16 is not supported on MPS')
+        raise RuntimeError('nonfinite gradient in native FP16')
+    monkeypatch.setattr(lm,'NativePrecisionState',probe)
+    request={'data_path':'invented','data_sha256':'x','seed':3101,'variant':'single','arm':{'batch':16,'lr':.001},'run_dir':str(tmp_path)}
+    with pytest.raises(RuntimeError,match='nonfinite gradient'):
+        lm.qualify_native_precision(request)
+    rows=[json.loads(line) for line in (tmp_path/'precision_attempts.jsonl').read_text().splitlines()]
+    assert [(r['precision'],r['status']) for r in rows]==[('bf16','unsupported'),('fp16','numerical_failure')]
+    assert 'BFloat16' in rows[0]['reason'] and 'nonfinite gradient' in rows[1]['reason']
+
+
+def _precision_replay_payload():
+    import torch
+    return {'bindings':{'device_type':'mps','native_precision':'fp16'},'model':{'weight':torch.tensor([1.,2.])},
+        'optimizer':{'state':{0:{'step':torch.tensor(3.),'exp_avg':torch.tensor([.1,.2]),'exp_avg_sq':torch.tensor([.01,.02])}},
+                     'param_groups':[{'lr':.001,'betas':(.9,.999),'eps':1e-8}]},
+        'stream':{'generator_state':torch.tensor([1,2,3],dtype=torch.uint8)},
+        'precision_state':{'precision':'fp16','scaler':{'scale':65536.,'_growth_tracker':3}},'logical_updates':3}
+
+
+@pytest.mark.parametrize('field',['model','moment'])
+def test_native_precision_replay_allows_only_declared_mps_model_moment_float_tolerance(field):
+    import oar.sampling_lm as lm
+    expected=_precision_replay_payload();actual=copy.deepcopy(expected)
+    target=actual['model']['weight'] if field=='model' else actual['optimizer']['state'][0]['exp_avg']
+    target.add_(1e-6)
+    proof=lm.validate_native_precision_replay(expected,actual,device_type='mps')
+    assert proof['policy']['rtol']==1e-4 and proof['policy']['atol']==1e-6
+    assert proof['max_model_absolute_deviation' if field=='model' else 'max_adam_moment_absolute_deviation']>0
+    with pytest.raises(RuntimeError,match='replay'):
+        lm.validate_native_precision_replay(expected,actual,device_type='cpu')
+
+
+@pytest.mark.parametrize('damage',['large_model','large_moment','step','rng','scaler','lr','betas','logical'])
+def test_native_precision_replay_rejects_other_deviations_exactly(damage):
+    import oar.sampling_lm as lm
+    expected=_precision_replay_payload();actual=copy.deepcopy(expected)
+    if damage=='large_model':actual['model']['weight'].add_(.1)
+    elif damage=='large_moment':actual['optimizer']['state'][0]['exp_avg_sq'].add_(.1)
+    elif damage=='step':actual['optimizer']['state'][0]['step'].add_(1e-5)
+    elif damage=='rng':actual['stream']['generator_state'][0]=4
+    elif damage=='scaler':actual['precision_state']['scaler']['scale']+=.001
+    elif damage=='lr':actual['optimizer']['param_groups'][0]['lr']+=1e-8
+    elif damage=='betas':actual['optimizer']['param_groups'][0]['betas']=(.9,.998999999)
+    else:actual['logical_updates']+=1
+    with pytest.raises(RuntimeError,match='replay'):
+        lm.validate_native_precision_replay(expected,actual,device_type='mps')
+
+
+@pytest.mark.parametrize('sealed',[False,True])
+@pytest.mark.parametrize('tamper',[False,True])
+def test_learning_ledger_reuse_authenticates_aggregate_science_and_parent_seal(tmp_path,monkeypatch,sealed,tamper):
+    d,cfg,q=_dispatch_fixture();freeze=d.build_learning_manifest(cfg,q,qualification_reference={},measurement_hashes={},config_sha256='a')
+    first=d.allocate_attempt(tmp_path,'pilot');second=d.allocate_attempt(tmp_path,'pilot');trial=freeze['grid'][0]
+    for p in (first,second):d.durable_json(p/'source_manifest.json',{'measurement_hashes':{},'config_sha256':'a'})
+    script="import pathlib,json,sys;r=json.load(open(sys.argv[1]));p=pathlib.Path(r['result']);p.parent.mkdir(parents=True);p.write_text(json.dumps({'status':'pass','reason':'fixture','endpoint_full':{'nll':2.5}}))"
+    monkeypatch.setattr(d,'worker_args',lambda stage,config,out,request:[sys.executable,'-c',script,str(request)])
+    original=d.execute_learning_trial(cfg,ROOT/'configs/dw_sampling.yaml',tmp_path,first,trial,freeze)
+    if sealed:d.seal_record(first,{'stage':'pilot','status':'INCOMPLETE_RESOURCE','learning_action':'learning',
+        'measurement_hashes':{},'source_manifest_sha256':d.digest(first/'source_manifest.json')})
+    aggregate=first/'trials'/trial['id']/'attempt-0001'/'aggregate-result.json'
+    if tamper:
+        changed=json.loads(aggregate.read_text());changed['endpoint_full']['nll']=1.
+        aggregate.write_text(json.dumps(changed))
+        with pytest.raises(ValueError,match='artifact|aggregate'):
+            d.execute_learning_trial(cfg,ROOT/'configs/dw_sampling.yaml',tmp_path,second,trial,freeze)
+    else:
+        assert d.execute_learning_trial(cfg,ROOT/'configs/dw_sampling.yaml',tmp_path,second,trial,freeze)==original
+        assert original['endpoint_full']['nll']==2.5
+
+
+def _development_control_censor_fixture():
+    d,cfg,q=_dispatch_fixture()
+    freeze=d.build_learning_manifest(cfg,q,qualification_reference={},measurement_hashes={},config_sha256='fixture')
+    rows=[]
+    for seed in (3102,3103,3104):
+        for role,t,nll in [('candidate',40.,2.50),('dense',60.,2.51),('native_b16',65.,2.52),('uniform',65.,2.70)]:
+            row=_learning_grid_record(f'{seed}-{role}',16,.001,nll,[(t-5,2.8),(t,2.8)])
+            row.update(seed=seed,roles=[role],canonical_completion_s=110.,initial_parameters_sha256=f'weights-{seed}')
+            rows.append(row)
+    return d,rows,{'q_star':3.,'epsilon_q':.02},freeze
+
+
+@pytest.mark.parametrize('control',['uniform','native_b16','precision'])
+@pytest.mark.parametrize('censored_seeds',[(3102,),(3102,3103,3104)])
+def test_development_dispatch_complete_censored_secondary_is_not_evaluable_not_primary_veto(control,censored_seeds):
+    d,rows,selection,freeze=_development_control_censor_fixture()
+    if control=='precision':
+        for row in list(rows):
+            if row['roles']==['native_b16']:
+                precision=copy.deepcopy(row);precision['id']+='-precision';precision['roles']=['precision']
+                precision['arm']['precision']='bf16';rows.append(precision)
+    for row in rows:
+        if row['roles']==[control] and row['seed'] in censored_seeds:
+            row['monitors']=[{'completed_s':35.,'nll':3.5},{'completed_s':40.,'nll':3.4}]
+    result=d.finish_development(rows,selection,freeze)
+    assert result['status']=='pass' and result['confirmation_plan']['N']==8
+    assert result['candidate']==rows[0]['arm'] and result['learning_success'] is False
+    evidence=result['controls'][control]
+    assert evidence['status']=='NOT_EVALUABLE' and evidence['dominates'] is None
+    assert evidence['superiority_claim'] is False
+    assert evidence['target_times_s']==[None if seed in censored_seeds else 65. for seed in (3102,3103,3104)]
+    assert 'R_simple' not in evidence and 'time_ratios' not in evidence
+    assert result['time_ratios']==[2/3,2/3,2/3] # only the complete primary pairs plan N
+
+
+@pytest.mark.parametrize('damage',['numerical','missing','budget','nonfinite_endpoint','nonfinite_clock','primary_censor','aliased_primary_censor'])
+def test_development_dispatch_censor_reconciliation_keeps_invalid_control_and_primary_guards(damage):
+    d,rows,selection,freeze=_development_control_censor_fixture()
+    uniform=next(r for r in rows if r['roles']==['uniform'] and r['seed']==3102)
+    uniform['monitors']=[{'completed_s':35.,'nll':3.5},{'completed_s':40.,'nll':3.4}]
+    if damage=='numerical':uniform['status']='NUMERICAL_FAILURE'
+    elif damage=='missing':rows.remove(uniform)
+    elif damage=='budget':uniform['canonical_completion_s']=121.
+    elif damage=='nonfinite_endpoint':uniform['endpoint_full']['nll']=float('nan')
+    elif damage=='nonfinite_clock':uniform['canonical_completion_s']=float('nan')
+    else:
+        primary=next(r for r in rows if r['roles']==['candidate'] and r['seed']==3102)
+        primary['monitors']=[{'completed_s':35.,'nll':3.5},{'completed_s':40.,'nll':3.4}]
+        if damage=='aliased_primary_censor':
+            rows.remove(uniform);primary['roles'].append('uniform')
+    result=d.finish_development(rows,selection,freeze)
+    assert result['status']=='INCONCLUSIVE_MEASUREMENT'
+    assert 'confirmation_plan' not in result
+
+
+@pytest.mark.parametrize('classification,status',[
+    ('numerical_failure','NUMERICAL_FAILURE'),
+    ('environmental_interruption','INCOMPLETE_RESOURCE'),
+    ('complete','INCONCLUSIVE_MEASUREMENT')])
+def test_learning_aggregate_budget_failure_priority_preserves_control_eligibility(tmp_path,classification,status):
+    d=driver()
+    native=_learning_grid_record('native',16,.0001,2.5,[(65.,2.9),(70.,2.8)])
+    raw=_learning_grid_record('uniform',16,.0003,2.7,[(35.,3.5),(40.,3.4)],sampler='uniform',rho=.25)
+    trial={'id':'uniform','phase':'development','seed':3101,'roles':['grid'],
+           'arm':{**raw['arm'],'precision':'fp32'}}
+    request={'kind':'learning_train','T_budget':120.,'result':str(tmp_path/'raw.json')}
+    terminal={'classification':classification,'cumulative_elapsed_s':121.,'result_sha256':'a'*64}
+    aggregate=d.aggregate_learning_result(raw,trial,request,terminal,tmp_path)
+    assert aggregate['status']==status
+    assert aggregate['budget_exceeded'] is True and aggregate['budget_excess_s']==1.
+    assert aggregate['canonical_completion_s']==121.
+    if classification=='numerical_failure':
+        controls=d.select_learning_controls([native,aggregate],{'R0':native,'q_star':3.,'epsilon_q':.01},
+            epsilon_eval=1e-6,r_time=6.,cutoff=100.)
+        assert controls['status']=='STOP_CONTROL' and controls['uniform'] is None

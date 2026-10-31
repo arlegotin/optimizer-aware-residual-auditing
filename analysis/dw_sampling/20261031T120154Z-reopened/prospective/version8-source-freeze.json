@@ -1,0 +1,29 @@
+{
+  "CPU_verification": "806 passed /16 MPS deselected before sole final aggregate-priority delta; final delta20 targeted passed, reviewer37+3 corrective tests passed; complete current A/C still required",
+  "actual_MPS_version8_qualification": "pending prepare; new native-precision backend tests included",
+  "actual_full_learning_pilot": "not run; no development training outcome",
+  "independent_review": "Approved exact final sources, all corrections and old B/D/full-model source continuity; version8-pilot-dispatch-final-review.md",
+  "phase": "full development pilot dispatcher; protected confirmation/test/reproduction dispatcher remains separate future work",
+  "prior_model_qualification": {
+    "measured_head": "110be7739067eec0aaddef40e21763818691fea8",
+    "nested_status": "pass",
+    "overall_status": "not_run",
+    "record_sha256": "d01c854daf8eb7f7fbc8505b0879b40bc869bfc469a141fa727ae086757c4209"
+  },
+  "protected_evaluation": "official-validation losses and official-test body unopened",
+  "recorded_utc": "2026-10-31T18:13:08.259507+00:00",
+  "source_freeze_parent_head": "ce4a09ea64b0c2dc1f3663f51e6e0db17e858de9",
+  "source_sha256": {
+    "analysis/run_dw_sampling.py": "07923e3415fe457274fec60eff42af7ff7191fb066f0d776a0787a47cd079c54",
+    "configs/dw_sampling.yaml": "1f1d4bf1c718a942a2e76d9649ab56c10194741ee9a5939a99321aab84e5ac47",
+    "decisions/dw_sampling_reopening.md": "a7f442d2f526f09a3fed89a7cabc1e8c41a9c1ea4ad84c26780208794abd5e9e",
+    "decisions/dw_sampling_scope.md": "d91d9350dc117f83e39c648e48d435de75ab9ea5a3b6bc197b216c4b73c11181",
+    "src/oar/hardware.py": "4ba118d816eec9d255cfb3d7925416373119fe181f82529fb58a96347d8e5048",
+    "src/oar/sampled_linear.py": "11398f9340a48b0dcabdc733c74dfa52b53663ea2005989f2ad7b53079827ca3",
+    "src/oar/sampling_data.py": "cfcf4b782eb9a444ce70f29df72e063518f794108020e51a5d12238118f06583",
+    "src/oar/sampling_lm.py": "ccf487079280d385a9fed1b3eb7069921a34a15fd78cb6b33f7778644a405d3c",
+    "src/oar/timing.py": "25351cd20abc14385dd1cb3e482c67f73619b1ead30900ca0150fe57072458e5",
+    "tests/test_dw_sampling_protocol.py": "7df50efb82f5a841f0d2f3d7da25fd131853a870b1ff046b00904369fa015d4e",
+    "tests/test_sampled_linear.py": "3ed4adbf6f62599172b0322374e84c7552f7fc4b46761f80057053469822eaa9"
+  }
+}

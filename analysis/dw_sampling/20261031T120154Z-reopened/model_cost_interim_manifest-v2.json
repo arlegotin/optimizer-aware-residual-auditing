@@ -1,0 +1,87 @@
+{
+  "calibration": {
+    "baseline_update_s_bound": 0.349031042016577,
+    "epsilon_eval": 1e-06,
+    "fallback_required": false,
+    "horizon": {
+      "B_max": 2.3987216249806806,
+      "Delta": 29.229170017908327,
+      "H": 1461.4585008954164,
+      "R": 29.399479834130034,
+      "T_budget": 1490.8579807295464,
+      "block_updates": 8,
+      "diagnostic_delta": 0.2085046466766194,
+      "monitor_count": 50,
+      "observations": [
+        {
+          "Delta": 14.688551038170699,
+          "H": 1468.85510381707,
+          "monitor_count": 100,
+          "overhead_fraction": 0.010071249236813363
+        },
+        {
+          "Delta": 29.229170017908327,
+          "H": 1461.4585008954164,
+          "monitor_count": 50,
+          "overhead_fraction": 0.0050611104708903724
+        }
+      ],
+      "overshoot_limit_s": 14.614585008954164,
+      "r_time": 31.627891642889008,
+      "required_time_ratio": 1.0,
+      "status": "pass"
+    },
+    "reason": "baseline-only full-model calibration complete",
+    "status": "pass"
+  },
+  "eligible": [
+    {
+      "arm": "importance-0.125",
+      "rho": 0.125,
+      "sampler": "importance"
+    },
+    {
+      "arm": "importance-0.25",
+      "rho": 0.25,
+      "sampler": "importance"
+    },
+    {
+      "arm": "uniform-0.125",
+      "rho": 0.125,
+      "sampler": "uniform"
+    },
+    {
+      "arm": "uniform-0.25",
+      "rho": 0.25,
+      "sampler": "uniform"
+    },
+    {
+      "arm": "uniform-0.5",
+      "rho": 0.5,
+      "sampler": "uniform"
+    }
+  ],
+  "learning_success": false,
+  "measured_head": "110be7739067eec0aaddef40e21763818691fea8",
+  "measurement_hashes": {
+    "analysis/run_dw_sampling.py": "ccd8490f6048905ffa5f48864143ab1df6e12ed77af146a7877b47ab2230d5bd",
+    "configs/dw_sampling.yaml": "7411e08b4430d06152c4c93a0c588660eedb9f6a27577ab002721b28284fe368",
+    "decisions/dw_sampling_reopening.md": "e5f17839a1e3696793b9adee485c873484f2b91a8ab4880032d0a7d67122e018",
+    "decisions/dw_sampling_scope.md": "d91d9350dc117f83e39c648e48d435de75ab9ea5a3b6bc197b216c4b73c11181",
+    "src/oar/hardware.py": "4ba118d816eec9d255cfb3d7925416373119fe181f82529fb58a96347d8e5048",
+    "src/oar/sampled_linear.py": "11398f9340a48b0dcabdc733c74dfa52b53663ea2005989f2ad7b53079827ca3",
+    "src/oar/sampling_data.py": "cfcf4b782eb9a444ce70f29df72e063518f794108020e51a5d12238118f06583",
+    "src/oar/sampling_lm.py": "b6a0ec4e1b66ccdf542e8d19c6830b897aec9fa4d4d4a77b13265dedb67bb21c",
+    "src/oar/timing.py": "25351cd20abc14385dd1cb3e482c67f73619b1ead30900ca0150fe57072458e5",
+    "tests/test_dw_sampling_protocol.py": "b271586886f1798b06a30c91834c4ceb470a4b3e5133de4f05a953932391f035",
+    "tests/test_sampled_linear.py": "3ed4adbf6f62599172b0322374e84c7552f7fc4b46761f80057053469822eaa9"
+  },
+  "original_historical_files_unchanged": 184,
+  "overall_pilot_status": "not_run",
+  "previous_report_sha256": "4f2bc00296d97fd2dfc060ab2ca830c3e3ef5c8637d14ffe908f6bddfccc1824",
+  "qualification_record_sha256": "d01c854daf8eb7f7fbc8505b0879b40bc869bfc469a141fa727ae086757c4209",
+  "qualification_status": "pass",
+  "recorded_utc": "2026-10-31T17:21:42.184067+00:00",
+  "report_sha256": "4b18793f698b448f113cf951f360f734902b9c87ccbd000bf1ad75dd7500c8f5",
+  "revision_reason": "Name exact predeclared 429-row formal timing-block ledger; disclose old-threshold sensitivity and bootstrap serial-dependence limitation; no numeric/source/H change."
+}

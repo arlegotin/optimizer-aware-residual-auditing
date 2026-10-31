@@ -2,7 +2,7 @@
 """Append-only dW sampling and gated full-model qualification.
 
 Language qualification requires the frozen native cost and asset prerequisites.
-Tuning/confirmation remain staged behind a future dispatcher. Importing starts
+The Stage E pilot is manifest-gated; protected confirmation is a separate freeze. Importing starts
 no work, and no historical oracle is invoked.
 """
 from __future__ import annotations
@@ -29,7 +29,7 @@ import traceback
 
 ROOT = Path(__file__).resolve().parents[1]
 REVIEWED = '9d8ad069c51b4d0e6c13e9c6e465579e9b44a339'
-PROTOCOL = '916e919075f7ded0b253e9fe7c6441439a345c765decc62cbaa8d167e5e2d399'
+PROTOCOL = '0b431043cd02f8514ecdf730ad2ef1448f8aa4b4fe2aa2b6184d5f2c0e7f9761'
 STAGES = ('prepare', 'feasibility', 'correctness', 'cost', 'pilot', 'confirm', 'summarize')
 CORE = ('analysis/run_dw_sampling.py', 'configs/dw_sampling.yaml', 'decisions/dw_sampling_scope.md',
         'decisions/dw_sampling_reopening.md',
@@ -677,9 +677,10 @@ def validate_worker_request(request, stage, config, out, request_path):
     out, config, request_path = Path(out).resolve(), Path(config).resolve(), Path(request_path).resolve()
     attempt = Path(request['attempt']).resolve()
     permitted = {'prepare': {'qualification'}, 'feasibility': {'feasibility'}, 'cost': {'cost', 'diagnostic'},
-                 'pilot': {'model_native', 'model_cost', 'model_calibration'}}
+                 'pilot': {'model_native', 'model_cost', 'model_calibration', 'learning_train', 'learning_precision_qualification', 'learning_diagnostic', 'learning_secondary'}}
     if (request['kind'] not in permitted.get(stage, set()) or Path(request['out']).resolve() != out
-            or Path(request['config']).resolve() != config or request_path.parent != attempt
+            or Path(request['config']).resolve() != config
+            or (request_path.parent != attempt and not (request.get('kind', '').startswith('learning_') and request_path.is_relative_to(attempt/'trials')))
             or attempt.parent != out/stage or not (attempt/'source_manifest.json').is_file()):
         raise ValueError('invalid frozen worker request or stage boundary')
     identity = json.loads((attempt/'source_manifest.json').read_text())
@@ -693,7 +694,20 @@ def validate_worker_request(request, stage, config, out, request_path):
     if stage == 'pilot':
         prerequisites = {name: require_stage(out, name, source_hashes(stage))
                          for name in ('prepare', 'feasibility', 'correctness', 'cost')}
-        validate_model_worker_request(request, load_config(config), attempt, identity, config, prerequisites['cost'])
+        cfg = load_config(config)
+        if request['kind'].startswith('learning_'):
+            freeze = load_learning_freeze(cfg, config, out)
+            validate_learning_worker_request(request, cfg, stage, attempt, identity, freeze)
+            run = Path(request['run_dir']).parent
+            launch_path = run/'launch.json'
+            if request_path != run/'request.json' or not launch_path.is_file():
+                raise ValueError('learning worker requires its exact durable launch/request receipt')
+            launch = json.loads(launch_path.read_text())
+            if (launch['request_sha256'] != digest(request_path) or launch['bindings'] != request['bindings']
+                    or launch['launch_perf_s'] != request['launch_perf_s']):
+                raise ValueError('learning worker launch receipt/request differs')
+        else:
+            validate_model_worker_request(request, cfg, attempt, identity, config, prerequisites['cost'])
 
 
 def assert_native_equivalent(parameters, optimizer, reference_parameters, reference_optimizer):
@@ -2081,6 +2095,1071 @@ def pilot_qualification(cfg, config, out, attempt):
     raise RuntimeError('unreachable model fallback state')
 
 
+def durable_json(path, value):
+    """Exclusive durable receipt; an incomplete write remains visibly unusable."""
+    path = Path(path)
+    with path.open('xb') as stream:
+        stream.write(canonical(value)+b'\n')
+        stream.flush()
+        os.fsync(stream.fileno())
+    descriptor = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
+def build_learning_grid(cfg, qualification):
+    """Declare every allowed slot before outcomes; deterministic named order."""
+    from oar.sampled_linear import named_seed
+    if qualification.get('status') != 'pass':
+        raise ValueError('grid requires successful full-model qualification')
+    rows = []
+    def add(sampler, rho, batch, lr):
+        arm = dict(sampler=sampler, rho=rho, batch=batch, lr=lr, precision='fp32')
+        token = hashlib.sha256(canonical(arm)).hexdigest()[:16]
+        rows.append({'id': 'grid-'+token, 'phase': 'development', 'seed': cfg['learning']['tuning_seed'],
+                     'arm': arm, 'roles': ['grid']})
+    for batch in cfg['learning']['dense_batches']:
+        for lr in cfg['learning']['peak_lrs']:
+            add(None, None, batch, lr)
+    seen = set()
+    for survivor in qualification['eligible']:
+        sampler, rho = survivor['sampler'], survivor['rho']
+        if sampler not in cfg['samplers'] or rho not in cfg['rhos'] or (sampler, rho) in seen:
+            raise ValueError('invalid or duplicate qualified survivor')
+        seen.add((sampler, rho))
+        for lr in cfg['learning']['peak_lrs']:
+            add(sampler, rho, cfg['learning']['candidate_batch'], lr)
+    order_seed = named_seed(cfg['learning']['tuning_seed'], 'order', 'learning-grid')
+    random.Random(order_seed).shuffle(rows)
+    return [{**r, 'order_seed': order_seed, 'order_index': i} for i, r in enumerate(rows)]
+
+
+def learning_forecast(cfg, calibration, grid_count, *, planned_n=8, checkpoint_bytes=None):
+    """Inclusive advisory forecast; reserve is a resource gate, never a timeout."""
+    horizon = calibration['horizon']
+    l = cfg['learning']
+    w, f, layers, context = (l[k] for k in ('width', 'ffn_width', 'blocks', 'context'))
+    parameters = (259+context)*w+layers*(4*w*w+2*w*f+9*w+f)+2*w
+    checkpoint_bytes = checkpoint_bytes or (12*parameters+1048576)
+    count = grid_count+15+1+2*planned_n+3+6
+    # Startup/full eval/checkpoint are already included in T_budget. Extra
+    # process completion, diagnostics, separately evaluated secondary states,
+    # and cold precision qualification are explicitly additional science cost.
+    trajectory_s = count*horizon['T_budget']
+    diagnostic_s = 2*(3+5*(2*cfg['timing']['warmup']['maximum']+2*cfg['timing']['pairs']))*max(.5,horizon['B_max'])
+    diagnostic_s += 3*cfg['resources']['qualification_forecast_s']
+    secondary_count = 15
+    overhead = count*cfg['resources']['qualification_forecast_s']+diagnostic_s+secondary_count*horizon['R']
+    return {'trial_count': count, 'grid': grid_count, 'development_maximum': 15, 'precision_screen': 1,
+            'confirmation_pairs': planned_n, 'confirmation_N_provisional': True, 'secondary_b16': 3,
+            'repeat_trajectories': 6, 'trajectory_s': trajectory_s, 'additional_science_s_allowance': overhead,
+            'forecast_s': trajectory_s+overhead, 'stage_deadline_s': None,
+            'checkpoint_bytes_allowance': checkpoint_bytes, 'endpoint_bytes': count*checkpoint_bytes,
+            'secondary_bytes': secondary_count*checkpoint_bytes,
+            'active_and_reserve_bytes': 4*checkpoint_bytes,
+            'required_free_bytes': (count+secondary_count+4)*checkpoint_bytes+cfg['resources']['minimum_free_disk_bytes'],
+            'accounting': 'T_budget includes cold setup/evaluation/checkpoint; additional allowances separately charged, never an elapsed cap'}
+
+
+def build_learning_manifest(cfg, qualification_record, *, qualification_reference, measurement_hashes, config_sha256):
+    """Pure prospective builder; outer amendment binds its bytes, avoiding cycles."""
+    record = qualification_record
+    q = record.get('qualification', {})
+    if record.get('status') != 'not_run' or record.get('learning_success') is not False or q.get('status') != 'pass':
+        raise ValueError('requires nested qualification pass, not a whole-pilot pass')
+    calibration = q['calibration']
+    if calibration.get('status') != 'pass' or calibration['horizon'].get('status') != 'pass':
+        raise ValueError('unqualified calibration')
+    if not 1e-6 <= calibration['epsilon_eval'] <= .001:
+        raise ValueError('invalid frozen evaluation precision')
+    grid = build_learning_grid(cfg, q)
+    return {'schema_version': 1, 'action': 'learning', 'qualification': copy.deepcopy(qualification_reference),
+            'measured_source_hashes': copy.deepcopy(record['measurement_hashes']),
+            'measurement_hashes': copy.deepcopy(measurement_hashes), 'config_sha256': config_sha256,
+            'native_variant': q['native_variant'], 'eligible': copy.deepcopy(q['eligible']),
+            'calibration': copy.deepcopy(calibration), 'data': copy.deepcopy(record['data']['files']['fitting-development']),
+            'data_manifest': {k: record['data'][k] for k in ('manifest_path', 'manifest_sha256')},
+            'grid': grid, 'development_seeds': list(cfg['learning']['development_seeds']),
+            'permitted_worker_kinds': ['learning_train', 'learning_precision_qualification', 'learning_diagnostic', 'learning_secondary'],
+            'checkpoint_policy': {'live_resumes': 2, 'final_after_receipt': 1, 'secondary_separate': 1,
+                                  'secondary_lifetime': 'capture through separately charged durable evaluation; then retire with hash receipt',
+                                  'resume': 'explicit environmental interruption only'},
+            'diagnostics': {'secondary_update': 1024, 'context_cost': {'context': 128, 'sessions': 2, 'pairs': 30},
+                'components': {'sessions': 2, 'summed_as_step': False},
+                'shift': {'seed': 62003, 'history_updates': 8, 'shift_updates': 32, 'rho': .125,
+                          'fixture': 'cpu-float64 teacher regression x64x8 w8x4; y=x@teacher then y=-x@teacher; AdamW(.9,.999),eps1e-8,lr1e-3,decay.01',
+                          'arms': ['dense', 'importance', 'uniform']},
+                'unbiased_adam_counterexample': 'tests/test_sampled_linear.py'},
+            'forecast': learning_forecast(cfg, calibration, len(grid)),
+            'protected_losses': 'development only; validation/test require subsequent separate freeze'}
+
+
+def qualification_git_blob(head, name):
+    """Separate full-model continuity reader, including both original LM files."""
+    if not re.fullmatch('[0-9a-f]{40}', head) or name not in CORE+SAMPLED+LEARNING:
+        raise ValueError('invalid full-model original committed identity')
+    try:
+        return subprocess.check_output(['git', 'show', f'{head}:{name}'], cwd=ROOT, stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as exc:
+        raise ValueError('unavailable full-model committed source') from exc
+
+
+def require_model_qualification(out, record_path, record_sha256, measurement_hashes):
+    """Nested cost PASS authority, kept distinct from a full Stage E PASS."""
+    out, path = Path(out).resolve(), Path(record_path).resolve()
+    if path.parent.parent != out/'pilot' or path.name != 'record.json' or digest(path) != record_sha256:
+        raise ValueError('qualification reference path/hash mismatch')
+    record = read_record(path)
+    if (record.get('status') != 'not_run' or record.get('learning_success') is not False
+            or record.get('qualification', {}).get('status') != 'pass'):
+        raise ValueError('full-model nested qualification did not pass')
+    amendment_now=json.loads((ROOT/'decisions/dw_sampling_amendment.json').read_text())
+    def genuine_learning_identity(identity):
+        return (identity.get('learning_action')=='learning'
+                and load_config(ROOT/'configs/dw_sampling.yaml')['learning']['action']=='learning'
+                and identity.get('config_sha256')==digest(ROOT/'configs/dw_sampling.yaml')
+                and identity.get('measurement_hashes')==measurement_hashes
+                and identity.get('amendment_sha256')==digest(ROOT/'decisions/dw_sampling_amendment.json')
+                and identity.get('bound_files')==amendment_now.get('bound_files'))
+    for later in sorted((out/'pilot').glob('attempt-*')):
+        if later.name <= path.parent.name:
+            continue
+        source=later/'source_manifest.json'
+        if (later/'record.json').is_file():
+            # Verify the complete seal BEFORE trusting a claimed action. A
+            # modified source identity cannot hide a later qualification stop.
+            subsequent=read_record(later/'record.json')
+            identity=json.loads(source.read_text()) if source.is_file() else {}
+            if ('source_manifest.json' not in subsequent.get('artifacts',{})
+                    or subsequent.get('source_manifest_sha256')!=digest(source)
+                    or subsequent.get('measurement_hashes')!=identity.get('measurement_hashes')
+                    or subsequent.get('learning_action')!=identity.get('learning_action')):
+                raise ValueError('later qualification/source manifest seal/action binding mismatch')
+            if (subsequent.get('stage')=='pilot' and 'qualification' not in subsequent
+                    and subsequent.get('learning_action')=='learning' and genuine_learning_identity(identity)):
+                continue
+            raise ValueError('later qualification supersedes pinned pass')
+        identity=json.loads(source.read_text()) if source.is_file() else {}
+        # An unfinished learning attempt is excluded only under the exact
+        # currently bound learning configuration/source/amendment provenance.
+        if genuine_learning_identity(identity):
+            continue
+        raise ValueError('later incomplete qualification supersedes pinned pass')
+    source = path.parent/'source_manifest.json'
+    identity = json.loads(source.read_text())
+    if record.get('source_manifest_sha256') != digest(source) or identity['measurement_hashes'] != record['measurement_hashes']:
+        raise ValueError('qualification sealed source manifest mismatch')
+    previous = record['measurement_hashes']
+    current = source_hashes('pilot')
+    if measurement_hashes != current or set(previous) != set(current):
+        raise ValueError('qualification incomplete previous/current source maps')
+    head = identity['actual_head']
+    original = {name: qualification_git_blob(head, name) for name in previous}
+    if any(hashlib.sha256(original[name]).hexdigest() != previous[name] for name in previous):
+        raise ValueError('qualification committed sources mismatch')
+    amendment = json.loads((ROOT/'decisions/dw_sampling_amendment.json').read_text())
+    entry = amendment.get('model_qualification_continuity', {})
+    changed = sorted(name for name in previous if previous[name] != current[name])
+    if set(changed)-{'analysis/run_dw_sampling.py','src/oar/sampling_lm.py','configs/dw_sampling.yaml',
+                     'tests/test_dw_sampling_protocol.py','decisions/dw_sampling_reopening.md'}:
+        raise ValueError('qualification changed protected sampler/data/timing/native sources')
+    exact = {'record_path': str(path.relative_to(ROOT)), 'record_sha256': record_sha256,
+             'source_manifest_sha256': digest(source), 'measured_head': head,
+             'previous_measurement_hashes': previous, 'current_measurement_hashes': current,
+             'changed_files': changed}
+    if any(entry.get(k) != v for k, v in exact.items()) or entry.get('status') != 'approved':
+        raise ValueError('qualification requires renewed exact reviewed continuity')
+    if (entry.get('executed_paths_unchanged') is not True or entry.get('initializers_and_transitive_callers_reviewed') is not True
+            or not entry.get('reviews')):
+        raise ValueError('qualification missing full-diff/transitive review')
+    for review in entry['reviews']:
+        review_path = (ROOT/review['path']).resolve()
+        if not review_path.is_relative_to(ROOT) or digest(review_path) != review['sha256']:
+            raise ValueError('qualification review artifact mismatch')
+    if any(amendment.get('bound_files', {}).get(name) != value for name, value in current.items()):
+        raise ValueError('qualification current sources not frozen')
+    # AST comparisons are corroboration of the explicit complete review above.
+    # Only never-consumed orchestration and isolated new precision code may differ.
+    mutable_driver = {'main', 'validate_worker_request', 'load_config'}
+    mutable_lm = {'train_budget', 'run_training_worker'}
+    for name in ('analysis/run_dw_sampling.py', 'src/oar/sampling_lm.py'):
+        old = ast.parse(original[name]); new = ast.parse((ROOT/name).read_bytes())
+        def initializers(tree):
+            return [ast.dump(n,include_attributes=False) for n in tree.body
+                    if not isinstance(n,(ast.FunctionDef,ast.ClassDef,ast.AsyncFunctionDef))
+                    and not (isinstance(n,ast.Expr) and isinstance(n.value,ast.Constant) and isinstance(n.value.value,str))
+                    and not (name.startswith('analysis/') and isinstance(n,ast.Assign)
+                             and any(isinstance(t,ast.Name) and t.id=='PROTOCOL' for t in n.targets))]
+        if initializers(old) != initializers(new):
+            raise ValueError('qualification module initializer/import execution changed')
+        allowed = mutable_driver if name.startswith('analysis/') else mutable_lm
+        nodes = lambda tree: {n.name: ast.dump(n, include_attributes=False) for n in tree.body
+                              if isinstance(n, (ast.FunctionDef, ast.ClassDef, ast.AsyncFunctionDef)) and n.name not in allowed}
+        before, after = nodes(old), nodes(new)
+        if any(after.get(k) != value for k, value in before.items()):
+            raise ValueError('qualification changed executed model/native/helper function')
+    import yaml
+    old_cfg = yaml.safe_load(original['configs/dw_sampling.yaml'])
+    new_cfg = load_config(ROOT/'configs/dw_sampling.yaml')
+    for config in (old_cfg, new_cfg):
+        for key in ('action', 'learning_manifest_path', 'qualification_record_path', 'qualification_record_sha256'):
+            config['learning'].pop(key, None)
+    if canonical(old_cfg) != canonical(new_cfg):
+        raise ValueError('qualification changed executed calibration/native/asset configuration')
+    qpath = path.parent/'model_qualification.json'
+    if json.loads(qpath.read_text()) != record['qualification'] or 'model_qualification.json' not in record['artifacts']:
+        raise ValueError('qualification calibration/selected native proof differs')
+    data = record['data']; manifest = Path(data['manifest_path'])
+    if manifest.parent != path.parent or digest(manifest) != data['manifest_sha256']:
+        raise ValueError('qualification data manifest mismatch')
+    prepared = json.loads(manifest.read_text())['processed_files']
+    if prepared != data['files']:
+        raise ValueError('qualification prepared cache reference mismatch')
+    return {'record': record, 'qualification': record['qualification'], 'data': data,
+            'reference': {**{k: exact[k] for k in ('record_path', 'record_sha256', 'source_manifest_sha256', 'measured_head')},
+                          'path': str(path), 'sha256': record_sha256}}
+
+
+def read_trial_ledger(trial_dir, expected_bindings, *, prior_trial_dirs=(), exclude_attempt=None):
+    """Reconstruct only durably ended active intervals; no inferred death time."""
+    trial_dir = Path(trial_dir).resolve()
+    elapsed, previous = 0., None
+    checkpoints, secondaries, attempts = {}, {}, []
+    classification = None
+    directories = sorted(path for root in [*map(Path,prior_trial_dirs),trial_dir] for path in root.glob('attempt-*')
+                         if path != exclude_attempt)
+    for attempt in directories:
+        launch_path, exit_path = attempt/'launch.json', attempt/'exit.json'
+        if not launch_path.is_file() or not exit_path.is_file():
+            raise MeasurementInvalid('unknown_active_interval', 'missing durable terminal/death interval; concurrent or orphan worker cannot resume')
+        launch, end = json.loads(launch_path.read_text()), json.loads(exit_path.read_text())
+        if 'request_sha256' in launch and 'worker_artifacts' not in end:
+            raise ValueError('learning terminal is missing hash-bound worker prefix artifacts')
+        if 'worker_artifacts' in end:
+            actual = {str(p.relative_to(attempt)):digest(p) for p in sorted((attempt/'worker').rglob('*')) if p.is_file()}
+            if actual != end['worker_artifacts']:
+                raise ValueError('learning worker prefix/receipt artifact changed after terminal')
+        if (launch['bindings'] != expected_bindings or launch['attempt_id'] != attempt.name
+                or launch['previous_exit_sha256'] != previous or launch['prior_elapsed_s'] != elapsed
+                or end['launch_sha256'] != digest(launch_path)):
+            raise ValueError('learning ledger binding/attempt chain mismatch')
+        active = end['ended_perf_s']-launch['launch_perf_s']
+        if (not math.isfinite(active) or active < 0 or active != end['active_s']
+                or end['cumulative_elapsed_s'] != elapsed+active):
+            raise ValueError('learning ledger active interval mismatch')
+        elapsed += active
+        previous = digest(exit_path)
+        classification = end['classification']
+        receipts = attempt/'worker'/'checkpoint_receipts.jsonl'
+        events = attempt/'worker'/'events.jsonl'
+        if receipts.is_file():
+            for line in receipts.read_text().splitlines():
+                row = json.loads(line); raw_path=Path(row['path']); p = raw_path.resolve()
+                owned = launch.get('checkpoint_dir')
+                if not owned or p.parent != Path(owned).resolve() or raw_path.is_symlink():
+                    raise ValueError('learning checkpoint ownership mismatch')
+                if row['kind'] == 'secondary':
+                    if str(p) in secondaries:
+                        raise ValueError('duplicate secondary receipt')
+                    secondaries[str(p)] = {**row,'path':str(p)}
+                    continue
+                if row['kind'] not in ('initial', 'periodic', 'final'):
+                    raise ValueError('unknown checkpoint kind')
+                if str(p) in checkpoints:
+                    raise ValueError('duplicate checkpoint receipt')
+                checkpoints[str(p)] = {**row, 'path': str(p)}
+        if events.is_file():
+            for line in events.read_text().splitlines():
+                event = json.loads(line)
+                if event['kind'] in ('checkpoint_pruned','secondary_checkpoint_pruned'):
+                    registry = secondaries if event['kind']=='secondary_checkpoint_pruned' else checkpoints
+                    row = registry.get(str(Path(event['path']).resolve()))
+                    if row is None or row['sha256'] != event['sha256']:
+                        raise ValueError('pruning unreceipted checkpoint')
+                    row['pruned'] = True
+        attempts.append({'attempt_id': attempt.name, 'run_dir': str(attempt), 'launch': launch, 'exit': end, 'exit_sha256': previous})
+    # Secondary evaluation runs have their own ledger/process. Their terminal
+    # prefix binds the durable evaluation and retirement receipt, so reopening
+    # the primary ledger need not treat the authorized deletion as missing data.
+    if secondaries:
+        stage_root=trial_dir.parents[2]
+        for receipt_path in stage_root.glob('attempt-*/trials/secondary-'+trial_dir.name+'/attempt-*/worker/secondary-retirement.json'):
+            retirement=json.loads(receipt_path.read_text())
+            if retirement.get('primary_bindings') != expected_bindings:
+                continue
+            cp=retirement['checkpoint'];row=secondaries.get(cp['path'])
+            invocation=receipt_path.parent.parent
+            terminal_path=invocation/'exit.json';evaluation=receipt_path.parent/'result.json'
+            if not terminal_path.is_file():
+                continue
+            terminal=json.loads(terminal_path.read_text())
+            if (row is None or row['sha256']!=cp['sha256'] or terminal['classification']!='complete'
+                    or terminal.get('worker_artifacts',{}).get('worker/secondary-retirement.json')!=digest(receipt_path)
+                    or retirement['evaluation_result_sha256']!=digest(evaluation)
+                    or terminal['result_sha256']!=digest(evaluation)
+                    or json.loads(evaluation.read_text()).get('checkpoint')!=cp):
+                raise ValueError('secondary retirement/evaluation receipt is not hash-bound to its terminal')
+            if Path(cp['path']).exists():
+                raise ValueError('secondary declared retired but its path was recreated')
+            row['pruned']=True;row['retirement_receipt']=str(receipt_path)
+    live = [r for r in checkpoints.values() if not r.get('pruned')]
+    for row in [*live,*[r for r in secondaries.values() if not r.get('pruned')]]:
+        path = Path(row['path'])
+        if not path.is_file() or path.is_symlink() or digest(path) != row['sha256']:
+            raise MeasurementInvalid('checkpoint_integrity', 'retained checkpoint missing/unreceipted prune or hash changed')
+    if len([r for r in live if r['kind'] != 'final']) > 2:
+        raise MeasurementInvalid('checkpoint_retention', 'more than two live ephemeral checkpoints')
+    return {'bindings': expected_bindings, 'prior_elapsed_s': elapsed, 'previous_exit_sha256': previous,
+            'attempts': attempts, 'checkpoint_history': list(checkpoints.values()),
+            'live_checkpoints': live, 'secondary_history':list(secondaries.values()), 'last_classification': classification}
+
+
+def validate_resume_selection(selection, ledger, bindings):
+    if ledger['bindings'] != bindings or ledger['last_classification'] != 'environmental_interruption':
+        raise ValueError('resume is only permitted after a proved environmental interruption')
+    if set(selection) != {'path', 'sha256'}:
+        raise ValueError('resume requires an explicit path and SHA256 only')
+    path = Path(selection['path'])
+    if path.is_symlink():
+        raise ValueError('resume path cannot be a symlink')
+    row = next((r for r in ledger['live_checkpoints'] if r['path'] == str(path.resolve())
+                and r['sha256'] == selection['sha256'] and r['kind'] in ('initial', 'periodic')), None)
+    if row is None or digest(path) != row['sha256']:
+        raise ValueError('resume must name an own live hash-validated receipted checkpoint')
+    from oar.sampling_lm import load_checkpoint
+    payload = load_checkpoint(path, row['sha256'], expected_bindings=bindings)
+    if payload.get('optimization_frozen') or ledger['prior_elapsed_s'] < payload['clock']['elapsed_s']:
+        raise ValueError('final/frozen checkpoint or ledger undercharge cannot resume')
+    return {'path': str(path.resolve()), 'sha256': row['sha256']}
+
+
+def learning_bindings(freeze, trial):
+    return {'manifest_sha256': hashlib.sha256(canonical(freeze)).hexdigest(), 'trial_id': trial['id'],
+            'seed': trial['seed'], 'phase': trial['phase'], 'arm': trial['arm'],
+            'measurement_hashes': freeze['measurement_hashes'], 'config_sha256':freeze['config_sha256'], 'data': freeze['data'],
+            'calibration': freeze['calibration'], 'native_variant': freeze['native_variant']}
+
+
+def select_learning_controls(records, selection, *, epsilon_eval, r_time, cutoff):
+    finite = [r for r in records if r.get('endpoint_full') and math.isfinite(r['endpoint_full']['nll'])
+              and r['status'] not in ('NUMERICAL_FAILURE', 'numerical_failure')]
+    def endpoint_best(rows, key):
+        if not rows:
+            return None
+        endpoint = min(r['endpoint_full']['nll'] for r in rows)
+        return min((r for r in rows if r['endpoint_full']['nll'] <= endpoint+epsilon_eval), key=key)
+    native = endpoint_best([r for r in finite if r['arm']['sampler'] is None and r['arm']['batch'] == 16], lambda r:r['arm']['lr'])
+    uniforms = [r for r in finite if r['arm']['sampler'] == 'uniform']
+    eligible = []
+    for row in uniforms:
+        target = confirmed_target_time([row['initial_monitor'], *row['monitors']], selection['q_star'], cutoff=cutoff)
+        if row['status'] == 'pass' and target is not None and row['endpoint_full']['nll'] <= selection['R0']['endpoint_full']['nll']+selection['epsilon_q']:
+            eligible.append({**row, 'target_time_s': target})
+    key = lambda r:(-r['arm']['rho'], r['arm']['lr'])
+    if eligible:
+        earliest = min(r['target_time_s'] for r in eligible)
+        uniform = min((r for r in eligible if r['target_time_s'] <= earliest+r_time), key=key)
+    else:
+        uniform = endpoint_best(uniforms, key)
+    return {'status': 'pass' if native and uniform else 'STOP_CONTROL', 'native_b16': native, 'uniform': uniform,
+            'uniform_adverse': not bool(eligible), 'uniform_eligible_ids': [r['id'] for r in eligible],
+            'reason': 'own grid controls frozen; ineligible finite uniform retained as adverse mandatory control'}
+
+
+def build_development_trials(selection, controls, cfg):
+    from oar.sampled_linear import named_seed
+    if controls['status'] != 'pass':
+        raise ValueError('independent development requires all mandatory controls')
+    settings = {'candidate': selection['candidate'], 'dense': selection['dense'],
+                'native_b16': controls['native_b16'], 'uniform': controls['uniform']}
+    if controls.get('precision'):
+        settings['precision'] = controls['precision']
+    rows = []
+    for seed in cfg['learning']['development_seeds']:
+        by_arm = {}
+        for role, selected in settings.items():
+            arm = {**selected['arm'], 'precision': selected['arm'].get('precision', 'fp32')}
+            key = canonical(arm)
+            if key in by_arm:
+                by_arm[key]['roles'].append(role)
+                continue
+            token = hashlib.sha256(key).hexdigest()[:16]
+            row = {'id': f'dev-{seed}-{token}', 'seed': seed, 'phase': 'development', 'arm': arm,
+                   'roles': [role], 'secondary_update': 1024}
+            by_arm[key] = row
+        ordered = list(by_arm.values())
+        order = named_seed(seed, 'order', 'independent-development')
+        random.Random(order).shuffle(ordered)
+        rows.extend({**r, 'order_seed': order, 'order_index': i} for i, r in enumerate(ordered))
+    if len(rows) > 15:
+        raise ValueError('development matrix exceeds declared roles')
+    return rows
+
+
+def finish_development(records, selection, freeze):
+    from statistics import mean
+    horizon = freeze['calibration']['horizon']; eps = freeze['calibration']['epsilon_eval']
+    by_role = {}
+    failures = []
+    seen_ids = set()
+    initials = {}
+    for row in records:
+        if row['id'] in seen_ids:
+            raise ValueError('duplicate independent trial')
+        seen_ids.add(row['id'])
+        initial = row.get('initial_parameters_sha256')
+        if initial is not None:
+            if row['seed'] in initials and initials[row['seed']] != initial:
+                raise ValueError('matched independent initial parameter identity differs')
+            initials[row['seed']] = initial
+        target = None
+        if row.get('initial_monitor') and row.get('monitors') is not None:
+            target = confirmed_target_time([row['initial_monitor'], *row['monitors']], selection['q_star'], cutoff=horizon['H'])
+        completion = row.get('canonical_completion_s')
+        complete = (row['status'] == 'pass' and row.get('endpoint_full')
+                    and math.isfinite(row['endpoint_full']['nll'])
+                    and type(completion) in (int,float) and math.isfinite(completion)
+                    and 0 <= completion <= horizon['T_budget'])
+        for role in row['roles']:
+            if row['seed'] in by_role.setdefault(role, {}):
+                raise ValueError('duplicate independent role/seed pair')
+            by_role[role][row['seed']] = {**row, 'target_time_s': target, 'complete': bool(complete)}
+        if not complete or (target is None and set(row['roles']) & {'candidate','dense'}):
+            failures.append(row['id'])
+    seeds = freeze['development_seeds']
+    def triple(role, *, require_target=False):
+        group = by_role.get(role, {})
+        if set(group) != set(seeds) or not all(group[s]['complete'] for s in seeds):
+            return None
+        if require_target and any(group[s]['target_time_s'] is None for s in seeds):
+            return None
+        return [group[s] for s in seeds]
+    candidate, dense = triple('candidate',require_target=True), triple('dense',require_target=True)
+    required_roles = freeze.get('development_roles',['native_b16','uniform'])
+    if any(triple(role) is None for role in required_roles):
+        return {'status':'INCONCLUSIVE_MEASUREMENT','reason':'mandatory independent control missing/incomplete/invalid','failed_ids':failures}
+    if not candidate or not dense:
+        return {'status': 'INCONCLUSIVE_MEASUREMENT', 'reason': 'primary independent pairs incomplete/censored/invalid', 'failed_ids': failures}
+    def compare(a, b):
+        ratios = [r['target_time_s']/n['target_time_s'] for r, n in zip(a,b)]
+        differences = [r['endpoint_full']['nll']-n['endpoint_full']['nll'] for r,n in zip(a,b)]
+        passes = (math.exp(mean(math.log(v) for v in ratios)) < 1 and mean(differences) <= selection['epsilon_q']
+                  and max(differences) <= 2*selection['epsilon_q'])
+        return passes, ratios, differences
+    primary_pass, ratios, differences = compare(candidate,dense)
+    controls = {}
+    for role in ('uniform', 'native_b16', 'precision', 'dense'):
+        if role not in by_role or (role=='dense' and dense[0]['arm']['batch']>=16):
+            continue
+        simple = triple(role)
+        if not simple:
+            controls[role] = {'status': 'incomplete', 'dominates': False}
+            # A failed mandatory control cannot become evidence for superiority.
+            return {'status': 'INCONCLUSIVE_MEASUREMENT', 'reason': 'mandatory independent control incomplete', 'controls': controls}
+        if any(row['target_time_s'] is None for row in simple):
+            controls[role] = {'status':'NOT_EVALUABLE','dominates':None,'superiority_claim':False,
+                              'seeds':list(seeds),'target_times_s':[row['target_time_s'] for row in simple],
+                              'endpoint_nll':[row['endpoint_full']['nll'] for row in simple],
+                              'reason':'complete finite budget-valid secondary control has censored target evidence; no substitution or subset ratio'}
+            continue
+        same = all(a['id'] == b['id'] for a,b in zip(simple,candidate))
+        dominance = {'dominates': False, 'alias_of_candidate': True} if same else simpler_dominates(
+            [r['target_time_s'] for r in simple], [r['target_time_s'] for r in candidate],
+            [r['endpoint_full']['nll'] for r in simple], [r['endpoint_full']['nll'] for r in candidate],
+            r_time=horizon['r_time'], epsilon_eval=eps)
+        controls[role] = dominance
+        if dominance['dominates']:
+            if role == 'uniform' and compare(simple,dense)[0]:
+                candidate = simple;primary_pass,ratios,differences = compare(candidate,dense)
+            else:
+                return {'status': 'STOP_DOMINATED', 'reason': role+' independently dominates selected candidate', 'controls': controls}
+    if not primary_pass:
+        return {'status': 'STOP_QUALITY', 'reason': 'independent time/endpoint guards failed', 'controls': controls,
+                'time_ratios': ratios, 'endpoint_differences': differences}
+    try:
+        planned = plan_confirmation(ratios,differences,epsilon_q=selection['epsilon_q'])
+    except ValueError as exc:
+        return {'status': 'INCONCLUSIVE_MEASUREMENT', 'reason': str(exc), 'controls': controls}
+    return {'status': 'pass', 'reason': 'independent development supports fixed prospective confirmation planning',
+            'confirmation_plan': planned, 'candidate': candidate[0]['arm'], 'dense': dense[0]['arm'],
+            'controls': controls, 'time_ratios': ratios, 'endpoint_differences': differences,
+            'learning_success': False}
+
+
+def previous_learning_trial_dirs(out, attempt, trial_id, bindings):
+    """Find matching logical-trial histories without selecting a resume file."""
+    attempt = Path(attempt).resolve()
+    roots=[]
+    for parent in sorted((Path(out).resolve()/'pilot').glob('attempt-*')):
+        if parent.name >= attempt.name:
+            continue
+        trial = parent/'trials'/trial_id
+        if not trial.is_dir():
+            continue
+        if (parent/'record.json').is_file():
+            read_record(parent/'record.json')
+        launches=sorted(trial.glob('attempt-*/launch.json'))
+        if not launches:
+            raise MeasurementInvalid('unknown_active_interval','previous trial has no durable launch/terminal proof')
+        old=json.loads(launches[0].read_text())
+        if old['bindings'] == bindings:
+            source=parent/'source_manifest.json'
+            identity=json.loads(source.read_text()) if source.is_file() else {}
+            if (identity.get('measurement_hashes')!=bindings['measurement_hashes']
+                    or identity.get('config_sha256')!=bindings['config_sha256']):
+                raise ValueError('previous learning stage source/config identity differs from logical trial')
+            roots.append(trial)
+    return roots
+
+
+def execute_learning_trial(cfg, config, out, attempt, trial, freeze, resume_selections=None):
+    """Reuse ended evidence; only an explicit environmental resume launches again."""
+    bindings=learning_bindings(freeze,trial)
+    if (Path(attempt)/'record.json').is_file():
+        read_record(Path(attempt)/'record.json')
+    root=Path(attempt)/'trials'/trial['id']
+    ledger=read_trial_ledger(root,bindings,prior_trial_dirs=previous_learning_trial_dirs(out,attempt,trial['id'],bindings))
+    selected=(resume_selections or {}).get(trial['id'])
+    if not ledger['attempts'] or selected:
+        return launch_learning_worker(cfg,config,out,attempt,trial,freeze,resume=selected)
+    last=ledger['attempts'][-1];run=Path(last['run_dir'])
+    result=run/'aggregate-result.json'
+    if not result.is_file():
+        raise MeasurementInvalid('aggregate_missing','ended invocation has no durable aggregate result; reconstruct from explicit review before continuation')
+    request_path=run/'request.json'
+    if digest(request_path)!=last['launch']['request_sha256']:
+        raise ValueError('previous learning request artifact changed')
+    request=json.loads(request_path.read_text())
+    if request['trial']!=trial or request['bindings']!=bindings:
+        raise ValueError('previous learning request differs from frozen trial')
+    raw_path=Path(request['result'])
+    raw=None
+    if raw_path.is_file():
+        if digest(raw_path)!=last['exit']['result_sha256']:
+            raise ValueError('previous raw worker result artifact changed')
+        try:
+            raw=json.loads(raw_path.read_text())
+            if not isinstance(raw,dict):raw=None
+        except ValueError:
+            raw=None
+    elif last['exit']['result_sha256'] is not None:
+        raise ValueError('previous raw worker result artifact missing')
+    reconstructed=aggregate_learning_result(raw,trial,request,last['exit'],run)
+    if json.loads(result.read_text())!=reconstructed:
+        raise ValueError('previous aggregate scientific fields differ from authenticated raw/terminal reconstruction')
+    return reconstructed
+
+
+def load_learning_freeze(cfg, config, out):
+    l = cfg['learning']
+    if l['action'] != 'learning':
+        raise ValueError('learning worker requires prospectively frozen learning action')
+    path = (ROOT/l['learning_manifest_path']).resolve()
+    amendment = json.loads((ROOT/'decisions/dw_sampling_amendment.json').read_text())
+    if not path.is_relative_to(ROOT) or amendment['bound_files'].get(str(path.relative_to(ROOT))) != digest(path):
+        raise ValueError('learning manifest is not bound by outer amendment')
+    proof = require_model_qualification(out, ROOT/l['qualification_record_path'], l['qualification_record_sha256'],source_hashes('pilot'))
+    expected = build_learning_manifest(cfg,proof['record'],qualification_reference=proof['reference'],
+                                     measurement_hashes=source_hashes('pilot'),config_sha256=digest(config))
+    freeze = json.loads(path.read_text())
+    if freeze != expected:
+        raise ValueError('learning manifest differs from exact qualification/source/config declaration')
+    return freeze
+
+
+def diagnostic_trials(cfg):
+    arm = dict(sampler=None,rho=None,batch=16,lr=.001,precision='fp32')
+    return [{'id':'diagnostic-shift','phase':'development','seed':62003,'arm':arm,
+             'roles':['diagnostic'],'kind':'learning_diagnostic','diagnostic':'shift'},
+            *[{'id':f'diagnostic-{kind}-{session}','phase':'development','seed':cfg['seed']+session,
+               'arm':arm,'roles':['diagnostic'],'kind':'learning_diagnostic','diagnostic':kind,'session':session}
+              for kind in ('context128','components') for session in range(2)]]
+
+
+def load_learning_selection(attempt, freeze, cfg):
+    """Recompute dynamic settings from retained grid evidence before new seeds."""
+    attempt = Path(attempt)
+    selection = json.loads((attempt/'selection.json').read_text())
+    grid_path = attempt/'grid-results.json'
+    if selection['grid_results_sha256'] != digest(grid_path):
+        raise ValueError('selection grid evidence changed')
+    rows = json.loads(grid_path.read_text())
+    if [r['id'] for r in rows] != [r['id'] for r in freeze['grid']]:
+        raise ValueError('selection is missing or replacing declared grid trials')
+    for row, trial in zip(rows,freeze['grid']):
+        if row['arm'] != trial['arm'] or row['seed'] != trial['seed']:
+            raise ValueError('selection grid trial metadata changed')
+        if row.get('result_path') and digest(row['result_path']) != row['result_sha256']:
+            raise ValueError('selection raw worker evidence changed')
+    h = freeze['calibration']['horizon']; eps = freeze['calibration']['epsilon_eval']
+    primary = select_learning_arms(rows,cutoff=h['H'],epsilon_eval=eps,r_time=h['r_time'])
+    if primary != selection['primary'] or primary['status'] != 'pass':
+        raise ValueError('selection primary choices differ from fixed decision helper')
+    controls = select_learning_controls(rows,primary,epsilon_eval=eps,r_time=h['r_time'],cutoff=h['H'])
+    if controls != selection['controls'] or controls['status'] != 'pass':
+        raise ValueError('selection mandatory controls changed')
+    return selection
+
+
+def declared_learning_trials(cfg, freeze, attempt):
+    trials = [*freeze['grid'],*diagnostic_trials(cfg)]
+    if (Path(attempt)/'selection.json').is_file():
+        selected = load_learning_selection(attempt,freeze,cfg)
+        dense = selected['primary']['dense']
+        trials.append({'id':'precision-qualification','phase':'development','seed':3101,'arm':dense['arm'],
+                       'roles':['precision_qualification'],'kind':'learning_precision_qualification'})
+        precision_path = Path(attempt)/'precision-qualification.json'
+        controls = selected['controls']
+        if precision_path.is_file():
+            precision = json.loads(precision_path.read_text())
+            if precision['status'] == 'pass':
+                arm = {**dense['arm'],'precision':precision['precision']}
+                screen = {'id':'precision-screen','phase':'development','seed':3101,'arm':arm,'roles':['precision_screen']}
+                trials.append(screen)
+                # A supported control is mandatory regardless of whether its
+                # single screen appears favorable. No development retuning.
+                controls = {**controls,'precision':{'id':screen['id'],'arm':arm}}
+        matrix = build_development_trials(selected['primary'],controls,cfg)
+        trials.extend(matrix)
+        trials.extend({**r,'id':'secondary-'+r['id'],'kind':'learning_secondary','roles':['secondary'],
+                       'secondary_of':r['id']} for r in matrix)
+    return trials
+
+
+def make_learning_request(cfg, config, out, attempt, trial, freeze, run, *, prior_elapsed_s,
+                          checkpoint_history, resume, launch_perf_s, secondary_history=None):
+    attempt, run = Path(attempt).resolve(), Path(run).resolve()
+    bindings = learning_bindings(freeze,trial)
+    checkpoint_dir = ROOT/'.cache'/'dw_sampling'/'learning'/bindings['manifest_sha256']/trial['id']
+    h = freeze['calibration']['horizon']
+    request = {'kind':trial.get('kind','learning_train'),'config':str(Path(config).resolve()),'out':str(Path(out).resolve()),
+               'attempt':str(attempt),'trial_id':trial['id'],'attempt_id':run.name,'id':trial['id'],
+               'trial':trial,'phase':trial['phase'],'seed':trial['seed'],'variant':freeze['native_variant'],
+               'arm':trial['arm'],'peak_lr':trial['arm']['lr'],
+               **{k:h[k] for k in ('H','Delta','R','T_budget','block_updates','overshoot_limit_s')},
+               'bindings':bindings,'run_dir':str(run/'worker'),'checkpoint_dir':str(checkpoint_dir),
+               'data_path':freeze['data']['path'],'data_sha256':freeze['data']['sha256'],
+               'launch_perf_s':launch_perf_s,'clock_implementation':time.get_clock_info('perf_counter').implementation,
+               'prior_elapsed_s':prior_elapsed_s,'resume':resume,'checkpoint_history':checkpoint_history,
+               'checkpoint_history_sha256':hashlib.sha256(canonical(checkpoint_history)).hexdigest(),
+               'secondary_history':secondary_history or [],
+               'result':str(run/'worker'/'result.json'),'secondary_update':trial.get('secondary_update')}
+    return request
+
+
+def validate_learning_worker_request(request, cfg, stage, attempt, identity, freeze):
+    """No pilot request can acquire validation/test or undeclared trajectory authority."""
+    keys = {'kind','config','out','attempt','trial_id','attempt_id','id','trial','phase','seed','variant','arm','peak_lr',
+            'H','Delta','R','T_budget','block_updates','overshoot_limit_s','bindings','run_dir','checkpoint_dir',
+            'data_path','data_sha256','launch_perf_s','clock_implementation','prior_elapsed_s','resume','checkpoint_history',
+            'checkpoint_history_sha256','secondary_history','result','secondary_update','precision_qualification','secondary_checkpoint'}
+    if set(request)-keys or stage != 'pilot' or cfg['learning']['action'] != 'learning':
+        raise ValueError('unknown pilot worker authority/action/stage/key')
+    if (identity['measurement_hashes'] != freeze['measurement_hashes'] or identity['config_sha256'] != freeze['config_sha256']
+            or request['phase'] != 'development' or request['variant'] != freeze['native_variant']):
+        raise ValueError('worker source/config/phase/native binding changed')
+    trial = next((r for r in declared_learning_trials(cfg,freeze,attempt) if r['id'] == request['trial_id']),None)
+    if trial is None or trial != request['trial'] or request['id'] != trial['id']:
+        raise ValueError('worker trial is not declared by frozen grid/selection')
+    run = Path(attempt).resolve()/'trials'/trial['id']/request['attempt_id']
+    if (not re.fullmatch('attempt-[0-9]{4}',request['attempt_id']) or Path(request['run_dir']).resolve() != run/'worker'
+            or Path(request['result']).resolve() != run/'worker'/'result.json' or Path(request['result']).exists()
+            or any(p.is_symlink() for p in [run,*run.parents] if p.is_relative_to(Path(attempt).resolve()))):
+        raise ValueError('worker run/result path outside owned invocation or already used')
+    expected = make_learning_request(cfg,request['config'],request['out'],attempt,trial,freeze,run,
+        prior_elapsed_s=request['prior_elapsed_s'],checkpoint_history=request['checkpoint_history'],resume=request['resume'],
+        launch_perf_s=request['launch_perf_s'],secondary_history=request.get('secondary_history',[]))
+    if any(request.get(k) != value for k,value in expected.items()):
+        raise ValueError('worker arm/seed/schedule/precision/data/ownership changed')
+    if (set(request['arm']) != {'sampler','rho','batch','lr','precision'} or request['peak_lr'] != request['arm']['lr']
+            or not all(type(request[k]) in (int,float) and math.isfinite(request[k]) and request[k] >= 0
+                       for k in ('launch_perf_s','prior_elapsed_s'))):
+        raise ValueError('invalid worker arm or charged clock')
+    ledger = read_trial_ledger(run.parent,request['bindings'],
+        prior_trial_dirs=previous_learning_trial_dirs(request['out'],attempt,trial['id'],request['bindings']),exclude_attempt=run)
+    if (request['prior_elapsed_s'] != ledger['prior_elapsed_s'] or request['checkpoint_history'] != ledger['checkpoint_history']
+            or request.get('secondary_history',[]) != ledger['secondary_history']):
+        raise ValueError('worker prior charge/checkpoint history differs from durable ledger')
+    if ledger['attempts']:
+        expected_resume = validate_resume_selection(request['resume'],ledger,request['bindings']) if request['resume'] else None
+        if expected_resume is None:
+            raise ValueError('worker previous attempt requires explicit eligible resume')
+    elif request['resume'] is not None:
+        raise ValueError('worker resume has no own previous ledger')
+    cp = Path(request['checkpoint_dir'])
+    if any(p.is_symlink() for p in [cp,*cp.parents] if p.is_relative_to(ROOT)):
+        raise ValueError('checkpoint directory symlink escape')
+    if request['arm']['precision'] != 'fp32':
+        proof = Path(attempt)/'precision-qualification.json'
+        if not proof.is_file() or request.get('precision_qualification') != json.loads(proof.read_text()):
+            raise ValueError('native precision worker lacks retained backend qualification')
+    if request['kind'] == 'learning_secondary':
+        primary = Path(attempt)/'trials'/trial['secondary_of']
+        primary_bindings = learning_bindings(freeze,{**trial,'id':trial['secondary_of'],'roles':[],'kind':'learning_train'})
+        prior_dirs = previous_learning_trial_dirs(request['out'],attempt,trial['secondary_of'],primary_bindings)
+        completed = read_trial_ledger(primary,primary_bindings,prior_trial_dirs=prior_dirs)
+        checkpoint = request.get('secondary_checkpoint')
+        if not checkpoint or completed['last_classification'] != 'complete':
+            raise ValueError('secondary evaluation requires completed own primary trajectory')
+        receipt_paths = [p for directory in [*prior_dirs,primary] for p in directory.glob('attempt-*/worker/checkpoint_receipts.jsonl')]
+        receipts = [json.loads(line) for p in receipt_paths for line in p.read_text().splitlines()]
+        if not any(r == checkpoint and r['kind']=='secondary' and r['logical_updates']==1024 for r in receipts):
+            raise ValueError('secondary evaluation is not the exact own update1024 receipt')
+
+
+def aggregate_learning_result(raw, trial, request, terminal, run):
+    """Deterministic scientific aggregate from raw bytes, terminal and frozen trial."""
+    classification=terminal['classification']
+    result_path=Path(request['result'])
+    elapsed = terminal['cumulative_elapsed_s']
+    if raw is None:
+        raw = {'status':'INCOMPLETE_RESOURCE' if classification == 'environmental_interruption' else 'NUMERICAL_FAILURE',
+               'reason':'worker did not complete; exact active interval and raw failure prefix retained'}
+    result = {**raw,'id':trial['id'],'seed':trial['seed'],'phase':trial['phase'],'arm':trial['arm'],'roles':trial['roles'],
+              'canonical_completion_s':elapsed,'terminal_receipt':str(run/'exit.json'),
+              'result_path':str(result_path) if result_path.is_file() else None,
+              'result_sha256':terminal['result_sha256']}
+    if classification != 'complete':
+        result.update(status='INCOMPLETE_RESOURCE' if classification=='environmental_interruption' else 'NUMERICAL_FAILURE',
+                      worker_status=raw.get('status'),reason='worker terminal failed; raw result retained without promotion')
+    if request['kind'] == 'learning_train' and elapsed > request['T_budget']:
+        result.update(budget_exceeded=True,budget_excess_s=elapsed-request['T_budget'])
+        if classification == 'complete':
+            result.update(status='INCONCLUSIVE_MEASUREMENT',reason='canonical invocation completion including result serialization/exit exceeded T_budget')
+    return result
+
+
+def launch_learning_worker(cfg, config, out, attempt, trial, freeze, *, resume=None):
+    """Serial fresh child with durable launch/end evidence including teardown IO."""
+    trial_dir = Path(attempt)/'trials'/trial['id']
+    trial_dir.mkdir(parents=True,exist_ok=True)
+    bindings = learning_bindings(freeze,trial)
+    with exclusive_session(trial_dir/'owner.lock'):
+        ledger = read_trial_ledger(trial_dir,bindings,prior_trial_dirs=previous_learning_trial_dirs(out,attempt,trial['id'],bindings))
+        if ledger['attempts'] and resume is None:
+            raise ValueError('already attempted trial needs explicit eligible resume; no implicit retry')
+        selected = validate_resume_selection(resume,ledger,bindings) if resume else None
+        run = trial_dir/f'attempt-{len(ledger["attempts"])+1:04d}'
+        run.mkdir()
+        # This timestamp precedes request serialization, process spawn and all
+        # child imports. Its eventual end is observed only after child exit.
+        start = time.perf_counter()
+        request = make_learning_request(cfg,config,out,attempt,trial,freeze,run,
+            prior_elapsed_s=ledger['prior_elapsed_s'],checkpoint_history=ledger['checkpoint_history'],
+            resume=selected,launch_perf_s=start,secondary_history=ledger['secondary_history'])
+        precision = Path(attempt)/'precision-qualification.json'
+        if trial['arm']['precision'] != 'fp32':
+            request['precision_qualification'] = json.loads(precision.read_text())
+        if trial.get('kind') == 'learning_secondary':
+            original = Path(attempt)/'trials'/trial['secondary_of']
+            primary_trial = next(t for t in declared_learning_trials(cfg,freeze,attempt) if t['id']==trial['secondary_of'])
+            primary_dirs = previous_learning_trial_dirs(out,attempt,trial['secondary_of'],learning_bindings(freeze,primary_trial))
+            finals = sorted(p for directory in [*primary_dirs,original] for p in directory.glob('attempt-*/worker/result.json'))
+            if not finals:
+                raise ValueError('secondary primary worker has no result')
+            request['secondary_checkpoint'] = json.loads(finals[-1].read_text()).get('secondary_checkpoint')
+        identity = json.loads((Path(attempt)/'source_manifest.json').read_text())
+        validate_learning_worker_request(request,cfg,'pilot',attempt,identity,freeze)
+        request_path = run/'request.json'
+        durable_json(request_path,request)
+        launch = {'bindings':bindings,'attempt_id':run.name,'request_sha256':digest(request_path),
+                  'launch_perf_s':start,'prior_elapsed_s':ledger['prior_elapsed_s'],
+                  'previous_exit_sha256':ledger['previous_exit_sha256'],'checkpoint_dir':request['checkpoint_dir'],
+                  'clock_implementation':request['clock_implementation'],'host':os.uname().nodename,'parent_pid':os.getpid()}
+        durable_json(run/'launch.json',launch)
+        child, code, failure, interrupted = None,None,None,False
+        try:
+            with (run/'stdout.txt').open('xb') as stdout, (run/'stderr.txt').open('xb') as stderr:
+                child = subprocess.Popen(worker_args('pilot',config,out,request_path),cwd=ROOT,env=environment(cfg),stdout=stdout,stderr=stderr)
+                durable_json(run/'process.json',{'pid':child.pid,'launch_sha256':digest(run/'launch.json')})
+                code = child.wait()
+        except BaseException as exc:
+            failure = {'exception':type(exc).__name__,'reason':str(exc)}
+            interrupted = isinstance(exc,(KeyboardInterrupt,TimeoutError,subprocess.TimeoutExpired))
+            if child is not None and child.poll() is None:
+                child.terminate()
+                try:
+                    code = child.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    child.kill();code=child.wait()
+        finally:
+            if child is not None and child.poll() is None:
+                child.kill();code=child.wait()
+            result_path = Path(request['result'])
+            raw = None
+            try:
+                raw = json.loads(result_path.read_text()) if result_path.is_file() else None
+                if raw is not None and not isinstance(raw,dict):
+                    raise ValueError('worker result must be an object')
+            except (OSError,ValueError) as exc:
+                failure = {'exception':type(exc).__name__,'reason':str(exc)}
+            result_hash = digest(result_path) if result_path.is_file() else None
+            sidecar = Path(request['run_dir'])/'worker-failure.json'
+            child_failure = json.loads(sidecar.read_text()) if sidecar.is_file() else {}
+            training_failure_path=Path(request['run_dir'])/'failure.json'
+            training_failure=json.loads(training_failure_path.read_text()) if training_failure_path.is_file() else {}
+            worker_artifacts = {str(p.relative_to(run)):digest(p) for p in sorted(Path(request['run_dir']).rglob('*')) if p.is_file()}
+            end = time.perf_counter()
+            classification = 'complete' if code == 0 and raw is not None else 'numerical_failure'
+            if interrupted or code in (-2,-9,-15,124):
+                classification = 'environmental_interruption'
+            if child_failure.get('classification') == 'environmental_interruption' or (failure and failure['exception'] in ('OSError','MemoryError')):
+                classification = 'environmental_interruption'
+            # A later signal, parent interruption, or filesystem failure must
+            # never turn a known bad numerical draw into a resumable trial.
+            if (child_failure.get('classification') == 'numerical_failure'
+                    or training_failure.get('exception') not in (None,'KeyboardInterrupt','OSError','MemoryError','TimeoutError')):
+                classification = 'numerical_failure'
+            terminal = {'launch_sha256':digest(run/'launch.json'),'ended_perf_s':end,'active_s':end-start,
+                        'cumulative_elapsed_s':ledger['prior_elapsed_s']+(end-start),
+                        'exit_code':code,'classification':classification,'failure':failure,'worker_failure':child_failure,
+                        'result_sha256':result_hash,'worker_artifacts':worker_artifacts,
+                        'clock_implementation':request['clock_implementation']}
+            durable_json(run/'exit.json',terminal)
+        result=aggregate_learning_result(raw,trial,request,terminal,run)
+        durable_json(run/'aggregate-result.json',result)
+        return result
+
+
+def run_learning_grid(cfg, config, out, attempt, freeze, *, resume_selections=None):
+    rows = []
+    for trial in freeze['grid']:
+        storage_guard(cfg,out)
+        row = execute_learning_trial(cfg,config,out,attempt,trial,freeze,resume_selections)
+        rows.append(row)
+        durable_json(Path(attempt)/(trial['id']+'-row.json'),row)
+    hashes = {r['initial_parameters_sha256'] for r in rows if r.get('initial_parameters_sha256')}
+    if len(hashes) > 1:
+        raise MeasurementInvalid('initial_parameters', 'seed3101 grid initial tensors differ between arms')
+    durable_json(Path(attempt)/'grid-results.json',rows)
+    return rows
+
+
+def synthetic_shift_diagnostic():
+    """One fixed adverse teacher shift from a nonzero common native history."""
+    import torch
+    from oar.sampled_linear import SamplingState,sampled_linear
+    rng = torch.Generator(device='cpu').manual_seed(62003)
+    x = torch.randn(64,8,dtype=torch.float64,generator=rng)
+    teacher = torch.randn(4,8,dtype=torch.float64,generator=rng)
+    initial = torch.randn(4,8,dtype=torch.float64,generator=rng)*.02
+    def optimizer(p):
+        return torch.optim.AdamW([p],lr=.001,betas=(.9,.999),eps=1e-8,weight_decay=.01,foreach=False)
+    history = torch.nn.Parameter(initial.clone());opt=optimizer(history)
+    for _ in range(8):
+        opt.zero_grad();loss=(x@history.T-x@teacher.T).square().mean();loss.backward()
+        torch.nn.utils.clip_grad_norm_([history],1.,error_if_nonfinite=True);opt.step()
+    moments = copy.deepcopy(opt.state_dict());arms={}
+    for name in ('dense','importance','uniform'):
+        weight=torch.nn.Parameter(history.detach().clone());opt=optimizer(weight);opt.load_state_dict(copy.deepcopy(moments))
+        state=SamplingState(62003,'shift-regression',name,.125) if name != 'dense' else None
+        losses=[]
+        for _ in range(32):
+            opt.zero_grad();pred=x@weight.T if state is None else sampled_linear(x,weight,None,state)
+            loss=(pred+x@teacher.T).square().mean();loss.backward()
+            torch.nn.utils.clip_grad_norm_([weight],1.,error_if_nonfinite=True);opt.step();losses.append(float(loss.detach()))
+        arms[name]={'losses':losses,'endpoint_mse':float((x@weight.detach().T+x@teacher.T).square().mean())}
+    return {'status':'pass','descriptive_only':True,'seed':62003,'history_updates':8,'shift_updates':32,
+            'native_moment_norm':float(next(iter(moments['state'].values()))['exp_avg'].norm()),'arms':arms}
+
+
+def diagnostic_context_blocks(blocks):
+    """Inclusive TargetBlock bounds, resegmented without changing target mass."""
+    from oar.sampling_data import TargetBlock
+    return [TargetBlock(b.article_index,start,min(start+127,b.target_end),start-1)
+            for b in blocks for start in range(b.target_start,b.target_end+1,128)]
+
+
+def diagnostic_model_fixture(cfg, data, request, *, variant, sampler=None, rho=.25):
+    """Use existing model/data logic; context128 cost trims fixed256 padding."""
+    fixture = model_fixture(cfg,data,request,variant=variant,sampler=sampler,rho=rho)
+    context = cfg['learning']['context']
+    if context == 128:
+        original_batch = fixture.stream.next_batch
+        def next_batch(*, device='cpu'):
+            value = original_batch(device=device)
+            for key in ('input_ids','target_ids','target_mask_cpu'):
+                value[key] = value[key][:,:128].contiguous()
+            value['physical_rows'] = value['input_ids'].shape[0]*128
+            return value
+        fixture.stream.next_batch = next_batch
+    return fixture
+
+
+def learning_diagnostic_worker(cfg, request, freeze):
+    """Only dispatched diagnostics; every observation has its own paid process."""
+    from oar.sampled_linear import named_seed
+    import torch
+    kind=request['trial']['diagnostic']
+    if kind == 'shift':
+        return synthetic_shift_diagnostic()
+    data = model_data(request)
+    model_resource_guard(cfg,request['out'])
+    local = copy.deepcopy(cfg)
+    r = {**request,'base_seed':request['seed'],'synchronize_each_update':freeze['calibration']['horizon']['block_updates']==1}
+    if kind == 'context128':
+        local['learning']['context']=128
+        blocks=diagnostic_context_blocks(data['training_blocks'])
+        data={**data,'training_blocks':blocks}
+        dense=diagnostic_model_fixture(local,data,r,variant=request['variant'])
+        updates,pilot=model_dense_calibration(local,dense)
+        del dense
+        dense=diagnostic_model_fixture(local,data,r,variant=request['variant'])
+        common,history=model_common_history(local,dense)
+        comparisons={}
+        for arm in freeze['eligible']:
+            candidate=diagnostic_model_fixture(local,data,r,variant=request['variant'],sampler=arm['sampler'],rho=arm['rho'])
+            comparisons[arm['arm']]=timed_pairs(local,dense,candidate,common,updates,
+                named_seed(request['seed'],'order','context128',arm['arm']),
+                Path(request['run_dir'])/(arm['arm']+'.jsonl'))
+            del candidate
+        return {'status':'pass','descriptive_only':True,'context':128,'sessions':2,'pairs':30,
+                'selected_dense_pilot':pilot,'native_history':history,'comparisons':comparisons,
+                'primary_horizon_unchanged':True}
+    if kind != 'components':
+        raise ValueError('unknown frozen diagnostic')
+    from torch.nn import functional as F
+    dense=diagnostic_model_fixture(local,data,r,variant=request['variant'])
+    common,history=model_common_history(local,dense)
+    comparisons={}
+    for arm in [dict(arm='dense',sampler=None,rho=.25),*freeze['eligible']]:
+        fixture=diagnostic_model_fixture(local,data,r,variant=request['variant'],sampler=arm['sampler'],rho=arm['rho'])
+        fixture.restore(common);state=fixture.training
+        def measured(operation):
+            torch.mps.synchronize();start=time.perf_counter();value=operation();torch.mps.synchronize()
+            return value,time.perf_counter()-start
+        batch,data_s=measured(lambda:state.stream.next_batch(device=next(state.model.parameters()).device))
+        fixture.opt.zero_grad(set_to_none=True)
+        loss,forward_s=measured(lambda:F.cross_entropy(fixture.model(batch['input_ids']).reshape(-1,259),
+            batch['target_ids'].reshape(-1),ignore_index=-100,reduction='sum')/batch['valid_targets'])
+        _,backward_s=measured(loss.backward)
+        _,clip_s=measured(lambda:torch.nn.utils.clip_grad_norm_(state._parameters,1.,error_if_nonfinite=True))
+        _,optimizer_s=measured(fixture.opt.step)
+        fixture.restore(common)
+        _,step_s=measured(fixture.step)
+        comparisons[arm['arm']]={'data_s':data_s,'forward_loss_s':forward_s,'backward_s':backward_s,
+            'clip_s':clip_s,'optimizer_s':optimizer_s,'observed_complete_step_s':step_s,
+            'component_sum_used':False,'interpretation':'separate synchronized component observations perturb execution; no sum estimates asynchronous step'}
+        del fixture
+    return {'status':'pass','descriptive_only':True,'native_history':history,'comparisons':comparisons}
+
+
+def run_learning_session_worker(cfg, request, freeze):
+    """All requests validated by main before device setup or cache access."""
+    from oar.sampling_lm import run_training_worker,run_precision_worker,qualify_native_precision
+    kind=request['kind'];run=Path(request['run_dir']);run.mkdir(parents=True,exist_ok=True)
+    if not (kind=='learning_diagnostic' and request['trial']['diagnostic']=='shift'):
+        model_resource_guard(cfg,request['out'])
+    if kind == 'learning_train':
+        return run_training_worker(request) if request['arm']['precision']=='fp32' else run_precision_worker(request)
+    if kind == 'learning_precision_qualification':
+        result=qualify_native_precision(request)
+    elif kind == 'learning_diagnostic':
+        result=learning_diagnostic_worker(cfg,request,freeze)
+    elif kind == 'learning_secondary':
+        from oar.sampling_lm import ModelFixture,load_checkpoint,evaluate,NativePrecisionState
+        checkpoint=request['secondary_checkpoint']
+        if checkpoint is None:
+            result={'status':'unavailable_not_reached','reason':'update1024 was not reached; no extrapolation'}
+        else:
+            data=model_data(request);arm=request['arm']
+            fixture=ModelFixture(data,base_seed=request['seed'],variant=request['variant'],sampler=arm['sampler'],rho=arm['rho'] or .25,batch_size=arm['batch'])
+            primary_trial=next(t for t in declared_learning_trials(cfg,freeze,request['attempt']) if t['id']==request['trial']['secondary_of'])
+            payload=load_checkpoint(checkpoint['path'],checkpoint['sha256'],expected_bindings=learning_bindings(freeze,primary_trial))
+            state=fixture.training
+            if arm['precision'] != 'fp32':
+                import torch
+                scaler=torch.amp.GradScaler('mps') if arm['precision']=='fp16' else None
+                state=NativePrecisionState(fixture.model,fixture.opt,fixture.stream,precision=arm['precision'],scaler=scaler,
+                    scaler_qualification={'backend':'mps','native_grad_scaler':True} if scaler else None)
+            state.restore(payload['training_state'])
+            result={'status':'pass','descriptive_only':True,'logical_update':1024,'checkpoint':checkpoint,
+                    'evaluation':evaluate(state.model,data['evaluation_tokens'],data['evaluation_full'],batch_size=16)}
+            # Freeze descriptive quality before retiring this extra owned file.
+            # The final endpoint checkpoint and two-resume policy are separate.
+            durable_json(request['result'],result)
+            checkpoint_path=Path(checkpoint['path'])
+            checkpoint_path.unlink()
+            descriptor=os.open(checkpoint_path.parent,os.O_RDONLY)
+            try:
+                os.fsync(descriptor)
+            finally:
+                os.close(descriptor)
+            durable_json(run/'secondary-retirement.json',{'checkpoint':checkpoint,
+                'primary_bindings':learning_bindings(freeze,primary_trial),
+                'evaluation_result_sha256':digest(request['result']),
+                'policy':'own equal-step checkpoint retired only after durable separately charged evaluation'})
+            return result
+    else:
+        raise ValueError('unknown guarded learning worker')
+    durable_json(request['result'],result)
+    return result
+
+
+def pilot_learning(cfg, config, out, attempt, *, resume_selections=None):
+    freeze=load_learning_freeze(cfg,config,out)
+    for stage in ('prepare','feasibility','correctness','cost'):
+        require_stage(out,stage,source_hashes('pilot'))
+    resources=model_resource_guard(cfg,out)
+    forecast={**freeze['forecast'],'actual_resources':resources,'utc':utc()}
+    durable_json(Path(attempt)/'inclusive-forecast.json',forecast)
+    if forecast['required_free_bytes'] > resources['storage']['free_disk_bytes']:
+        raise MemoryError('inclusive endpoint/secondary/active forecast would exhaust free disk reserve')
+    rows=run_learning_grid(cfg,config,out,attempt,freeze,resume_selections=resume_selections)
+    h=freeze['calibration']['horizon'];eps=freeze['calibration']['epsilon_eval']
+    primary=select_learning_arms(rows,cutoff=h['H'],epsilon_eval=eps,r_time=h['r_time'])
+    if primary['status'] != 'pass':
+        return {**primary,'learning_action':'learning','learning_success':False,'qualification_reference':freeze['qualification']}
+    controls=select_learning_controls(rows,primary,epsilon_eval=eps,r_time=h['r_time'],cutoff=h['H'])
+    selected={'primary':primary,'controls':controls,'grid_results_sha256':digest(Path(attempt)/'grid-results.json')}
+    durable_json(Path(attempt)/'selection.json',selected)
+    if controls['status'] != 'pass':
+        return {'status':'STOP_CONTROL','reason':'no finite mandatory control','learning_success':False}
+    trial=next(t for t in declared_learning_trials(cfg,freeze,attempt) if t['id']=='precision-qualification')
+    precision=execute_learning_trial(cfg,config,out,attempt,trial,freeze,resume_selections)
+    durable_json(Path(attempt)/'precision-qualification.json',precision)
+    if precision['status'] not in ('pass','unsupported'):
+        return {'status':'INCONCLUSIVE_MEASUREMENT','reason':'native precision qualification numerically invalid/incomplete','learning_success':False}
+    declared=declared_learning_trials(cfg,freeze,attempt)
+    if precision['status']=='pass':
+        screen=next(t for t in declared if t['id']=='precision-screen')
+        screen_result=execute_learning_trial(cfg,config,out,attempt,screen,freeze,resume_selections)
+        durable_json(Path(attempt)/'precision-screen.json',screen_result)
+        if screen_result['status'] != 'pass':
+            return {'status':'INCONCLUSIVE_MEASUREMENT','reason':'native precision screen invalid/censored; no qualified control claim','learning_success':False}
+    matrix=[r for r in declared if r['id'].startswith('dev-')]
+    durable_json(Path(attempt)/'development-matrix.json',matrix)
+    development=[];secondaries=[]
+    for trial in matrix:
+        storage_guard(cfg,out)
+        row=execute_learning_trial(cfg,config,out,attempt,trial,freeze,resume_selections)
+        development.append(row)
+        # Evaluation is separately paid after each trajectory and never changes
+        # its H endpoint, primary target, or selected setting.
+        if row.get('secondary_checkpoint'):
+            secondary=next(t for t in declared if t['id']=='secondary-'+trial['id'])
+            secondaries.append(execute_learning_trial(cfg,config,out,attempt,secondary,freeze,resume_selections))
+        else:
+            secondaries.append({'id':'secondary-'+trial['id'],'status':'unavailable_not_reached','reason':'update1024 not reached'})
+    durable_json(Path(attempt)/'development-results.json',development)
+    durable_json(Path(attempt)/'secondary-results.json',secondaries)
+    result=finish_development(development,primary,{**freeze,'development_roles':sorted({role for t in matrix for role in t['roles']})})
+    diagnostics=[execute_learning_trial(cfg,config,out,attempt,t,freeze,resume_selections) for t in diagnostic_trials(cfg)]
+    durable_json(Path(attempt)/'diagnostics.json',diagnostics)
+    if result['status']=='pass' and (any(r['status']!='pass' for r in diagnostics)
+            or any(r['status'] not in ('pass','unavailable_not_reached') for r in secondaries)):
+        result={'status':'INCONCLUSIVE_MEASUREMENT','reason':'required diagnostics/secondary evaluation incomplete','development_result':result}
+    if result['status']=='pass':
+        durable_json(Path(attempt)/'prospective-confirmation-plan.json',{
+            **result['confirmation_plan'],'candidate':result['candidate'],'dense':result['dense'],
+            'q_star':primary['q_star'],'epsilon_q':primary['epsilon_q'],'qualification':freeze['qualification'],
+            'calibration':freeze['calibration'],'measurement_hashes':freeze['measurement_hashes'],
+            'confirmation_dispatch':'separate future task/freeze; no protected loss access authorized'})
+    return {**result,'learning_action':'learning','learning_success':False,'qualification_reference':freeze['qualification']}
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--stage', required=True, choices=STAGES)
@@ -2088,15 +3167,35 @@ def main(argv=None):
     parser.add_argument('--out', required=True, type=Path)
     parser.add_argument('--dry-run', action='store_true', help='prepare inventory only; no tests, training, bodies or device operations')
     parser.add_argument('--session-worker', type=Path, help=argparse.SUPPRESS)
+    parser.add_argument('--learning-resume', type=Path, help='explicit trial-ID to retained checkpoint path/SHA selections; no automatic retries')
     args = parser.parse_args(argv)
     cfg = load_config(args.config)
+    resume_selections = json.loads(args.learning_resume.read_text()) if args.learning_resume else None
+    if resume_selections is not None and (args.stage != 'pilot' or cfg['learning']['action'] != 'learning'
+            or not isinstance(resume_selections,dict) or any(not isinstance(v,dict) or set(v) != {'path','sha256'} for v in resume_selections.values())):
+        raise ValueError('explicit learning resume selections require pilot learning action and path/SHA pairs')
     args.config, args.out = args.config.resolve(), args.out.resolve()
     amendment = validate_amendment(args.config)
     if args.session_worker:
         request = json.loads(args.session_worker.read_text())
         validate_worker_request(request, args.stage, args.config, args.out, args.session_worker)
         configure_torch()
-        if request['kind'] == 'qualification':
+        if request['kind'].startswith('learning_'):
+            freeze = load_learning_freeze(cfg, args.config, args.out)
+            try:
+                run_learning_session_worker(cfg, request, freeze)
+            except BaseException as exc:
+                run = Path(request['run_dir']);run.mkdir(parents=True,exist_ok=True)
+                classification = ('environmental_interruption' if isinstance(exc,(OSError,MemoryError,KeyboardInterrupt))
+                                  else 'numerical_failure')
+                try:
+                    durable_json(run/'worker-failure.json',{'classification':classification,'exception':type(exc).__name__,
+                        'reason':str(exc),'clock_implementation':request['clock_implementation'],
+                        'observed_perf_s':time.perf_counter()})
+                except OSError:
+                    pass
+                raise
+        elif request['kind'] == 'qualification':
             write_json(Path(request['attempt'])/'qualification.json', primitive_qualification(cfg))
         elif request['kind'] == 'diagnostic':
             write_json(Path(request['attempt'])/'diagnostic.json', offline_diagnostics(cfg, request))
@@ -2114,7 +3213,7 @@ def main(argv=None):
     identity = {'reviewed_head': REVIEWED, 'actual_head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
                 'git_status': subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT, text=True),
                 'amendment_sha256': digest(ROOT/'decisions/dw_sampling_amendment.json'), 'config_path': str(args.config),
-                'config_sha256': digest(args.config),
+                'resume_selections': resume_selections, 'config_sha256': digest(args.config), 'learning_action': cfg['learning']['action'] if args.stage == 'pilot' else None,
                 'measurement_hashes': source_hashes(args.stage), 'bound_files': amendment['bound_files'], 'utc': utc()}
     write_json(attempt/'source_manifest.json', identity)
     result = {}
@@ -2138,7 +3237,8 @@ def main(argv=None):
         elif args.stage == 'correctness':
             result = correctness(cfg, args.config, args.out, attempt)
         elif args.stage == 'pilot':
-            result = pilot_qualification(cfg, args.config, args.out, attempt)
+            result = (pilot_learning(cfg, args.config, args.out, attempt, resume_selections=resume_selections) if cfg['learning']['action'] == 'learning'
+                      else pilot_qualification(cfg, args.config, args.out, attempt))
         elif args.stage == 'confirm':
             require_stage(args.out, 'pilot', source_hashes('confirm'))
             result = {'status': 'not_run', 'reason': 'confirmation dispatcher awaits qualified development/selection and a future prospective freeze'}
@@ -2159,7 +3259,7 @@ def main(argv=None):
         (attempt/'source_stability_failure.txt').write_text(traceback.format_exc())
         result = {'status': 'INCONCLUSIVE_MEASUREMENT', 'reason': str(exc),
                   'exception': type(exc).__name__, 'invalidated_result': result}
-    record = seal_record(attempt, {'stage': args.stage, **result, 'measurement_hashes': identity['measurement_hashes'],
+    record = seal_record(attempt, {'stage': args.stage, 'learning_action': identity.get('learning_action'), **result, 'measurement_hashes': identity['measurement_hashes'],
                                   'invocation_wall_s': time.perf_counter()-start, 'source_manifest_sha256': digest(attempt/'source_manifest.json')})
     print(json.dumps({'stage': args.stage, 'status': record['status'], 'attempt': str(attempt), 'reason': record['reason']}))
     return 0 if record['status'] in ('pass', 'not_run', 'BLOCKED_ASSET', 'BLOCKED_HARDWARE', 'STOP_COST', 'INCONCLUSIVE_MEASUREMENT', 'INCOMPLETE_RESOURCE') else 1

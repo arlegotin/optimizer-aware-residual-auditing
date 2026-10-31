@@ -1,0 +1,56 @@
+--- v2/analysis/run_dw_sampling.py
++++ v3/analysis/run_dw_sampling.py
+@@ -2820,17 +2820,19 @@
+     result = {**raw,'id':trial['id'],'seed':trial['seed'],'phase':trial['phase'],'arm':trial['arm'],'roles':trial['roles'],
+               'canonical_completion_s':elapsed,'terminal_receipt':str(run/'exit.json'),
+               'result_path':str(result_path) if result_path.is_file() else None,
+               'result_sha256':terminal['result_sha256']}
+     if classification != 'complete':
+         result.update(status='INCOMPLETE_RESOURCE' if classification=='environmental_interruption' else 'NUMERICAL_FAILURE',
+                       worker_status=raw.get('status'),reason='worker terminal failed; raw result retained without promotion')
+     if request['kind'] == 'learning_train' and elapsed > request['T_budget']:
+-        result.update(status='INCONCLUSIVE_MEASUREMENT',reason='canonical invocation completion including result serialization/exit exceeded T_budget')
++        result.update(budget_exceeded=True,budget_excess_s=elapsed-request['T_budget'])
++        if classification == 'complete':
++            result.update(status='INCONCLUSIVE_MEASUREMENT',reason='canonical invocation completion including result serialization/exit exceeded T_budget')
+     return result
+ 
+ 
+ def launch_learning_worker(cfg, config, out, attempt, trial, freeze, *, resume=None):
+     """Serial fresh child with durable launch/end evidence including teardown IO."""
+     trial_dir = Path(attempt)/'trials'/trial['id']
+     trial_dir.mkdir(parents=True,exist_ok=True)
+     bindings = learning_bindings(freeze,trial)
+--- v2/tests/test_dw_sampling_protocol.py
++++ v3/tests/test_dw_sampling_protocol.py
+@@ -3644,8 +3644,30 @@
+     else:
+         primary=next(r for r in rows if r['roles']==['candidate'] and r['seed']==3102)
+         primary['monitors']=[{'completed_s':35.,'nll':3.5},{'completed_s':40.,'nll':3.4}]
+         if damage=='aliased_primary_censor':
+             rows.remove(uniform);primary['roles'].append('uniform')
+     result=d.finish_development(rows,selection,freeze)
+     assert result['status']=='INCONCLUSIVE_MEASUREMENT'
+     assert 'confirmation_plan' not in result
++
++
++@pytest.mark.parametrize('classification,status',[
++    ('numerical_failure','NUMERICAL_FAILURE'),
++    ('environmental_interruption','INCOMPLETE_RESOURCE'),
++    ('complete','INCONCLUSIVE_MEASUREMENT')])
++def test_learning_aggregate_budget_failure_priority_preserves_control_eligibility(tmp_path,classification,status):
++    d=driver()
++    native=_learning_grid_record('native',16,.0001,2.5,[(65.,2.9),(70.,2.8)])
++    raw=_learning_grid_record('uniform',16,.0003,2.7,[(35.,3.5),(40.,3.4)],sampler='uniform',rho=.25)
++    trial={'id':'uniform','phase':'development','seed':3101,'roles':['grid'],
++           'arm':{**raw['arm'],'precision':'fp32'}}
++    request={'kind':'learning_train','T_budget':120.,'result':str(tmp_path/'raw.json')}
++    terminal={'classification':classification,'cumulative_elapsed_s':121.,'result_sha256':'a'*64}
++    aggregate=d.aggregate_learning_result(raw,trial,request,terminal,tmp_path)
++    assert aggregate['status']==status
++    assert aggregate['budget_exceeded'] is True and aggregate['budget_excess_s']==1.
++    assert aggregate['canonical_completion_s']==121.
++    if classification=='numerical_failure':
++        controls=d.select_learning_controls([native,aggregate],{'R0':native,'q_star':3.,'epsilon_q':.01},
++            epsilon_eval=1e-6,r_time=6.,cutoff=100.)
++        assert controls['status']=='STOP_CONTROL' and controls['uniform'] is None
