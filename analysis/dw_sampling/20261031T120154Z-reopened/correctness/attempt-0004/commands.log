@@ -1,0 +1,1 @@
+{"argv": ["/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python", "-m", "pytest", "-q", "tests/test_sampled_linear.py", "tests/test_dw_sampling_protocol.py"], "exit_code": 0}
