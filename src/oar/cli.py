@@ -16,7 +16,20 @@ def main(argv: list[str] | None = None) -> int:
     bench.add_argument('--config', type=Path, required=True)
     oracle = commands.add_parser('audit-checkpoints', help='bounded synthetic structural oracle only')
     oracle.add_argument('--config', type=Path, required=True)
+    report = commands.add_parser('report', help='synthesize reached or stopped evidence')
+    report.add_argument('--gates', type=Path, required=True)
+    report.add_argument('--run-index', type=Path)
+    report.add_argument('--out', type=Path, required=True)
     args = parser.parse_args(argv)
+    if args.command == 'report':
+        from oar.report import build_report
+        try:
+            path = build_report(args.gates, args.run_index, args.out)
+        except (ValueError, TypeError, OSError) as exc:
+            print(f'report: invalid evidence: {exc}', file=sys.stderr)
+            return 2
+        print(f'report: {path}')
+        return 0
     if args.command == 'audit-checkpoints':
         from oar.oracle import run_structural_oracle
         from oar.gates import GateBlocked

@@ -1,0 +1,52 @@
+schema_version: 1
+phase: exploratory
+synthetic_only: true
+loss_unit: mse_per_output_element
+device: mps
+stage: study
+shape:
+  n: 2048
+  di: 512
+  do: 2048
+seeds:
+- 1101
+- 2202
+conditions:
+- low_rank
+- full_rank
+- direction_shift
+checkpoints:
+- 8
+- 32
+- 128
+ages:
+- 1
+- 4
+- 16
+ranks:
+- 4
+- 16
+- 64
+teacher_rank: 16
+shift_step: 120
+pilot_steps: 128
+learning_rates:
+- 0.0001
+- 0.0003
+- 0.001
+- 0.003
+selected_learning_rate: 0.003
+taus:
+- 0.25
+- 0.5
+- 0.75
+relative_thresholds:
+- 0.1
+- 0.25
+- 0.5
+- 1.0
+- 2.0
+queries_per_split: 1
+max_wall_s: 600
+output: analysis/reproduction/wp09
+checkpoints_dir: checkpoints/reproduction/wp09

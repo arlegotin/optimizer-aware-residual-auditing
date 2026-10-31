@@ -1,0 +1,113 @@
+{
+  "amendment_sha256": "ccc6e9ddfa270fc7133f12824635409ee01f98b5d5bc6fad1affa78077b45894",
+  "comparison": {
+    "atol": 2e-06,
+    "categorical_fields": [
+      "actual_rank",
+      "basis_age",
+      "basis_kind",
+      "basis_source_id",
+      "basis_source_step",
+      "condition",
+      "count_unit",
+      "development_id",
+      "layer",
+      "loss_unit",
+      "missing_reason",
+      "numerical_allowance",
+      "numerical_reason",
+      "observations",
+      "online_eligible",
+      "proposal_id",
+      "query_id",
+      "query_step",
+      "rank",
+      "runtime_evidence_reason",
+      "schema_version",
+      "seed",
+      "split"
+    ],
+    "curve_field": "development_mse",
+    "curve_key": [
+      "condition",
+      "seed",
+      "step",
+      "target_phase"
+    ],
+    "excluded": "wall times, resource snapshots, source revision, output paths, regenerated tensor/basis hashes",
+    "interpretation": "same-seed numerical reproducibility only; not independent replication or confirmation",
+    "numeric_fields": [
+      "complement_bound",
+      "complement_norm",
+      "cosine",
+      "dense_development_delta",
+      "dense_displacement_norm",
+      "dense_same_batch_delta",
+      "development_delta",
+      "displacement_norm",
+      "energy",
+      "gradient_norm",
+      "lost_progress",
+      "ordinary_bound",
+      "orthogonality",
+      "probe_complement_bound",
+      "probe_residual_bound",
+      "projected_norm",
+      "projection_defect",
+      "proposal_complement_bound",
+      "proposal_ordinary_bound",
+      "proposal_probe_complement_bound",
+      "proposal_raw_alignment",
+      "proposal_relative_residual",
+      "proposal_true_alignment",
+      "raw_alignment",
+      "relative_residual",
+      "residual_norm",
+      "same_batch_delta",
+      "true_alignment"
+    ],
+    "relative_thresholds": [
+      0.1,
+      0.25,
+      0.5,
+      1.0,
+      2.0
+    ],
+    "row_key": [
+      "proposal_id",
+      "layer"
+    ],
+    "rtol": 0.0002,
+    "sign_fields": [
+      "proposal_true_alignment",
+      "same_batch_delta",
+      "development_delta",
+      "lost_progress",
+      "dense_same_batch_delta",
+      "dense_development_delta"
+    ],
+    "taus": [
+      0.25,
+      0.5,
+      0.75
+    ]
+  },
+  "config_path": "analysis/reproduction/wp09/config.yaml",
+  "config_sha256": "b86fb64b3e7f26d96548d1c2e7cdad0d912126060c99c70e2e9842d409ebad5d",
+  "kind": "full_path_only_same_seed_reproduction",
+  "original_config_path": "configs/structural_oracle.yaml",
+  "original_config_sha256": "a387445beda9eeb81f4d2107cfa3c457fb89b3399c5684035d6c5fb5990c169b",
+  "original_research_revision": "2e89e742131eb5eebaeb7a028d8e8f2e4fc50e07",
+  "reference": {
+    "analysis/structural_oracle_audit.jsonl": "2c7c4374a58037a27d2ae4b76ee799089328690b07e7c2194ca3317e8f70c518",
+    "analysis/structural_oracle_summary.json": "df45a00eb921a4a55594a18de155b24eb774a27f10fb0f81d2fbd5257d5f7558"
+  },
+  "schema_version": 1,
+  "scope_amendment": "Only output/checkpoint paths change. Same full shape, seeds, histories, queries, ranks, ages, LR, grid and 600s ceiling. No benchmark, corpus, trainer/controller or confirmation. Append amendment.json before execution; restore preceding permission afterwards.",
+  "source_revision": "3d7b57c663ba104f89d92de62977efb8211e4028",
+  "sources": {
+    "analysis/reproduce_structural_oracle.py": "1182670843170dcb42a089143e091b7f6515e4e7e72c8c671820c5c64508752e",
+    "src/oar/oracle.py": "febb3517407260eb05c4992b0541d28e0e47290e085f27c1ca4f0a7d9ffee889",
+    "src/oar/reproduction.py": "360e6f875014ebaff3bad2f7f191cc33c183845cba3030a274f79b7888ae1677"
+  }
+}
