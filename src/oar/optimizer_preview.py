@@ -29,6 +29,20 @@ def _tensor(value, reference=None):
         raise ValueError('gradient/moment shape, dtype and device must match parameter')
 
 
+def _writable_parameter(value):
+    # Sufficient nonoverlap proof for transposes and ordinary strided slices,
+    # including holes. Each next dimension must start beyond the entire span
+    # of the smaller-stride dimensions; uncertain exotic layouts fail closed.
+    if not value.numel():
+        return
+    span = 1
+    for stride, size in sorted((stride, size) for stride, size in
+                               zip(value.stride(), value.shape) if size > 1):
+        if stride < span:
+            raise ValueError('require provably nonoverlapping writable parameter layout')
+        span += (size - 1) * stride
+
+
 def _validate(parameters, raw_gradients, state, groups, pv, sv, clip):
     if any(type(v) is not int or v < 0 for v in (pv, sv)):
         raise ValueError('versions must be nonnegative integers')
@@ -50,6 +64,7 @@ def _validate(parameters, raw_gradients, state, groups, pv, sv, clip):
     storages = set()
     for name, p in parameters.items():
         _tensor(p)
+        _writable_parameter(p)
         if p.numel():
             storage = (p.device, p.untyped_storage().data_ptr())
             if storage in storages:
@@ -91,6 +106,12 @@ def preview_adamw(parameters: dict[str, Tensor], raw_gradients: dict[str, Tensor
     zero tensors participate. Candidate parameters, actual stored displacements
     and pending moments own separate storage. Clipping uses native stabilization
     on detached copies. Raw alignment includes decay and uses unclipped inputs.
+    Parameters require provably nonoverlapping writable layouts: transposes
+    and ordinary strided slices are supported; ambiguous exotic layouts reject.
+    Finite candidates/moments do not guarantee finite derived displacement or
+    alignment: subtraction/reduction can overflow at extreme finite endpoints.
+    Consumers must fail closed on nonfinite derived metadata (as decide_margin
+    does); this API does not establish arbitrary finite-input arithmetic closure.
     """
     _validate(parameters, raw_gradients, state, groups, parameter_version, state_version, max_grad_norm)
     active = [name for g in groups for name in g.parameter_ids if raw_gradients.get(name) is not None]
@@ -160,6 +181,8 @@ def commit_pending(pending: PendingUpdate, parameters: dict[str, Tensor],
     if (ownership[2] != _tensor_signature(parameters) or ownership[3] != _state_signature(state)
             or ownership[4] != _pending_signature(pending)):
         raise RuntimeError('pending or source tensors modified since preview (version mismatch)')
+    for name in pending.candidate_parameters:
+        _writable_parameter(parameters[name])
     for name, candidate in pending.candidate_parameters.items():
         parameters[name].copy_(candidate)
     state.update(pending.optimizer_state)

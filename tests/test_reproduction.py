@@ -84,3 +84,70 @@ def test_curve_comparison_uses_actual_committed_update_field():
     assert o.compare_curves(reference, repeated)['failures']
     assert o.compare_curves(reference, reference[:-1])['failures']
     assert o.compare_curves(reference, reference+[reference[0]])['failures']
+
+
+@pytest.mark.parametrize('mode', ['normal', 'recovery'])
+@pytest.mark.parametrize('alter', ['duplicate', 'missing', 'hash', 'valid'])
+def test_reproduction_helper_validates_checkpoint_identity_count_and_bytes(tmp_path, monkeypatch, mode, alter):
+    """The external worker is replaced; real helper validation reads real fixture bytes."""
+    import runpy
+    import shutil
+    from types import SimpleNamespace
+    helpers = runpy.run_path('analysis/reproduce_structural_oracle.py')
+    original = json.loads(Path('analysis/structural_oracle_summary.json').read_text())
+    reference_row = row()
+    for name in ('configs/structural_oracle.yaml', 'src/oar/oracle.py', 'src/oar/reproduction.py',
+                 'analysis/reproduce_structural_oracle.py'):
+        target = tmp_path/name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(name, target)
+    monkeypatch.chdir(tmp_path)
+    Path('decisions').mkdir()
+    prior = '{"fixture_permission": true}\n'
+    Path('decisions/amendments.jsonl').write_text(prior)
+    entries = []
+    for step in (2, 4):
+        checkpoint = tmp_path/f'{step}.pt'
+        checkpoint.write_bytes(f'fixture checkpoint {step}'.encode())
+        entries.append(dict(condition='full_rank', seed=17, step=step, path=str(checkpoint),
+                            sha256=helpers['sha'](checkpoint)))
+    original.update(artifact_index=entries, row_count=1, curves=original['curves'][:1])
+    Path('analysis/structural_oracle_summary.json').write_text(json.dumps(original))
+    Path('analysis/structural_oracle_audit.jsonl').write_text(json.dumps(reference_row)+'\n')
+    out = Path('analysis/reproduction/fixture')
+    g = helpers['run'].__globals__
+    monkeypatch.setitem(g, 'require_structural_oracle', lambda *a, **k: {})
+
+    def fixture_worker(command, **kwargs):
+        import yaml
+        summary = copy.deepcopy(original)
+        summary['config'] = yaml.safe_load((out/'config.yaml').read_text())
+        if alter == 'duplicate': summary['artifact_index'][1] = copy.deepcopy(entries[0])
+        if alter == 'missing': summary['artifact_index'].pop()
+        if alter == 'hash': summary['artifact_index'][1]['sha256'] = '0'*64
+        (out/'structural_oracle_summary.json').write_text(json.dumps(summary))
+        (out/'structural_oracle_audit.jsonl').write_text(json.dumps(reference_row)+'\n')
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setitem(g, 'subprocess', SimpleNamespace(
+        check_output=lambda *a, **k: '0'*40, run=fixture_worker, STDOUT=-2))
+    helpers['prepare'](out)
+    status = helpers['run'](out/'plan.json')
+    if mode == 'recovery':
+        # Recreate only the retained schema-failure condition accepted by recovery.
+        failure_path = out/'comparison.json'
+        failed = json.loads(failure_path.read_text())
+        failed.update(status='failed', failures=["KeyError: 'step'"])
+        failure_path.write_text(json.dumps(failed))
+        status = helpers['recover_comparison'](out/'plan.json')
+        result = json.loads((out/'comparison_recovered.json').read_text())
+    else:
+        result = json.loads((out/'comparison.json').read_text())
+    assert status == (0 if alter == 'valid' else 1)
+    assert result['status'] == ('reproduced' if alter == 'valid' else 'failed')
+    if alter == 'duplicate':
+        assert any('identity' in f for f in result['failures'])
+    if alter == 'valid':
+        assert result['checkpoint_hashes_validated'] == 2
+        assert result['failures'] == []
+    assert json.loads(Path('decisions/amendments.jsonl').read_text().splitlines()[-1]) == json.loads(prior)

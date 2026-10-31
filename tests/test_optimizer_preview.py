@@ -314,3 +314,43 @@ def test_all_missing_gradients_preserve_live_gradients_parameters_and_state(omit
     commit_pending(pending, p, state, 0, 0)
     assert_snapshot(saved, p, grads, state)
     assert all(torch.equal(v.grad, torch.full_like(v, 42.)) for v in p.values())
+
+
+@pytest.mark.parametrize('layout', ['expanded', 'overlapping_strides'])
+def test_internally_overlapping_second_parameter_rejected_without_mutation(layout):
+    bad = (torch.ones(1).expand(2) if layout == 'expanded' else
+           torch.ones(3).as_strided((2, 2), (1, 1)))
+    p = {'a': torch.tensor([1.]), 'b': bad}
+    grads = {k: torch.ones_like(v) for k, v in p.items()}
+    state = {'a': AdamWParamState(7, torch.full_like(p['a'], .4), torch.ones_like(p['a']))}
+    groups = (AdamWGroup(tuple(p), .1, (.9, .999), 1e-8, 0.),)
+    saved = snapshot(p, grads, state)
+    with pytest.raises(ValueError, match='overlap|writable'):
+        preview_adamw(p, grads, state, groups, 3, 8, None)
+    assert_snapshot(saved, p, grads, state)
+
+
+def test_commit_rejects_changed_second_parameter_layout_before_any_write():
+    p = {'a': torch.tensor([1.]), 'b': torch.ones(2)}
+    grads = {k: torch.ones_like(v) for k, v in p.items()}
+    state = {}
+    groups = (AdamWGroup(tuple(p), .1, (.9, .999), 1e-8, 0.),)
+    pending = preview_adamw(p, grads, state, groups, 3, 8, None)
+    p['b'].as_strided_((2,), (0,))
+    saved = snapshot(p, grads, state)
+    with pytest.raises(RuntimeError, match='modified|version|overlap|writable'):
+        commit_pending(pending, p, state, 3, 8)
+    assert_snapshot(saved, p, grads, state)
+    assert pending.consumed is False
+
+
+def test_gapped_noncontiguous_parameter_commit_matches_native():
+    p = {'a': torch.arange(12., dtype=torch.float64).reshape(3, 4)[:, ::2]}
+    grads = {'a': torch.full_like(p['a'], .25)}
+    state = {}
+    groups = (AdamWGroup(tuple(p), .1, (.9, .999), 1e-8, .01),)
+    refs, optimizer = native_copy(p, state, groups)
+    native_step(refs, optimizer, grads, groups, None)
+    pending = preview_adamw(p, grads, state, groups, 0, 0, None)
+    assert commit_pending(pending, p, state, 0, 0) == (1, 1)
+    torch.testing.assert_close(p['a'], refs['a'], rtol=0, atol=0)

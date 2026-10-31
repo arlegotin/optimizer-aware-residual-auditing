@@ -54,6 +54,23 @@ def prepare(out):
     print(f'Prepared {out.relative_to(root)}/plan.json; commit declaration before --run')
 
 
+def validate_checkpoints(original, repeated):
+    """Share identity, duplicate, cardinality and retained-byte checks on both paths."""
+    failures = []
+    keys = lambda entries: {(r['condition'], r['seed'], r['step']) for r in entries}
+    left, right = keys(original), keys(repeated)
+    if (left != right or len(left) != len(original) or len(right) != len(repeated)
+            or len(original) != len(repeated)):
+        failures.append('checkpoint coverage/identity differs')
+    validated = 0
+    for artifact in repeated:
+        if sha(artifact['path']) != artifact['sha256']:
+            failures.append('checkpoint hash differs: '+artifact['path'])
+        else:
+            validated += 1
+    return dict(failures=failures, checkpoint_hashes_validated=validated)
+
+
 def run(plan_path):
     plan_path = plan_path.resolve()
     out = plan_path.parent
@@ -114,12 +131,8 @@ def run(plan_path):
         result.update(curve_result)
         attempts = lambda s: {(r['condition'],r['seed']):r['learnable'] for r in s['attempts']}
         if attempts(summary) != attempts(baseline): failures.append('learnability/attempt coverage differs')
-        if len(summary['artifact_index']) != len(baseline['artifact_index']): failures.append('checkpoint coverage differs')
-        result['checkpoint_hashes_validated'] = 0
-        for artifact in summary['artifact_index']:
-            if sha(artifact['path']) != artifact['sha256']:
-                failures.append(f'checkpoint byte hash differs: {artifact["path"]}')
-            else: result['checkpoint_hashes_validated'] += 1
+        checkpoints = validate_checkpoints(baseline['artifact_index'], summary['artifact_index'])
+        failures.extend(checkpoints.pop('failures')); result.update(checkpoints)
         result['worker_wall_s'] = summary['total_wall_s']
         result['endpoint_rss_bytes'] = summary['rss_at_finish_bytes']
         result['endpoint_mps_driver_bytes'] = summary['mps_driver_at_finish_bytes']
@@ -167,15 +180,8 @@ def recover_comparison(plan_path):
         result['failures'].append('coverage/backend/config provenance differs')
     attempts = lambda s: {(r['condition'],r['seed']):r['learnable'] for r in s['attempts']}
     if attempts(summary) != attempts(baseline): result['failures'].append('learnability/attempt coverage differs')
-    result['checkpoint_hashes_validated'] = 0
-    original_keys = {(r['condition'],r['seed'],r['step']) for r in baseline['artifact_index']}
-    repeated_keys = {(r['condition'],r['seed'],r['step']) for r in summary['artifact_index']}
-    if original_keys != repeated_keys or len(repeated_keys) != len(summary['artifact_index']):
-        result['failures'].append('checkpoint coverage/identity differs')
-    for artifact in summary['artifact_index']:
-        if sha(artifact['path']) != artifact['sha256']:
-            result['failures'].append('checkpoint hash differs: '+artifact['path'])
-        else: result['checkpoint_hashes_validated'] += 1
+    checkpoints = validate_checkpoints(baseline['artifact_index'], summary['artifact_index'])
+    result['failures'].extend(checkpoints.pop('failures')); result.update(checkpoints)
     result.update(schema_version=1, status='failed' if result['failures'] else 'reproduced',
                   original_failure_path=str(out/'comparison.json'), original_failure_sha256=sha(out/'comparison.json'),
                   plan_sha256=sha(plan_path), recovery_sources={p:sha(p) for p in ('src/oar/reproduction.py','analysis/reproduce_structural_oracle.py')},

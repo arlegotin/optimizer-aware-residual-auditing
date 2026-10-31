@@ -218,13 +218,22 @@ def loss_value(x, y, p):
     with torch.no_grad(): return float(F.mse_loss(forward(x, p), y).item())
 
 
-def bootstrap_trajectory(config, seed, condition, lr, *, retain=True, steps=None, progress=None):
+def _check_deadline(deadline):
+    if time.perf_counter() >= deadline:
+        raise StudyIncomplete('study engineering ceiling reached')
+
+
+def bootstrap_trajectory(config, seed, condition, lr, *, retain=True, steps=None, progress=None,
+                         deadline=None):
     """Native scaffolding with incremental evidence owned by the registered attempt.
 
     Last committed update counts and saved checkpoints are distinct: a failure
     can follow committed updates newer than the latest selected checkpoint.
+    A worker supplies its absolute study deadline; standalone calls receive a
+    local ceiling without changing the scientific config saved in checkpoints.
     """
     started = time.perf_counter()
+    deadline = started + config.max_wall_s if deadline is None else deadline
     steps = max(config.checkpoints) if steps is None else steps
     paths, curves = [], []
     progress = {} if progress is None else progress
@@ -281,10 +290,9 @@ def bootstrap_trajectory(config, seed, condition, lr, *, retain=True, steps=None
 
         measure(0)
         for s in range(steps):
-            if time.perf_counter()-started > config.max_wall_s:
-                raise StudyIncomplete('trajectory engineering ceiling reached')
             if retain and s in config.checkpoints:
                 save_checkpoint(s)
+            _check_deadline(deadline)
             optimizer.zero_grad(set_to_none=True)
             batch = synthetic_batch(config, seed, condition, s, 'data', 0)
             x, y = replay_synthetic(batch, config, seed, condition)
@@ -299,6 +307,8 @@ def bootstrap_trajectory(config, seed, condition, lr, *, retain=True, steps=None
                 measure(s+1)
         if retain and steps in config.checkpoints:
             save_checkpoint(steps)
+        synchronize(config.device)
+        _check_deadline(deadline)
         progress['status'] = 'completed'
         return paths, curves
     except Exception as exc:
@@ -476,6 +486,7 @@ def run_oracle_worker(config, *, pilot_only):
     """Internal bounded scaffolding; public entry validates permission in fresh process."""
     import psutil
     start=time.perf_counter();out=Path(config.output);out.mkdir(parents=True,exist_ok=True)
+    deadline = start + config.max_wall_s
     summary=dict(schema_version=1,scope='synthetic_structural_exploratory',online_eligible=False,
                  config=asdict(config),loss_unit=config.loss_unit,count_unit='synthetic_observations',
                  coverage_complete=False,curves=[],artifact_index=[],attempts=[],rng_domains={str(seed):{d:domain_seed(seed,d) for d in _DOMAINS} for seed in config.seeds},
@@ -489,9 +500,9 @@ def run_oracle_worker(config, *, pilot_only):
         if phase == 'pilot':
             summary['pilot'].append(attempt)
         try:
-            if time.perf_counter()-start > config.max_wall_s:
-                raise StudyIncomplete('study engineering ceiling reached')
-            paths, curves = bootstrap_trajectory(config, seed, condition, lr, progress=attempt, **kwargs)
+            _check_deadline(deadline)
+            paths, curves = bootstrap_trajectory(config, seed, condition, lr, progress=attempt,
+                                                  deadline=deadline, **kwargs)
             return paths, curves, attempt
         except Exception as exc:
             attempt['status'] = 'incomplete' if isinstance(exc, StudyIncomplete) else 'failed'
@@ -525,7 +536,7 @@ def run_oracle_worker(config, *, pilot_only):
                             [r for r in curves if r['target_phase']==phase][-1]['development_mse']+1e-7 for phase in phases)
                         attempt['learnable']=learnable
                         for path in paths:
-                            if time.perf_counter()-start>config.max_wall_s:raise StudyIncomplete('study engineering ceiling reached')
+                            _check_deadline(deadline)
                             snap=torch.load(path,weights_only=False)
                             if not learnable:continue
                             past=[synthetic_batch(config,seed,condition,s,'data',0) for s in snap['sources']]
@@ -535,6 +546,7 @@ def run_oracle_worker(config, *, pilot_only):
                             auditwall=time.perf_counter()-at
                             for r in rows:stream.write(json.dumps(r,sort_keys=True,allow_nan=False)+'\n')
                             stream.flush();allrows.extend(rows)
+                            _check_deadline(deadline)
                             if 'resource_forecast' not in summary:
                                 planned=len(config.conditions)*len(config.seeds)*sum((1+sum(q-a>=0 for a in config.ages))*len(config.ranks)*2*2*config.queries_per_split for q in config.checkpoints)
                                 forecast=auditwall*planned/len(rows)+summary['attempts'][-1]['native_wall_s']*len(config.conditions)*len(config.seeds)
@@ -558,6 +570,7 @@ def run_oracle_worker(config, *, pilot_only):
                 oracle='current_svd_oracle uses paid exact current gradient, never a past/deployable proposal'))
         summary['resources_note']='RSS and Metal are overlapping endpoint snapshots, not measured peaks; CPU SVD and transfers are charged, no online speedup.'
         summary['provenance']={name:sha(name) for name in ('src/oar/oracle.py','src/oar/linear.py','src/oar/basis.py','src/oar/optimizer_preview.py','configs/structural_oracle.yaml','decisions/structural_oracle_scope.md','analysis/timing_calibration.json','analysis/headroom_decision.json')}
+        _check_deadline(deadline)
         summary['coverage_complete']=True
         summary['outcome']='pilot_complete' if pilot_only else 'synthetic_only_online_still_blocked'
     except StudyIncomplete as exc:
@@ -570,6 +583,9 @@ def run_oracle_worker(config, *, pilot_only):
         summary['failure']=dict(type=type(exc).__name__,message=str(exc));raise
     finally:
         synchronize(config.device);summary['total_wall_s']=time.perf_counter()-start
+        if summary['coverage_complete'] and summary['total_wall_s'] >= config.max_wall_s:
+            summary.update(outcome='incomplete_inconclusive', coverage_complete=False,
+                           incomplete_reason='study engineering ceiling reached at final synchronization')
         summary['rss_at_finish_bytes']=psutil.Process().memory_info().rss
         if config.device=='mps':summary['mps_driver_at_finish_bytes']=torch.mps.driver_allocated_memory()
         path=out/('structural_oracle_pilot.json' if pilot_only else 'structural_oracle_summary.json');write_json(path,summary)

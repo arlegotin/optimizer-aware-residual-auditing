@@ -353,3 +353,93 @@ def test_inside_bootstrap_failure_retains_real_partial_progress(tmp_path, monkey
     assert checkpoint['step'] == 2
     assert all(state['step'] == 2 for state in checkpoint['state'].values())
     assert summary['row_count'] == 0
+
+
+def test_later_native_history_uses_remaining_study_deadline(tmp_path, monkeypatch):
+    from dataclasses import replace
+    from types import SimpleNamespace
+    o = api()
+    c = replace(tiny_config(tmp_path), conditions=('full_rank',), seeds=(17, 18),
+                selected_learning_rate=.003, max_wall_s=100.)
+    clock = [0.]
+    monkeypatch.setattr(o, 'time', SimpleNamespace(perf_counter=lambda: clock[0]))
+    audit, replay = o.audit_checkpoint, o.replay_synthetic
+
+    def timed_audit(*args, **kwargs):
+        rows = audit(*args, **kwargs)
+        if rows[0]['seed'] == 17 and rows[0]['query_step'] == 4:
+            clock[0] = 95.
+        return rows
+
+    def timed_replay(batch, config, seed, condition):
+        result = replay(batch, config, seed, condition)
+        d = batch.microbatches[0]
+        if seed == 18 and d['domain'] == 'data':
+            clock[0] += 3.
+        return result
+
+    monkeypatch.setattr(o, 'audit_checkpoint', timed_audit)
+    monkeypatch.setattr(o, 'replay_synthetic', timed_replay)
+    summary = json.loads(o.run_oracle_worker(c, pilot_only=False).read_text())
+    assert summary['outcome'] == 'incomplete_inconclusive'
+    assert summary['coverage_complete'] is False
+    assert summary['row_count'] == 48
+    assert len(Path(c.output, 'structural_oracle_audit.jsonl').read_text().splitlines()) == 48
+    attempt = summary['attempts'][1]
+    assert attempt['status'] == 'incomplete'
+    assert attempt['last_committed_update'] == 2
+    assert [r['committed_updates'] for r in attempt['curves']] == [0, 2]
+    assert [r['step'] for r in attempt['artifact_index']] == [2]
+    saved = torch.load(attempt['last_checkpoint']['path'], weights_only=False)
+    assert saved['step'] == 2 and saved['config']['max_wall_s'] == 100.
+    assert all(s['step'] == 2 for s in saved['state'].values())
+
+
+@pytest.mark.parametrize('boundary', ['final_audit', 'final_summary', 'final_sync'])
+def test_final_completion_deadline_retains_completed_evidence(tmp_path, monkeypatch, boundary):
+    from dataclasses import replace
+    from types import SimpleNamespace
+    o = api()
+    c = replace(tiny_config(tmp_path), conditions=('full_rank',),
+                selected_learning_rate=.003, max_wall_s=100.)
+    clock = [0.]
+    audited = [False]
+    monkeypatch.setattr(o, 'time', SimpleNamespace(perf_counter=lambda: clock[0]))
+    audit, summarize, sync = o.audit_checkpoint, o.summarize_policies, o.synchronize
+
+    def timed_audit(*args, **kwargs):
+        rows = audit(*args, **kwargs)
+        if rows[0]['query_step'] == 4:
+            audited[0] = True
+            if boundary == 'final_audit':
+                clock[0] = 100.
+        return rows
+
+    def timed_summary(*args, **kwargs):
+        result = summarize(*args, **kwargs)
+        if boundary == 'final_summary':
+            clock[0] = 100.
+        return result
+
+    def timed_sync(device):
+        sync(device)
+        if audited[0] and boundary == 'final_sync':
+            clock[0] = 100.
+
+    monkeypatch.setattr(o, 'audit_checkpoint', timed_audit)
+    monkeypatch.setattr(o, 'summarize_policies', timed_summary)
+    monkeypatch.setattr(o, 'synchronize', timed_sync)
+    summary = json.loads(o.run_oracle_worker(c, pilot_only=False).read_text())
+    assert summary['coverage_complete'] is False
+    assert summary['outcome'] == 'incomplete_inconclusive'
+    assert 'ceiling' in summary['incomplete_reason']
+    assert summary['total_wall_s'] == 100.
+    assert summary['row_count'] == 48
+    rows = Path(c.output, 'structural_oracle_audit.jsonl').read_text().splitlines()
+    assert len(rows) == 48
+    assert [r['committed_updates'] for r in summary['curves']] == [0, 2, 4]
+    assert [r['step'] for r in summary['artifact_index']] == [2, 4]
+    assert summary['attempts'][0]['last_committed_update'] == 4
+    for artifact in summary['artifact_index']:
+        assert o.sha(artifact['path']) == artifact['sha256']
+        assert torch.load(artifact['path'], weights_only=False)['config']['max_wall_s'] == 100.
