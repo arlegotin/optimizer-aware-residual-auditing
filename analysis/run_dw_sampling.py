@@ -29,7 +29,7 @@ import traceback
 
 ROOT = Path(__file__).resolve().parents[1]
 REVIEWED = '9d8ad069c51b4d0e6c13e9c6e465579e9b44a339'
-PROTOCOL = '0b431043cd02f8514ecdf730ad2ef1448f8aa4b4fe2aa2b6184d5f2c0e7f9761'
+PROTOCOL = '88532f55d93bec6a682568fa3a7e8b4d0c79be94cd5d07d5cce5048d0fca3775'
 STAGES = ('prepare', 'feasibility', 'correctness', 'cost', 'pilot', 'confirm', 'summarize')
 CORE = ('analysis/run_dw_sampling.py', 'configs/dw_sampling.yaml', 'decisions/dw_sampling_scope.md',
         'decisions/dw_sampling_reopening.md',
@@ -673,7 +673,7 @@ def worker_args(stage, config, out, request):
     return [sys.executable, str(ROOT/'analysis/run_dw_sampling.py'), '--stage', stage, '--config', str(config), '--out', str(out), '--session-worker', str(request)]
 
 
-def validate_worker_request(request, stage, config, out, request_path):
+def validate_worker_request(request, stage, config, out, request_path, *, deep_resume=False):
     out, config, request_path = Path(out).resolve(), Path(config).resolve(), Path(request_path).resolve()
     attempt = Path(request['attempt']).resolve()
     permitted = {'prepare': {'qualification'}, 'feasibility': {'feasibility'}, 'cost': {'cost', 'diagnostic'},
@@ -697,7 +697,7 @@ def validate_worker_request(request, stage, config, out, request_path):
         cfg = load_config(config)
         if request['kind'].startswith('learning_'):
             freeze = load_learning_freeze(cfg, config, out)
-            validate_learning_worker_request(request, cfg, stage, attempt, identity, freeze)
+            validate_learning_worker_request(request, cfg, stage, attempt, identity, freeze, deep_resume=deep_resume)
             run = Path(request['run_dir']).parent
             launch_path = run/'launch.json'
             if request_path != run/'request.json' or not launch_path.is_file():
@@ -2109,9 +2109,16 @@ def durable_json(path, value):
         os.close(descriptor)
 
 
+def learning_named_seed(base_seed, domain, *ids):
+    """Exact existing named-stream bytes, without importing the Torch operator."""
+    if type(base_seed) is not int or not isinstance(domain,str) or any(not isinstance(i,str) for i in ids):
+        raise ValueError('named seeds require integer base_seed and string domain/ids')
+    encoded=json.dumps([base_seed,domain,*ids],separators=(',', ':'),ensure_ascii=True).encode('ascii')
+    return int.from_bytes(hashlib.sha256(encoded).digest()[:8],'big') % (2**63-1)
+
+
 def build_learning_grid(cfg, qualification):
     """Declare every allowed slot before outcomes; deterministic named order."""
-    from oar.sampled_linear import named_seed
     if qualification.get('status') != 'pass':
         raise ValueError('grid requires successful full-model qualification')
     rows = []
@@ -2131,7 +2138,7 @@ def build_learning_grid(cfg, qualification):
         seen.add((sampler, rho))
         for lr in cfg['learning']['peak_lrs']:
             add(sampler, rho, cfg['learning']['candidate_batch'], lr)
-    order_seed = named_seed(cfg['learning']['tuning_seed'], 'order', 'learning-grid')
+    order_seed = learning_named_seed(cfg['learning']['tuning_seed'], 'order', 'learning-grid')
     random.Random(order_seed).shuffle(rows)
     return [{**r, 'order_seed': order_seed, 'order_index': i} for i, r in enumerate(rows)]
 
@@ -2206,6 +2213,41 @@ def qualification_git_blob(head, name):
         raise ValueError('unavailable full-model committed source') from exc
 
 
+def historical_learning_git_blob(head, name):
+    """Read only original committed source/config and the original amendment."""
+    if not re.fullmatch('[0-9a-f]{40}',head) or name not in CORE+SAMPLED+LEARNING+('decisions/dw_sampling_amendment.json',):
+        raise ValueError('invalid historical learning committed source identity')
+    try:
+        return subprocess.check_output(['git','show',f'{head}:{name}'],cwd=ROOT,stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as exc:
+        raise ValueError('unavailable historical learning committed source') from exc
+
+
+def historical_learning_identity(identity):
+    """Classify a verified sealed learning record by its own committed freeze."""
+    if identity.get('learning_action')!='learning':
+        return False
+    head=identity.get('actual_head','');hashes=identity.get('measurement_hashes',{})
+    if set(hashes)!=set(CORE+SAMPLED+LEARNING):
+        return False
+    original={name:historical_learning_git_blob(head,name) for name in hashes}
+    if any(hashlib.sha256(original[name]).hexdigest()!=value for name,value in hashes.items()):
+        return False
+    if identity.get('config_sha256')!=hashes['configs/dw_sampling.yaml']:
+        return False
+    amendment_bytes=historical_learning_git_blob(head,'decisions/dw_sampling_amendment.json')
+    if hashlib.sha256(amendment_bytes).hexdigest()!=identity.get('amendment_sha256'):
+        return False
+    amendment=json.loads(amendment_bytes)
+    if (amendment.get('bound_files')!=identity.get('bound_files')
+            or any(amendment.get('bound_files',{}).get(name)!=value for name,value in hashes.items())):
+        return False
+    import yaml
+    from oar.config import _UniqueLoader
+    cfg=yaml.load(original['configs/dw_sampling.yaml'],Loader=_UniqueLoader)
+    return isinstance(cfg,dict) and cfg.get('learning',{}).get('action')=='learning'
+
+
 def require_model_qualification(out, record_path, record_sha256, measurement_hashes):
     """Nested cost PASS authority, kept distinct from a full Stage E PASS."""
     out, path = Path(out).resolve(), Path(record_path).resolve()
@@ -2238,7 +2280,8 @@ def require_model_qualification(out, record_path, record_sha256, measurement_has
                     or subsequent.get('learning_action')!=identity.get('learning_action')):
                 raise ValueError('later qualification/source manifest seal/action binding mismatch')
             if (subsequent.get('stage')=='pilot' and 'qualification' not in subsequent
-                    and subsequent.get('learning_action')=='learning' and genuine_learning_identity(identity)):
+                    and subsequent.get('learning_action')=='learning'
+                    and (genuine_learning_identity(identity) or historical_learning_identity(identity))):
                 continue
             raise ValueError('later qualification supersedes pinned pass')
         identity=json.loads(source.read_text()) if source.is_file() else {}
@@ -2416,7 +2459,7 @@ def read_trial_ledger(trial_dir, expected_bindings, *, prior_trial_dirs=(), excl
             'live_checkpoints': live, 'secondary_history':list(secondaries.values()), 'last_classification': classification}
 
 
-def validate_resume_selection(selection, ledger, bindings):
+def validate_resume_selection(selection, ledger, bindings, *, deep=True):
     if ledger['bindings'] != bindings or ledger['last_classification'] != 'environmental_interruption':
         raise ValueError('resume is only permitted after a proved environmental interruption')
     if set(selection) != {'path', 'sha256'}:
@@ -2428,6 +2471,12 @@ def validate_resume_selection(selection, ledger, bindings):
                 and r['sha256'] == selection['sha256'] and r['kind'] in ('initial', 'periodic')), None)
     if row is None or digest(path) != row['sha256']:
         raise ValueError('resume must name an own live hash-validated receipted checkpoint')
+    completed=row.get('completed_s')
+    if type(completed) not in (int,float) or not math.isfinite(completed) or not 0<=completed<=ledger['prior_elapsed_s']:
+        raise ValueError('resume checkpoint receipt clock exceeds the charged ledger')
+    selected={'path':str(path.resolve()),'sha256':row['sha256']}
+    if not deep:
+        return selected
     from oar.sampling_lm import load_checkpoint
     payload = load_checkpoint(path, row['sha256'], expected_bindings=bindings)
     if payload.get('optimization_frozen') or ledger['prior_elapsed_s'] < payload['clock']['elapsed_s']:
@@ -2469,7 +2518,6 @@ def select_learning_controls(records, selection, *, epsilon_eval, r_time, cutoff
 
 
 def build_development_trials(selection, controls, cfg):
-    from oar.sampled_linear import named_seed
     if controls['status'] != 'pass':
         raise ValueError('independent development requires all mandatory controls')
     settings = {'candidate': selection['candidate'], 'dense': selection['dense'],
@@ -2490,7 +2538,7 @@ def build_development_trials(selection, controls, cfg):
                    'roles': [role], 'secondary_update': 1024}
             by_arm[key] = row
         ordered = list(by_arm.values())
-        order = named_seed(seed, 'order', 'independent-development')
+        order = learning_named_seed(seed, 'order', 'independent-development')
         random.Random(order).shuffle(ordered)
         rows.extend({**r, 'order_seed': order, 'order_index': i} for i, r in enumerate(ordered))
     if len(rows) > 15:
@@ -2749,7 +2797,7 @@ def make_learning_request(cfg, config, out, attempt, trial, freeze, run, *, prio
     return request
 
 
-def validate_learning_worker_request(request, cfg, stage, attempt, identity, freeze):
+def validate_learning_worker_request(request, cfg, stage, attempt, identity, freeze, *, deep_resume=True):
     """No pilot request can acquire validation/test or undeclared trajectory authority."""
     keys = {'kind','config','out','attempt','trial_id','attempt_id','id','trial','phase','seed','variant','arm','peak_lr',
             'H','Delta','R','T_budget','block_updates','overshoot_limit_s','bindings','run_dir','checkpoint_dir',
@@ -2783,7 +2831,7 @@ def validate_learning_worker_request(request, cfg, stage, attempt, identity, fre
             or request.get('secondary_history',[]) != ledger['secondary_history']):
         raise ValueError('worker prior charge/checkpoint history differs from durable ledger')
     if ledger['attempts']:
-        expected_resume = validate_resume_selection(request['resume'],ledger,request['bindings']) if request['resume'] else None
+        expected_resume = validate_resume_selection(request['resume'],ledger,request['bindings'],deep=deep_resume) if request['resume'] else None
         if expected_resume is None:
             raise ValueError('worker previous attempt requires explicit eligible resume')
     elif request['resume'] is not None:
@@ -3181,6 +3229,10 @@ def main(argv=None):
         validate_worker_request(request, args.stage, args.config, args.out, args.session_worker)
         configure_torch()
         if request['kind'].startswith('learning_'):
+            if request.get('resume'):
+                # Weights-only CPU deserialization is deliberately after the
+                # strict fresh-worker policy and before any training/device step.
+                validate_worker_request(request,args.stage,args.config,args.out,args.session_worker,deep_resume=True)
             freeze = load_learning_freeze(cfg, args.config, args.out)
             try:
                 run_learning_session_worker(cfg, request, freeze)

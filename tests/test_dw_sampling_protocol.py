@@ -3671,3 +3671,183 @@ def test_learning_aggregate_budget_failure_priority_preserves_control_eligibilit
         controls=d.select_learning_controls([native,aggregate],{'R0':native,'q_star':3.,'epsilon_q':.01},
             epsilon_eval=1e-6,r_time=6.,cutoff=100.)
         assert controls['status']=='STOP_CONTROL' and controls['uniform'] is None
+
+
+def _fresh_learning_preflight_case(tmp_path,mode):
+    d,cfg,q=_dispatch_fixture();root=tmp_path/'root';root.mkdir();d.ROOT=root
+    config=root/'configs/dw_sampling.yaml';config.parent.mkdir();config.write_bytes((ROOT/'configs/dw_sampling.yaml').read_bytes())
+    out=root/'out';attempt=d.allocate_attempt(out,'pilot')
+    reference={'path':'invented-qualified.json','sha256':'e'*64}
+    freeze=d.build_learning_manifest(cfg,q,qualification_reference=reference,measurement_hashes={},config_sha256=d.digest(config))
+    manifest=root/cfg['learning']['learning_manifest_path'];manifest.parent.mkdir(parents=True);d.durable_json(manifest,freeze)
+    amendment={'bound_files':{cfg['learning']['learning_manifest_path']:d.digest(manifest)}}
+    amendment_path=root/'decisions/dw_sampling_amendment.json';amendment_path.parent.mkdir();d.durable_json(amendment_path,amendment)
+    identity={'measurement_hashes':{},'config_sha256':d.digest(config)};d.durable_json(attempt/'source_manifest.json',identity)
+    if mode=='development':
+        rows=[]
+        for trial in freeze['grid']:
+            sampler=trial['arm']['sampler'];t=30. if sampler=='importance' else (50. if sampler=='uniform' else 70.)
+            row=_learning_grid_record(trial['id'],trial['arm']['batch'],trial['arm']['lr'],2.5,
+                [(t-5,3.),(t,2.9),(max(t+1,60.),2.8),(max(t+2,80.),2.7)],sampler=sampler,rho=trial['arm']['rho'])
+            if sampler is None:row['monitors']=[{'completed_s':60.,'nll':3.},{'completed_s':70.,'nll':2.9},{'completed_s':80.,'nll':2.8}]
+            row.update(arm=trial['arm'],seed=trial['seed'],roles=trial['roles']);rows.append(row)
+        primary=d.select_learning_arms(rows,cutoff=100.,epsilon_eval=1e-6,r_time=6.)
+        controls=d.select_learning_controls(rows,primary,epsilon_eval=1e-6,r_time=6.,cutoff=100.)
+        assert primary['status']==controls['status']=='pass'
+        d.durable_json(attempt/'grid-results.json',rows)
+        d.durable_json(attempt/'selection.json',{'primary':primary,'controls':controls,'grid_results_sha256':d.digest(attempt/'grid-results.json')})
+        trial=d.build_development_trials(primary,controls,cfg)[0]
+    else:
+        trial=next(r for r in freeze['grid'] if r['arm']['sampler'] is None and r['arm']['batch']==16)
+    prior=0.;history=[];resume=None
+    if mode.startswith('resume'):
+        import oar.sampling_lm as lm
+        state=_byte_recovery_fixture(sampler=None,seed=3101,batch_size=16)
+        bindings=d.learning_bindings(freeze,trial)
+        first=attempt/'trials'/trial['id']/'attempt-0001';(first/'worker').mkdir(parents=True)
+        prototype=d.make_learning_request(cfg,config,out,attempt,trial,freeze,first,prior_elapsed_s=0.,checkpoint_history=[],resume=None,launch_perf_s=0.)
+        cp=Path(prototype['checkpoint_dir'])/'initial.pt';cp.parent.mkdir(parents=True)
+        payload={'schema_version':1,'bindings':bindings,'training_state':state.snapshot(),
+            'clock':{'launch_perf_s':0.,'prior_elapsed_s':0.,'elapsed_s':1.},'t0_s':.5,
+            'scheduler_rule':{},'optimization_frozen':mode=='resume_invalid'}
+        receipt={'path':str(cp),**lm.save_checkpoint(cp,payload),'kind':'initial','logical_updates':0,'completed_s':1.}
+        (first/'worker/checkpoint_receipts.jsonl').write_text(json.dumps(receipt)+'\n')
+        d.durable_json(first/'launch.json',{'bindings':bindings,'attempt_id':first.name,'launch_perf_s':0.,'prior_elapsed_s':0.,
+            'previous_exit_sha256':None,'checkpoint_dir':str(cp.parent)})
+        d.durable_json(first/'exit.json',{'launch_sha256':d.digest(first/'launch.json'),'ended_perf_s':5.,'active_s':5.,
+            'cumulative_elapsed_s':5.,'classification':'environmental_interruption','exit_code':-15})
+        prior=5.;history=[receipt];resume={'path':str(cp),'sha256':receipt['sha256']}
+    run=attempt/'trials'/trial['id']/('attempt-0002' if resume else 'attempt-0001');run.mkdir(parents=True)
+    request=d.make_learning_request(cfg,config,out,attempt,trial,freeze,run,prior_elapsed_s=prior,
+        checkpoint_history=history,resume=resume,launch_perf_s=10.)
+    path=run/'request.json';d.durable_json(path,request)
+    d.durable_json(run/'launch.json',{'request_sha256':d.digest(path),'bindings':request['bindings'],'launch_perf_s':10.})
+    fixture=root/'fixture.json';d.durable_json(fixture,{'root':str(root),'out':str(out),'config':str(config),
+        'request':str(path),'proof':{'record':q,'reference':reference},'amendment':amendment})
+    return fixture
+
+
+@pytest.mark.parametrize('mode',['normal','development','resume'])
+def test_learning_worker_preflight_torch_free_in_fresh_process(tmp_path,mode):
+    fixture=_fresh_learning_preflight_case(tmp_path,mode)
+    code=r'''
+import importlib.util,json,pathlib,sys
+assert 'torch' not in sys.modules
+spec=importlib.util.spec_from_file_location('dw',sys.argv[1]);d=importlib.util.module_from_spec(spec);spec.loader.exec_module(d)
+f=json.load(open(sys.argv[2]));d.ROOT=pathlib.Path(f['root'])
+d.validate_amendment=lambda config:f['amendment']
+d.require_stage=lambda *args:{'status':'pass'}
+d.require_model_qualification=lambda *args:f['proof']
+d.source_hashes=lambda stage:{}
+class PolicyEntry(Exception):pass
+def configure():
+    assert 'torch' not in sys.modules,'full worker preflight imported Torch before policy entry'
+    print('POLICY_ENTRY_TORCH_FREE')
+    raise PolicyEntry
+d.configure_torch=configure
+try:d.main(['--stage','pilot','--config',f['config'],'--out',f['out'],'--session-worker',f['request']])
+except PolicyEntry:pass
+else:raise AssertionError('worker did not enter policy')
+'''
+    result=subprocess.run([sys.executable,'-c',code,str(ROOT/'analysis/run_dw_sampling.py'),str(fixture)],
+        cwd=ROOT,capture_output=True,text=True)
+    assert result.returncode==0,result.stderr
+    assert result.stdout.strip()=='POLICY_ENTRY_TORCH_FREE'
+
+
+def test_learning_seed_metadata_preserves_all_named_stream_bytes():
+    from oar.sampled_linear import named_seed
+    d=driver()
+    ids=[(),('learning-grid',),('independent-development',),('full_model','cost','0','importance-0.125','False')]
+    ids += [(f'blocks.{i}.{layer}',sampler) for i in range(4) for layer in ('ffn_in','ffn_out') for sampler in ('importance','uniform')]
+    ids += [('quoted"', '\\slash', '\u2603')]
+    for base in (0,3101,3102,3103,3104,61001,-1,2**64):
+        for domain in ('init','data','sampling','order'):
+            for names in ids:
+                assert d.learning_named_seed(base,domain,*names)==named_seed(base,domain,*names)
+
+
+@pytest.mark.parametrize('mode',['resume','resume_invalid'])
+def test_learning_resume_deep_checkpoint_proof_follows_policy_before_worker(tmp_path,mode):
+    fixture=_fresh_learning_preflight_case(tmp_path,mode)
+    code=r'''
+import importlib.util,json,pathlib,sys
+assert 'torch' not in sys.modules
+spec=importlib.util.spec_from_file_location('dw',sys.argv[1]);d=importlib.util.module_from_spec(spec);spec.loader.exec_module(d)
+f=json.load(open(sys.argv[2]));d.ROOT=pathlib.Path(f['root'])
+d.validate_amendment=lambda config:f['amendment'];d.require_stage=lambda *args:{'status':'pass'}
+d.require_model_qualification=lambda *args:f['proof'];d.source_hashes=lambda stage:{}
+events=[]
+def configure():
+    assert 'torch' not in sys.modules,'resume loaded checkpoint before policy entry'
+    events.append('POLICY')
+    import torch
+    import oar.sampling_lm as lm
+    original=lm.load_checkpoint
+    def load(*args,**kwargs):
+        assert events==['POLICY'];events.append('DEEP')
+        return original(*args,**kwargs)
+    lm.load_checkpoint=load
+d.configure_torch=configure
+d.run_learning_session_worker=lambda *args:events.append('WORKER')
+try:
+    d.main(['--stage','pilot','--config',f['config'],'--out',f['out'],'--session-worker',f['request']])
+except ValueError as exc:
+    assert sys.argv[3]=='resume_invalid' and ('frozen' in str(exc) or 'final' in str(exc)),str(exc)
+else:assert sys.argv[3]=='resume'
+assert events==(['POLICY','DEEP'] if sys.argv[3]=='resume_invalid' else ['POLICY','DEEP','WORKER']),events
+print(json.dumps(events))
+'''
+    result=subprocess.run([sys.executable,'-c',code,str(ROOT/'analysis/run_dw_sampling.py'),str(fixture),mode],
+        cwd=ROOT,capture_output=True,text=True)
+    assert result.returncode==0,result.stderr
+
+
+def test_learning_resume_prepolicy_rejects_unreceipted_hash_without_torch(tmp_path):
+    fixture=_fresh_learning_preflight_case(tmp_path,'resume')
+    code=r'''
+import importlib.util,json,pathlib,sys
+spec=importlib.util.spec_from_file_location('dw',sys.argv[1]);d=importlib.util.module_from_spec(spec);spec.loader.exec_module(d)
+f=json.load(open(sys.argv[2]));d.ROOT=pathlib.Path(f['root'])
+d.validate_amendment=lambda config:f['amendment'];d.require_stage=lambda *args:{'status':'pass'}
+d.require_model_qualification=lambda *args:f['proof'];d.source_hashes=lambda stage:{}
+p=pathlib.Path(f['request']);request=json.loads(p.read_text());request['resume']['sha256']='0'*64;p.write_text(json.dumps(request))
+d.configure_torch=lambda:(_ for _ in ()).throw(AssertionError('invalid resume reached policy'))
+try:d.main(['--stage','pilot','--config',f['config'],'--out',f['out'],'--session-worker',f['request']])
+except ValueError as exc:assert 'hash' in str(exc) or 'receipt' in str(exc),str(exc)
+else:raise AssertionError('unreceipted checkpoint was accepted')
+assert 'torch' not in sys.modules,'invalid resume imported Torch during prepolicy guard'
+'''
+    result=subprocess.run([sys.executable,'-c',code,str(ROOT/'analysis/run_dw_sampling.py'),str(fixture)],
+        cwd=ROOT,capture_output=True,text=True)
+    assert result.returncode==0,result.stderr
+
+
+@pytest.mark.parametrize('damage',[None,'source_hash','amendment_hash','qualification_action'])
+def test_qualification_continuity_historical_sealed_learning_uses_own_committed_freeze(qualification_continuity_case,damage,monkeypatch):
+    d,out,path,current,amendment,original=qualification_continuity_case
+    old={name:(d.ROOT/name).read_bytes() for name in current}
+    if damage=='qualification_action':old['configs/dw_sampling.yaml']=original['configs/dw_sampling.yaml']
+    old_map={name:hashlib.sha256(value).hexdigest() for name,value in old.items()}
+    old_amendment={'bound_files':old_map}
+    old['decisions/dw_sampling_amendment.json']=d.canonical(old_amendment)
+    identity={'actual_head':'2'*40,'learning_action':'learning','measurement_hashes':old_map,
+        'config_sha256':old_map['configs/dw_sampling.yaml'],
+        'amendment_sha256':hashlib.sha256(old['decisions/dw_sampling_amendment.json']).hexdigest(),'bound_files':old_map}
+    later=d.allocate_attempt(out,'pilot');d.write_json(later/'source_manifest.json',identity)
+    d.seal_record(later,{'stage':'pilot','status':'STOP_QUALITY','learning_action':'learning',
+        'measurement_hashes':old_map,'source_manifest_sha256':d.digest(later/'source_manifest.json')})
+    # A new prospective scope/source freeze changes current hashes/amendment;
+    # the old sealed learning action must keep its original attribution.
+    scope=d.ROOT/'decisions/dw_sampling_reopening.md';scope.write_bytes(scope.read_bytes()+b'\n')
+    current=d.source_hashes('pilot');amendment['bound_files']=current
+    entry=amendment['model_qualification_continuity'];entry['current_measurement_hashes']=current
+    entry['changed_files']=sorted(name for name in current if current[name]!=entry['previous_measurement_hashes'][name])
+    (d.ROOT/'decisions/dw_sampling_amendment.json').write_text(json.dumps(amendment))
+    if damage=='source_hash':old['src/oar/sampling_data.py']+=b'\n'
+    elif damage=='amendment_hash':old['decisions/dw_sampling_amendment.json']+=b'\n'
+    monkeypatch.setattr(d,'historical_learning_git_blob',lambda head,name:old[name],raising=False)
+    if damage is None:
+        assert d.require_model_qualification(out,path,d.digest(path),current)['record']['status']=='not_run'
+    else:
+        with pytest.raises(ValueError):d.require_model_qualification(out,path,d.digest(path),current)

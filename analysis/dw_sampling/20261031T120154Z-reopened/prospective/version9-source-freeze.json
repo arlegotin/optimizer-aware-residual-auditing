@@ -1,0 +1,30 @@
+{
+  "CPU_verification": "820 passed /16 MPS deselected; targeted25 +independent12 passed; actual fresh normal/development/resume guards tested",
+  "actual_MPS_version9_qualification": "pending current A/C",
+  "learning_status": "not run; v8 startup failed before model creation/updates/evaluation",
+  "prior_failure": {
+    "child_active_sum_s": 41.98803141526878,
+    "interpretation": "implementation startup error; retained development/failure cost, not measured quality",
+    "model_updates": 0,
+    "outer_wall_s": 44.16540000005625,
+    "record_sha256": "5e2718ebcdaea047a92d58a3a6271f733ab49ba85c471c9fd0e18fa29093f8f7"
+  },
+  "protected_losses_and_test": "unopened",
+  "recorded_utc": "2026-10-31T18:40:50.938724+00:00",
+  "review": "Approved exact Torch-free startup/source/seed/history repair; version9-torch-free-review.md",
+  "science_settings": "same27grid,H,data/model/optimizer/rho/LR/seeds/targets/statistics; original policy guard unchanged",
+  "source_freeze_parent_head": "09a8686bc0c6e383d5cf55068d09d41f29729a90",
+  "source_sha256": {
+    "analysis/run_dw_sampling.py": "bc004d8716b1ab6a6ff8be4df7eb3328b69e0f7bec4f35ee1aebe1ca695266d3",
+    "configs/dw_sampling.yaml": "1bd8b99be2ddb27bbf1a0555287137733a4496cda8e0dad66e0274f302dde101",
+    "decisions/dw_sampling_reopening.md": "7d1cffdb861f8436cd0629b27bb4e9dea97f0f6ab1146ce22a0e9eefc5294e55",
+    "decisions/dw_sampling_scope.md": "d91d9350dc117f83e39c648e48d435de75ab9ea5a3b6bc197b216c4b73c11181",
+    "src/oar/hardware.py": "4ba118d816eec9d255cfb3d7925416373119fe181f82529fb58a96347d8e5048",
+    "src/oar/sampled_linear.py": "11398f9340a48b0dcabdc733c74dfa52b53663ea2005989f2ad7b53079827ca3",
+    "src/oar/sampling_data.py": "cfcf4b782eb9a444ce70f29df72e063518f794108020e51a5d12238118f06583",
+    "src/oar/sampling_lm.py": "ccf487079280d385a9fed1b3eb7069921a34a15fd78cb6b33f7778644a405d3c",
+    "src/oar/timing.py": "25351cd20abc14385dd1cb3e482c67f73619b1ead30900ca0150fe57072458e5",
+    "tests/test_dw_sampling_protocol.py": "9965812491973defa2cf0fbd5c197fd8790e4563c66cf51b5441d8c899d6638c",
+    "tests/test_sampled_linear.py": "3ed4adbf6f62599172b0322374e84c7552f7fc4b46761f80057053469822eaa9"
+  }
+}

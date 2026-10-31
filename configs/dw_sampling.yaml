@@ -164,7 +164,7 @@ learning:
   action: learning
   qualification_record_path: analysis/dw_sampling/20261031T120154Z-reopened/pilot/attempt-0002/record.json
   qualification_record_sha256: d01c854daf8eb7f7fbc8505b0879b40bc869bfc469a141fa727ae086757c4209
-  learning_manifest_path: analysis/dw_sampling/20261031T120154Z-reopened/prospective/learning-v8.json
+  learning_manifest_path: analysis/dw_sampling/20261031T120154Z-reopened/prospective/learning-v9.json
   required_time_ratio: 1.0
   overshoot_fraction: 0.01
   checkpoint_live_retention: 2

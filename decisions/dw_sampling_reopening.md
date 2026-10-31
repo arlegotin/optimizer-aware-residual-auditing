@@ -375,3 +375,54 @@ primary arm retains the primary uncensored requirement; uniform can replace
 importance only after its own complete independent comparison passes. This follows
 the original primary-pair gate and the prospectively declared adverse uniform
 control; no training outcome has been used to change a protected threshold.
+
+## Fresh-worker validation repair, version 9 (prospective)
+
+The frozen v8 preparation passed825 tests, including all16 actual MPS tests,
+and correctness passed461 checks. Its first full pilot invocation then exposed
+an integration error before any model creation, forward/evaluation, gradient,
+optimizer update or training checkpoint: authority validation imported Torch via
+an elementary seed helper before the unchanged strict device-policy entry.
+All27 attempted launches failed at that same startup boundary in44.165400 seconds.
+The sealed `pilot/attempt-0003` status is the old dispatcher's generic STOP_QUALITY;
+it is not an observed learning-quality failure. Preserve its raw status, every
+stderr/launch/exit receipt and the independently reproduced import diagnostic.
+
+Fix the validation boundary, leaving the original `configure_torch` import-policy
+guard intact. Pre-policy grid/development/worker authority checks must use only
+standard-library seed derivation with the exact declared compact-JSON/SHA256
+formula; resolved initialization/data/sampling/order streams do not change.
+Validate checkpoint receipt/hash/ownership and ledger metadata before device
+policy, and retain full weights-only checkpoint/payload validation after policy
+and before training. Exercise the actual authority path in a fresh interpreter,
+including explicit resume, so a pytest process that already imported Torch cannot
+conceal an early import. No model, sampler, native optimizer, dtype, data, H,
+quality threshold, target construction, grid, or seed is changed by this repair.
+
+A sealed earlier learning attempt is classified against its own hash-validated
+source/configuration and original recorded identity after validating its seal;
+it does not become a qualification attempt merely because the current source
+version changes. An unfinished current learning invocation still needs the exact
+current source/configuration/amendment authority before exclusion. A corrupted
+sealed record or genuine later failed qualification cannot be bypassed.
+
+Freeze the corrected v9 source/configuration/manifest and renewed exact-diff
+continuity review, then repeat current preparation/correctness and all affected
+E measurements in a fresh append-only attempt. The v7 model cost/calibration and
+B/D retain their original measured identities if their executed paths remain
+unchanged under that review. No prior learning checkpoint exists to resume, no
+stochastic gradient was observed and no bad draw is retried. Keep the44.165400
+seconds and diagnostic/setup work in the disclosed development/failure ledger;
+do not present the unsuccessful v8 launches as free work or as trained arms.
+The new manifest uses `learning-v9.json`; the v8 manifest/amendment/source remain
+immutable. Protected official-validation losses and official-test body remain
+unopened. Complete the same declared study after this ordinary implementation
+repair rather than expanding its scientific settings.
+
+For the declared long local study, a temporary native macOS `caffeinate -i -w
+<owned-driver-PID>` assertion may keep the Mac awake only while that driver
+exists. Record its command, target PID and lifetime in the new attempt. It changes
+no permanent power preference, memory safeguard, model computation or unrelated
+application, and releases automatically when the owned driver exits. Use the same
+assertion throughout all arms; this is shared operational setup, not an extra
+benchmark or collector. The required Python driver invocation remains unchanged.
