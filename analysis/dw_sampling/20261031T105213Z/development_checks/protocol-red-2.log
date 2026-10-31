@@ -1,0 +1,25 @@
+.......FF.                                                               [100%]
+=================================== FAILURES ===================================
+_________ test_native_environment_checks_actual_versions_against_pins __________
+
+    def test_native_environment_checks_actual_versions_against_pins():
+        d = driver()
+        lock = 'torch==2.15.0 --hash=sha256:abc\nPyYAML==6.0.3 --hash=sha256:def\n'
+>       assert d.pin_mismatches(lock, {'torch': '2.15.0', 'pyyaml': '6.0.3'}) == []
+               ^^^^^^^^^^^^^^^^
+E       AttributeError: module 'dw_sampling_driver' has no attribute 'pin_mismatches'
+
+tests/test_dw_sampling_protocol.py:138: AttributeError
+____________ test_shared_deadline_never_restarts_for_later_commands ____________
+
+    def test_shared_deadline_never_restarts_for_later_commands():
+        d = driver()
+>       assert d.remaining_timeout(100., clock=lambda: 75.) == 25.
+               ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'dw_sampling_driver' has no attribute 'remaining_timeout'
+
+tests/test_dw_sampling_protocol.py:145: AttributeError
+=========================== short test summary info ============================
+FAILED tests/test_dw_sampling_protocol.py::test_native_environment_checks_actual_versions_against_pins
+FAILED tests/test_dw_sampling_protocol.py::test_shared_deadline_never_restarts_for_later_commands
+2 failed, 8 passed in 2.27s

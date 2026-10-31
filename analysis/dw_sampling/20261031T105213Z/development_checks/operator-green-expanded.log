@@ -1,0 +1,19 @@
+........................................................................ [ 82%]
+....F..........                                                          [100%]
+=================================== FAILURES ===================================
+__________ test_zero_dw_still_checks_exact_derivative_overflow[bias] ___________
+
+op = <module 'oar.sampled_linear' from '/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/src/oar/sampled_linear.py'>
+derivative = 'bias'
+
+    @pytest.mark.parametrize('derivative', ['x', 'bias'])
+    def test_zero_dw_still_checks_exact_derivative_overflow(op, derivative):
+        x = torch.zeros(5, 1, requires_grad=True)
+>       w = torch.tensor([[1e30 if derivative == 'x' else 0]], requires_grad=True)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       RuntimeError: Only Tensors of floating point and complex dtype can require gradients
+
+tests/test_sampled_linear.py:436: RuntimeError
+=========================== short test summary info ============================
+FAILED tests/test_sampled_linear.py::test_zero_dw_still_checks_exact_derivative_overflow[bias]
+1 failed, 86 passed in 2.02s

@@ -1,0 +1,56 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___ test_mps_score_transfer_fp64_normalization_weights_and_sampled_backward ____
+
+op = <module 'oar.sampled_linear' from '/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/src/oar/sampled_linear.py'>
+
+    @pytest.mark.mps
+    @pytest.mark.skipif(not torch.backends.mps.is_available(), reason='requires actual visible MPS')
+    def test_mps_score_transfer_fp64_normalization_weights_and_sampled_backward(op):
+        # All normalized row scores are exactly representable FP32: .5,1,.5,1,0.
+        # The mixture is independently hand-computed, and no FP64 tensor enters MPS.
+        x_cpu = torch.tensor([[1., 0.], [0., 2.], [-1., 0.], [0., -2.], [0., 0.]])
+        d_cpu = torch.tensor([[2.], [2.], [-2.], [-2.], [0.]])
+        w_cpu, b_cpu = torch.tensor([[.3, -.2]]), torch.tensor([.1])
+        x, w, b = [t.to('mps').requires_grad_() for t in (x_cpu, w_cpu, b_cpu)]
+        d = d_cpu.to('mps')
+>       p = op.importance_probabilities(x, d)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_sampled_linear.py:555: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+x2 = tensor([[ 1.,  0.],
+        [ 0.,  2.],
+        [-1.,  0.],
+        [ 0., -2.],
+        [ 0.,  0.]], device='mps:0', requires_grad=True)
+d2 = tensor([[ 2.],
+        [ 2.],
+        [-2.],
+        [-2.],
+        [ 0.]], device='mps:0')
+
+    def importance_probabilities(x2: Tensor, d2: Tensor) -> Tensor | None:
+        """CPU FP64 mixture probabilities; None only for proved unscaled zero.
+    
+        Only the n device FP32 scores move to CPU; complete operands stay on device.
+        Nonzero operands whose normalized FP32 scores vanish are an explicit error.
+        """
+        if x2.ndim != 2 or d2.ndim != 2 or x2.shape[0] != d2.shape[0] or not x2.shape[0]:
+            raise ValueError('score operands require matching nonempty row matrices')
+        sx, sd = _operand_scales(x2, d2)
+        if bool(sx == 0) or bool(sd == 0):
+            return None
+        xs = (x2.detach()/sx).to(dtype=torch.float32)
+        ds = (d2.detach()/sd).to(dtype=torch.float32)
+        scores = torch.linalg.vector_norm(xs, dim=1)*torch.linalg.vector_norm(ds, dim=1)
+        _finite(scores, 'sampling scores')
+>       scores_cpu = scores.to(device='cpu', dtype=torch.float64)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       RuntimeError: Undefined type Double
+
+src/oar/sampled_linear.py:92: RuntimeError
+=========================== short test summary info ============================
+FAILED tests/test_sampled_linear.py::test_mps_score_transfer_fp64_normalization_weights_and_sampled_backward
+1 failed, 100 deselected in 1.58s

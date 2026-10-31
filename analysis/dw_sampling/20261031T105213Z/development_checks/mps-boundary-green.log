@@ -1,0 +1,5 @@
+.                                                                        [100%]
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/test_sampled_linear.py::test_mps_score_transfer_fp64_normalization_weights_and_sampled_backward
+1 passed, 100 deselected in 1.93s

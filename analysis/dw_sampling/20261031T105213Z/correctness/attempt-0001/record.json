@@ -1,0 +1,29 @@
+{
+  "artifacts": {
+    "command-001.json": "56871db420594474506ce59261dda66c215f63974a87a0fa7b58d590406a8275",
+    "command-001.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "command-001.stdout.txt": "86d5f06758a750cb276de27a5a9da8d34f9d600fc543ee91049cbe140cc5e657",
+    "commands.log": "302a7955ea40df5e7319f20385582506f21c417404f7e019325905c4c775fb7e",
+    "exclusive_session.json": "1a128df911ca65771b7df7bb9f2dbca5ccedac5878ce987b5c4873f37ef8f738",
+    "source_manifest.json": "007e40d7ebc2463945fdf7e0dbff8f6b1337311a9f0c7b36955f64ea3ef942cc"
+  },
+  "cpu_correctness_only": false,
+  "invocation_wall_s": 2.1432692079106346,
+  "measurement_hashes": {
+    "analysis/run_dw_sampling.py": "227f6977d4713e84d01cf2ebeb61d390d769f391da6fe14e65704daac47df663",
+    "configs/dw_sampling.yaml": "afbff17b101ffc45963b0bb8132574c405ba821f196704ff254e721e9e7ad4c3",
+    "decisions/dw_sampling_scope.md": "d91d9350dc117f83e39c648e48d435de75ab9ea5a3b6bc197b216c4b73c11181",
+    "src/oar/hardware.py": "4ba118d816eec9d255cfb3d7925416373119fe181f82529fb58a96347d8e5048",
+    "src/oar/sampled_linear.py": "11398f9340a48b0dcabdc733c74dfa52b53663ea2005989f2ad7b53079827ca3",
+    "src/oar/timing.py": "25351cd20abc14385dd1cb3e482c67f73619b1ead30900ca0150fe57072458e5",
+    "tests/test_dw_sampling_protocol.py": "9772893f8002de46004ff334a39209d9df9438fc6bbf51b9dac91cf004dd1c3f",
+    "tests/test_sampled_linear.py": "3ed4adbf6f62599172b0322374e84c7552f7fc4b46761f80057053469822eaa9"
+  },
+  "reason": "CPU operator/protocol reference tests; actual-device qualification separately in prepare",
+  "recorded_utc": "2026-10-31T11:27:32.608476+00:00",
+  "schema_version": 1,
+  "source_manifest_sha256": "007e40d7ebc2463945fdf7e0dbff8f6b1337311a9f0c7b36955f64ea3ef942cc",
+  "stage": "correctness",
+  "status": "pass",
+  "test_output": "........................................................................ [ 61%]\n.............................................                            [100%]\n117 passed in 1.51s"
+}

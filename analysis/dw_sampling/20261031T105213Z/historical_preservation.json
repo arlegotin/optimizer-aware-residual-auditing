@@ -1,0 +1,10 @@
+{
+  "actual_commit": "cf6481741933130f2e86b440e750909686b81eb3",
+  "changed": [],
+  "git_diff_historical": "",
+  "initial_manifest_sha256": "10fc155f316905ba509ee1f76b4b8bd8d6a4c438537b153e026100d346e666fc",
+  "new_files_and_results": "all new branch units; no old gates, amendments, configs, index, reports or raw scientific evidence changed",
+  "reviewed_commit": "9d8ad069c51b4d0e6c13e9c6e465579e9b44a339",
+  "utc": "2026-10-31T11:29:58.461184+00:00",
+  "verified_historical_files": 184
+}

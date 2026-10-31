@@ -1,0 +1,662 @@
+EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE.                         [100%]
+==================================== ERRORS ====================================
+_ ERROR at setup of test_enumeration_unbiased_variance_duplicates[importance-2-1] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_enumeration_unbiased_variance_duplicates[importance-3-1] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_enumeration_unbiased_variance_duplicates[importance-3-2] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_enumeration_unbiased_variance_duplicates[uniform-2-1] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_enumeration_unbiased_variance_duplicates[uniform-3-1] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_enumeration_unbiased_variance_duplicates[uniform-3-2] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_linear_forward_exact_adjoints_and_native_dispatch[dtype0-1] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_linear_forward_exact_adjoints_and_native_dispatch[dtype0-4] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_linear_forward_exact_adjoints_and_native_dispatch[dtype0-5] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_linear_forward_exact_adjoints_and_native_dispatch[dtype0-8] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_linear_forward_exact_adjoints_and_native_dispatch[dtype1-1] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_linear_forward_exact_adjoints_and_native_dispatch[dtype1-4] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_linear_forward_exact_adjoints_and_native_dispatch[dtype1-5] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_linear_forward_exact_adjoints_and_native_dispatch[dtype1-8] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_deep_nonlinear_residual_keeps_root_bias_and_unsampled_grads_exact _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_layout_leading_axes_optional_bias_and_needs_input_grad[x-False] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_layout_leading_axes_optional_bias_and_needs_input_grad[x-True] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_layout_leading_axes_optional_bias_and_needs_input_grad[weight-False] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_layout_leading_axes_optional_bias_and_needs_input_grad[weight-True] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_layout_leading_axes_optional_bias_and_needs_input_grad[neither-False] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_layout_leading_axes_optional_bias_and_needs_input_grad[neither-True] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_proved_zero_dense_gradient_without_draws[importance-x] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_proved_zero_dense_gradient_without_draws[importance-d] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+__ ERROR at setup of test_proved_zero_dense_gradient_without_draws[uniform-x] __
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+__ ERROR at setup of test_proved_zero_dense_gradient_without_draws[uniform-d] __
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_reciprocal_scale_score_underflow_aborts_before_draw[dtype0] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_reciprocal_scale_score_underflow_aborts_before_draw[dtype1] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_probability_bounds_concentration_and_cast_inverse_weights[1] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_probability_bounds_concentration_and_cast_inverse_weights[3] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_probability_bounds_concentration_and_cast_inverse_weights[8192] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+____________ ERROR at setup of test_nonfinite_operands_abort[x-nan] ____________
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+____________ ERROR at setup of test_nonfinite_operands_abort[x-inf] ____________
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+____________ ERROR at setup of test_nonfinite_operands_abort[d-nan] ____________
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+____________ ERROR at setup of test_nonfinite_operands_abort[d-inf] ____________
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_____ ERROR at setup of test_finite_operands_with_gradient_overflow_abort ______
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_fp64_reference_scale_is_preserved_before_score_cast[1e-150] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_fp64_reference_scale_is_preserved_before_score_cast[1e+150] _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_______ ERROR at setup of test_rank_deficient_cancellation_wide_and_tiny _______
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+__________________ ERROR at setup of test_reject_half[dtype0] __________________
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+__________________ ERROR at setup of test_reject_half[dtype1] __________________
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+___________ ERROR at setup of test_reject_amp_higher_order_and_empty ___________
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+____ ERROR at setup of test_named_streams_isolation_consumption_and_restore ____
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+____ ERROR at setup of test_uniform_direct_randint_and_no_score_dependency _____
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_ ERROR at setup of test_microbatch_valid_token_expectation_and_independent_samples _
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+__ ERROR at setup of test_shared_module_alias_storage_and_optimizer_exclusion __
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+_____ ERROR at setup of test_dynamic_same_weight_in_one_backward_rejected ______
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+__ ERROR at setup of test_adamw_multistep_identical_injected_sample_reference __
+
+    @pytest.fixture
+    def op():
+        # Missing implementation is a behavioral RED failure, not collection failure.
+>       assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+E       AssertionError: standalone sampler missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x1030c09a0>('oar.sampled_linear')
+E        +    where <function find_spec at 0x1030c09a0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests/test_sampled_linear.py:18: AssertionError
+=========================== short test summary info ============================
+ERROR tests/test_sampled_linear.py::test_enumeration_unbiased_variance_duplicates[importance-2-1]
+ERROR tests/test_sampled_linear.py::test_enumeration_unbiased_variance_duplicates[importance-3-1]
+ERROR tests/test_sampled_linear.py::test_enumeration_unbiased_variance_duplicates[importance-3-2]
+ERROR tests/test_sampled_linear.py::test_enumeration_unbiased_variance_duplicates[uniform-2-1]
+ERROR tests/test_sampled_linear.py::test_enumeration_unbiased_variance_duplicates[uniform-3-1]
+ERROR tests/test_sampled_linear.py::test_enumeration_unbiased_variance_duplicates[uniform-3-2]
+ERROR tests/test_sampled_linear.py::test_linear_forward_exact_adjoints_and_native_dispatch[dtype0-1]
+ERROR tests/test_sampled_linear.py::test_linear_forward_exact_adjoints_and_native_dispatch[dtype0-4]
+ERROR tests/test_sampled_linear.py::test_linear_forward_exact_adjoints_and_native_dispatch[dtype0-5]
+ERROR tests/test_sampled_linear.py::test_linear_forward_exact_adjoints_and_native_dispatch[dtype0-8]
+ERROR tests/test_sampled_linear.py::test_linear_forward_exact_adjoints_and_native_dispatch[dtype1-1]
+ERROR tests/test_sampled_linear.py::test_linear_forward_exact_adjoints_and_native_dispatch[dtype1-4]
+ERROR tests/test_sampled_linear.py::test_linear_forward_exact_adjoints_and_native_dispatch[dtype1-5]
+ERROR tests/test_sampled_linear.py::test_linear_forward_exact_adjoints_and_native_dispatch[dtype1-8]
+ERROR tests/test_sampled_linear.py::test_deep_nonlinear_residual_keeps_root_bias_and_unsampled_grads_exact
+ERROR tests/test_sampled_linear.py::test_layout_leading_axes_optional_bias_and_needs_input_grad[x-False]
+ERROR tests/test_sampled_linear.py::test_layout_leading_axes_optional_bias_and_needs_input_grad[x-True]
+ERROR tests/test_sampled_linear.py::test_layout_leading_axes_optional_bias_and_needs_input_grad[weight-False]
+ERROR tests/test_sampled_linear.py::test_layout_leading_axes_optional_bias_and_needs_input_grad[weight-True]
+ERROR tests/test_sampled_linear.py::test_layout_leading_axes_optional_bias_and_needs_input_grad[neither-False]
+ERROR tests/test_sampled_linear.py::test_layout_leading_axes_optional_bias_and_needs_input_grad[neither-True]
+ERROR tests/test_sampled_linear.py::test_proved_zero_dense_gradient_without_draws[importance-x]
+ERROR tests/test_sampled_linear.py::test_proved_zero_dense_gradient_without_draws[importance-d]
+ERROR tests/test_sampled_linear.py::test_proved_zero_dense_gradient_without_draws[uniform-x]
+ERROR tests/test_sampled_linear.py::test_proved_zero_dense_gradient_without_draws[uniform-d]
+ERROR tests/test_sampled_linear.py::test_reciprocal_scale_score_underflow_aborts_before_draw[dtype0]
+ERROR tests/test_sampled_linear.py::test_reciprocal_scale_score_underflow_aborts_before_draw[dtype1]
+ERROR tests/test_sampled_linear.py::test_probability_bounds_concentration_and_cast_inverse_weights[1]
+ERROR tests/test_sampled_linear.py::test_probability_bounds_concentration_and_cast_inverse_weights[3]
+ERROR tests/test_sampled_linear.py::test_probability_bounds_concentration_and_cast_inverse_weights[8192]
+ERROR tests/test_sampled_linear.py::test_nonfinite_operands_abort[x-nan] - As...
+ERROR tests/test_sampled_linear.py::test_nonfinite_operands_abort[x-inf] - As...
+ERROR tests/test_sampled_linear.py::test_nonfinite_operands_abort[d-nan] - As...
+ERROR tests/test_sampled_linear.py::test_nonfinite_operands_abort[d-inf] - As...
+ERROR tests/test_sampled_linear.py::test_finite_operands_with_gradient_overflow_abort
+ERROR tests/test_sampled_linear.py::test_fp64_reference_scale_is_preserved_before_score_cast[1e-150]
+ERROR tests/test_sampled_linear.py::test_fp64_reference_scale_is_preserved_before_score_cast[1e+150]
+ERROR tests/test_sampled_linear.py::test_rank_deficient_cancellation_wide_and_tiny
+ERROR tests/test_sampled_linear.py::test_reject_half[dtype0] - AssertionError...
+ERROR tests/test_sampled_linear.py::test_reject_half[dtype1] - AssertionError...
+ERROR tests/test_sampled_linear.py::test_reject_amp_higher_order_and_empty - ...
+ERROR tests/test_sampled_linear.py::test_named_streams_isolation_consumption_and_restore
+ERROR tests/test_sampled_linear.py::test_uniform_direct_randint_and_no_score_dependency
+ERROR tests/test_sampled_linear.py::test_microbatch_valid_token_expectation_and_independent_samples
+ERROR tests/test_sampled_linear.py::test_shared_module_alias_storage_and_optimizer_exclusion
+ERROR tests/test_sampled_linear.py::test_dynamic_same_weight_in_one_backward_rejected
+ERROR tests/test_sampled_linear.py::test_adamw_multistep_identical_injected_sample_reference
+1 passed, 47 errors in 2.07s

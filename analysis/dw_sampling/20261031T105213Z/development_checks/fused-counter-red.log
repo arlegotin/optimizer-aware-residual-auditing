@@ -1,0 +1,27 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____ test_native_optimizer_step_counter_device_does_not_disqualify_fused ______
+
+    @pytest.mark.mps
+    def test_native_optimizer_step_counter_device_does_not_disqualify_fused():
+        import torch
+        if not torch.backends.mps.is_available():
+            pytest.skip('actual MPS unavailable; not qualification evidence')
+        d = driver()
+        p = torch.nn.Parameter(torch.tensor([1., -2.], device='mps'))
+        q = torch.nn.Parameter(p.detach().clone())
+        actual = torch.optim.AdamW([p], foreach=False, fused=True)
+        reference = torch.optim.AdamW([q], foreach=False, fused=False)
+        for step in range(5):
+            gradient = torch.tensor([.2+step/10, -.3], device='mps')
+            p.grad, q.grad = gradient.clone(), gradient.clone()
+            actual.step()
+            reference.step()
+>           d.assert_native_equivalent({'p': p}, actual, {'p': q}, reference)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'dw_sampling_driver' has no attribute 'assert_native_equivalent'
+
+tests/test_dw_sampling_protocol.py:221: AttributeError
+=========================== short test summary info ============================
+FAILED tests/test_dw_sampling_protocol.py::test_native_optimizer_step_counter_device_does_not_disqualify_fused
+1 failed, 15 deselected in 1.46s

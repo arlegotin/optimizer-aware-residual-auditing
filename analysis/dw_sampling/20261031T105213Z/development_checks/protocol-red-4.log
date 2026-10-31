@@ -1,0 +1,25 @@
+.............FF                                                          [100%]
+=================================== FAILURES ===================================
+______ test_relative_argv_competing_work_is_detected_by_working_directory ______
+
+    def test_relative_argv_competing_work_is_detected_by_working_directory():
+        d = driver()
+>       assert d.is_competing_work(['python', '-m', 'pytest', '-q'], str(ROOT))
+               ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'dw_sampling_driver' has no attribute 'is_competing_work'
+
+tests/test_dw_sampling_protocol.py:192: AttributeError
+_____________________ test_timeout_exit_is_a_resource_stop _____________________
+
+    def test_timeout_exit_is_a_resource_stop():
+        d = driver()
+        with pytest.raises(TimeoutError):
+>           d.check_command_deadline(124, 100., clock=lambda: 99.)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'dw_sampling_driver' has no attribute 'check_command_deadline'
+
+tests/test_dw_sampling_protocol.py:200: AttributeError
+=========================== short test summary info ============================
+FAILED tests/test_dw_sampling_protocol.py::test_relative_argv_competing_work_is_detected_by_working_directory
+FAILED tests/test_dw_sampling_protocol.py::test_timeout_exit_is_a_resource_stop
+2 failed, 13 passed in 1.89s

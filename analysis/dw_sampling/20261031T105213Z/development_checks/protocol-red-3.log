@@ -1,0 +1,45 @@
+..........FFF                                                            [100%]
+=================================== FAILURES ===================================
+_________________ test_exclusive_session_rejects_second_owner __________________
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2434/test_exclusive_session_rejects0')
+
+    def test_exclusive_session_rejects_second_owner(tmp_path):
+        d = driver()
+        lock = tmp_path/'measurement.lock'
+>       with d.exclusive_session(lock):
+             ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'dw_sampling_driver' has no attribute 'exclusive_session'
+
+tests/test_dw_sampling_protocol.py:162: AttributeError
+________ test_selected_dense_block_is_remeasured_until_duration_or_cap _________
+
+    def test_selected_dense_block_is_remeasured_until_duration_or_cap():
+        d = driver()
+>       count, observations = d.choose_block_length(lambda n: .001*n, 3)
+                              ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'dw_sampling_driver' has no attribute 'choose_block_length'
+
+tests/test_dw_sampling_protocol.py:172: AttributeError
+______ test_latest_passing_attempt_supersedes_historical_hardware_failure ______
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2434/test_latest_passing_attempt_su0')
+
+    def test_latest_passing_attempt_supersedes_historical_hardware_failure(tmp_path):
+        d = driver()
+        for status in ('BLOCKED_HARDWARE', 'pass'):
+            p = d.allocate_attempt(tmp_path, 'prepare')
+            d.seal_record(p, {'stage': 'prepare', 'status': status, 'measurement_hashes': {}})
+        result = d.summarize_run(tmp_path)
+>       assert result['terminal_state'] == 'INCOMPLETE_RESOURCE'
+E       AssertionError: assert 'BLOCKED_HARDWARE' == 'INCOMPLETE_RESOURCE'
+E         
+E         - INCOMPLETE_RESOURCE
+E         + BLOCKED_HARDWARE
+
+tests/test_dw_sampling_protocol.py:186: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_dw_sampling_protocol.py::test_exclusive_session_rejects_second_owner
+FAILED tests/test_dw_sampling_protocol.py::test_selected_dense_block_is_remeasured_until_duration_or_cap
+FAILED tests/test_dw_sampling_protocol.py::test_latest_passing_attempt_supersedes_historical_hardware_failure
+3 failed, 10 passed in 2.16s

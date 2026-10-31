@@ -1,0 +1,170 @@
+FFFFFFF                                                                  [100%]
+=================================== FAILURES ===================================
+___ test_configuration_rejects_changed_protected_protocol_and_unknown_fields ___
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2428/test_configuration_rejects_cha0')
+
+    def test_configuration_rejects_changed_protected_protocol_and_unknown_fields(tmp_path):
+>       d = driver()
+            ^^^^^^^^
+
+tests/test_dw_sampling_protocol.py:24: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_dw_sampling_protocol.py:19: in driver
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:1022: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1159: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10aa699d0>
+path = '/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py'
+
+<frozen importlib._bootstrap_external>:1217: FileNotFoundError
+___________ test_attempts_append_and_sealed_records_detect_tampering ___________
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2428/test_attempts_append_and_seale0')
+
+    def test_attempts_append_and_sealed_records_detect_tampering(tmp_path):
+>       d = driver()
+            ^^^^^^^^
+
+tests/test_dw_sampling_protocol.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_dw_sampling_protocol.py:19: in driver
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:1022: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1159: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b3b1730>
+path = '/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py'
+
+<frozen importlib._bootstrap_external>:1217: FileNotFoundError
+______ test_missing_failed_and_source_changed_prerequisites_cannot_launch ______
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2428/test_missing_failed_and_source0')
+
+    def test_missing_failed_and_source_changed_prerequisites_cannot_launch(tmp_path):
+>       d = driver()
+            ^^^^^^^^
+
+tests/test_dw_sampling_protocol.py:66: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_dw_sampling_protocol.py:19: in driver
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:1022: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1159: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b3b3770>
+path = '/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py'
+
+<frozen importlib._bootstrap_external>:1217: FileNotFoundError
+_____________ test_geometric_paired_estimator_and_noise_threshold ______________
+
+    def test_geometric_paired_estimator_and_noise_threshold():
+>       d = driver()
+            ^^^^^^^^
+
+tests/test_dw_sampling_protocol.py:81: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_dw_sampling_protocol.py:19: in driver
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:1022: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1159: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b3b3710>
+path = '/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py'
+
+<frozen importlib._bootstrap_external>:1217: FileNotFoundError
+_______ test_zero_dw_control_keeps_adjoint_bias_and_native_moment_decay ________
+
+    def test_zero_dw_control_keeps_adjoint_bias_and_native_moment_decay():
+        import torch
+>       d = driver()
+            ^^^^^^^^
+
+tests/test_dw_sampling_protocol.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_dw_sampling_protocol.py:19: in driver
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:1022: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1159: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10b3b26f0>
+path = '/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py'
+
+<frozen importlib._bootstrap_external>:1217: FileNotFoundError
+___________ test_summary_handles_incomplete_run_without_promoting_it ___________
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2428/test_summary_handles_incomplet0')
+
+    def test_summary_handles_incomplete_run_without_promoting_it(tmp_path):
+>       d = driver()
+            ^^^^^^^^
+
+tests/test_dw_sampling_protocol.py:118: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_dw_sampling_protocol.py:19: in driver
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:1022: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1159: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x10cd0c9b0>
+path = '/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py'
+
+<frozen importlib._bootstrap_external>:1217: FileNotFoundError
+__________ test_help_has_no_output_directory_or_training_side_effect ___________
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2428/test_help_has_no_output_direct0')
+
+    def test_help_has_no_output_directory_or_training_side_effect(tmp_path):
+        result = subprocess.run([sys.executable, str(ROOT / 'analysis/run_dw_sampling.py'), '--help'], cwd=tmp_path,
+                                text=True, capture_output=True)
+>       assert result.returncode == 0
+E       assert 2 == 0
+E        +  where 2 = CompletedProcess(args=['/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python', '...ments/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py': [Errno 2] No such file or directory\n").returncode
+
+tests/test_dw_sampling_protocol.py:130: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_dw_sampling_protocol.py::test_configuration_rejects_changed_protected_protocol_and_unknown_fields
+FAILED tests/test_dw_sampling_protocol.py::test_attempts_append_and_sealed_records_detect_tampering
+FAILED tests/test_dw_sampling_protocol.py::test_missing_failed_and_source_changed_prerequisites_cannot_launch
+FAILED tests/test_dw_sampling_protocol.py::test_geometric_paired_estimator_and_noise_threshold
+FAILED tests/test_dw_sampling_protocol.py::test_zero_dw_control_keeps_adjoint_bias_and_native_moment_decay
+FAILED tests/test_dw_sampling_protocol.py::test_summary_handles_incomplete_run_without_promoting_it
+FAILED tests/test_dw_sampling_protocol.py::test_help_has_no_output_directory_or_training_side_effect
+7 failed in 1.09s
