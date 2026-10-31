@@ -1,0 +1,288 @@
+{
+  "fallback_before_import": "0",
+  "matmul_precision": "highest",
+  "native_resource_calibration": [
+    {
+      "boundary": "resource forecast calibration only; not comparative performance",
+      "native_complete_step_s": [
+        0.039946457953192294,
+        0.04018620797432959,
+        0.04144062497653067
+      ],
+      "shape": {
+        "di": 512,
+        "do": 2048,
+        "id": "middle4096",
+        "microbatches": 1,
+        "n": 4096,
+        "stride": 1
+      }
+    },
+    {
+      "boundary": "resource forecast calibration only; not comparative performance",
+      "native_complete_step_s": [
+        0.021687875036150217,
+        0.022078000009059906,
+        0.021196249988861382
+      ],
+      "shape": {
+        "di": 512,
+        "do": 2048,
+        "id": "middle2048",
+        "microbatches": 1,
+        "n": 2048,
+        "stride": 1
+      }
+    },
+    {
+      "boundary": "resource forecast calibration only; not comparative performance",
+      "native_complete_step_s": [
+        0.024977207998745143,
+        0.024166167015209794,
+        0.023580749984830618
+      ],
+      "shape": {
+        "di": 512,
+        "do": 2048,
+        "id": "middle2048_accum4_stride2",
+        "microbatches": 4,
+        "n": 2048,
+        "stride": 2
+      }
+    },
+    {
+      "boundary": "resource forecast calibration only; not comparative performance",
+      "native_complete_step_s": [
+        0.16635604202747345,
+        0.16638525004964322,
+        0.17351550003513694
+      ],
+      "shape": {
+        "di": 768,
+        "do": 3072,
+        "id": "wide",
+        "microbatches": 1,
+        "n": 8192,
+        "stride": 1
+      }
+    },
+    {
+      "boundary": "resource forecast calibration only; not comparative performance",
+      "native_complete_step_s": [
+        0.0012575420551002026,
+        0.0013167919823899865,
+        0.0019075829768553376
+      ],
+      "shape": {
+        "di": 128,
+        "do": 512,
+        "id": "tiny",
+        "microbatches": 1,
+        "n": 128,
+        "stride": 1
+      }
+    }
+  ],
+  "operations": [
+    {
+      "device": "mps:0",
+      "input_stride": [
+        512,
+        1
+      ],
+      "p_min": 0.0002210053417050222,
+      "p_sum": 1.0,
+      "sampler": "importance",
+      "score_count_transferred": 4096,
+      "shape": {
+        "di": 512,
+        "do": 2048,
+        "id": "middle4096",
+        "microbatches": 1,
+        "n": 4096,
+        "stride": 1
+      },
+      "status": "pass"
+    },
+    {
+      "device": "mps:0",
+      "input_stride": [
+        512,
+        1
+      ],
+      "p_min": 0.0002210053417050222,
+      "p_sum": 1.0,
+      "sampler": "uniform",
+      "score_count_transferred": 4096,
+      "shape": {
+        "di": 512,
+        "do": 2048,
+        "id": "middle4096",
+        "microbatches": 1,
+        "n": 4096,
+        "stride": 1
+      },
+      "status": "pass"
+    },
+    {
+      "device": "mps:0",
+      "input_stride": [
+        512,
+        1
+      ],
+      "p_min": 0.0004269188073835855,
+      "p_sum": 0.9999999999999999,
+      "sampler": "importance",
+      "score_count_transferred": 2048,
+      "shape": {
+        "di": 512,
+        "do": 2048,
+        "id": "middle2048",
+        "microbatches": 1,
+        "n": 2048,
+        "stride": 1
+      },
+      "status": "pass"
+    },
+    {
+      "device": "mps:0",
+      "input_stride": [
+        512,
+        1
+      ],
+      "p_min": 0.0004269188073835855,
+      "p_sum": 0.9999999999999999,
+      "sampler": "uniform",
+      "score_count_transferred": 2048,
+      "shape": {
+        "di": 512,
+        "do": 2048,
+        "id": "middle2048",
+        "microbatches": 1,
+        "n": 2048,
+        "stride": 1
+      },
+      "status": "pass"
+    },
+    {
+      "device": "mps:0",
+      "input_stride": [
+        1024,
+        2
+      ],
+      "p_min": 0.0004468436862198802,
+      "p_sum": 1.0,
+      "sampler": "importance",
+      "score_count_transferred": 2048,
+      "shape": {
+        "di": 512,
+        "do": 2048,
+        "id": "middle2048_accum4_stride2",
+        "microbatches": 4,
+        "n": 2048,
+        "stride": 2
+      },
+      "status": "pass"
+    },
+    {
+      "device": "mps:0",
+      "input_stride": [
+        1024,
+        2
+      ],
+      "p_min": 0.0004468436862198802,
+      "p_sum": 1.0,
+      "sampler": "uniform",
+      "score_count_transferred": 2048,
+      "shape": {
+        "di": 512,
+        "do": 2048,
+        "id": "middle2048_accum4_stride2",
+        "microbatches": 4,
+        "n": 2048,
+        "stride": 2
+      },
+      "status": "pass"
+    },
+    {
+      "device": "mps:0",
+      "input_stride": [
+        768,
+        1
+      ],
+      "p_min": 0.0001112392298220365,
+      "p_sum": 1.0,
+      "sampler": "importance",
+      "score_count_transferred": 8192,
+      "shape": {
+        "di": 768,
+        "do": 3072,
+        "id": "wide",
+        "microbatches": 1,
+        "n": 8192,
+        "stride": 1
+      },
+      "status": "pass"
+    },
+    {
+      "device": "mps:0",
+      "input_stride": [
+        768,
+        1
+      ],
+      "p_min": 0.0001112392298220365,
+      "p_sum": 1.0,
+      "sampler": "uniform",
+      "score_count_transferred": 8192,
+      "shape": {
+        "di": 768,
+        "do": 3072,
+        "id": "wide",
+        "microbatches": 1,
+        "n": 8192,
+        "stride": 1
+      },
+      "status": "pass"
+    },
+    {
+      "device": "mps:0",
+      "input_stride": [
+        128,
+        1
+      ],
+      "p_min": 0.006664850048078731,
+      "p_sum": 1.0,
+      "sampler": "importance",
+      "score_count_transferred": 128,
+      "shape": {
+        "di": 128,
+        "do": 512,
+        "id": "tiny",
+        "microbatches": 1,
+        "n": 128,
+        "stride": 1
+      },
+      "status": "pass"
+    },
+    {
+      "device": "mps:0",
+      "input_stride": [
+        128,
+        1
+      ],
+      "p_min": 0.006664850048078731,
+      "p_sum": 1.0,
+      "sampler": "uniform",
+      "score_count_transferred": 128,
+      "shape": {
+        "di": 128,
+        "do": 512,
+        "id": "tiny",
+        "microbatches": 1,
+        "n": 128,
+        "stride": 1
+      },
+      "status": "pass"
+    }
+  ]
+}
