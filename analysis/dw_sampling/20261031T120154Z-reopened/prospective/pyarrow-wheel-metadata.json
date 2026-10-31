@@ -1,0 +1,15 @@
+{
+  "name": "pyarrow",
+  "version": "26.0.0",
+  "reason": "no supported Parquet reader installed; sole explicitly permitted added dependency",
+  "metadata_url": "https://pypi.org/pypi/pyarrow/26.0.0/json",
+  "metadata_sha256": "820e0086a99265aeb261219e687d72eae106dba6290a66683315b4fe85276be5",
+  "filename": "pyarrow-26.0.0-cp313-cp313-macosx_12_0_arm64.whl",
+  "url": "https://files.pythonhosted.org/packages/4d/35/ca95493712af97c46a312945c8e9d16b21c5fe2f148be5466168d0290505/pyarrow-26.0.0-cp313-cp313-macosx_12_0_arm64.whl",
+  "size": 36336700,
+  "sha256": "a6ca849f90cf73fe361f08a5762c783ead9671e4548c1f558cc637b54c9103f2",
+  "python": "3.13.5 (main, Jun 11 2025, 15:36:57) [Clang 17.0.0 (clang-1700.0.13.3)]",
+  "license": "Apache-2.0",
+  "existing_project_pins": "unchanged; install with --no-deps",
+  "corpus_bodies": "none requested by this command"
+}

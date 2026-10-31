@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-m",
+    "not mps"
+  ],
+  "exit_code": 0,
+  "wall_s": 14.378914500004612,
+  "environment": {
+    "PYTHONPATH": "src"
+  },
+  "stdout_sha256": "868d512bbadf7b969d60d1ba611174c4157033e2f6702daa1fce1da44f68e1c4"
+}

@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-"""Bounded, append-only dW sampling experiment. Importing never starts work.
+"""Append-only dW sampling and gated full-model qualification.
 
-Only A--D are implemented before their gates. Corpus/trainer work stays absent
-while the recorded asset restriction is unresolved. No old oracle is invoked.
+Language qualification requires the frozen native cost and asset prerequisites.
+Tuning/confirmation remain staged behind a future dispatcher. Importing starts
+no work, and no historical oracle is invoked.
 """
 from __future__ import annotations
 
@@ -28,11 +29,12 @@ import traceback
 
 ROOT = Path(__file__).resolve().parents[1]
 REVIEWED = '9d8ad069c51b4d0e6c13e9c6e465579e9b44a339'
-PROTOCOL = '8d0ce1920bdc06d0c02f94a0ca14a7a7e9e976060225820270bf8c1affbeca67'
+PROTOCOL = '916e919075f7ded0b253e9fe7c6441439a345c765decc62cbaa8d167e5e2d399'
 STAGES = ('prepare', 'feasibility', 'correctness', 'cost', 'pilot', 'confirm', 'summarize')
 CORE = ('analysis/run_dw_sampling.py', 'configs/dw_sampling.yaml', 'decisions/dw_sampling_scope.md',
         'decisions/dw_sampling_reopening.md',
         'src/oar/timing.py', 'src/oar/hardware.py')
+LEARNING = ('src/oar/sampling_lm.py', 'src/oar/sampling_data.py')
 SAMPLED = ('src/oar/sampled_linear.py', 'tests/test_sampled_linear.py', 'tests/test_dw_sampling_protocol.py')
 HISTORICAL = ('decisions/gates.jsonl', 'decisions/amendments.jsonl', 'manifests/assets.json',
               'analysis/evidence_index.json', 'analysis/report.md', 'requirements.lock.txt', 'manifests/wheels.sha256')
@@ -120,13 +122,18 @@ def read_record(path):
 
 
 def require_stage(out, stage, measurement_hashes):
-    paths = sorted((Path(out)/stage).glob('attempt-*/record.json'))
-    if not paths:
+    attempts = sorted(path for path in (Path(out)/stage).glob('attempt-*') if path.is_dir())
+    if not attempts:
         raise ValueError(f'missing prerequisite: {stage}')
+    paths = [attempts[-1]/'record.json']
+    if not paths[-1].is_file() or not paths[-1].with_suffix('.sha256').is_file():
+        raise ValueError(f'incomplete prerequisite: {stage}')
     # Latest attempt is authoritative; an older pass cannot hide a later stop.
     record = read_record(paths[-1])
     if record.get('stage') != stage or record['status'] != 'pass':
         raise ValueError(f'failed prerequisite {stage}: {record["status"]}')
+    if measurement_hashes not in (source_hashes('feasibility'), source_hashes('cost'), source_hashes('pilot')):
+        raise ValueError('prerequisite source/config map differs from actual consumer sources')
     previous = record['measurement_hashes']
     for name, expected in previous.items():
         # A native-only consumer does not depend on the sampled source/tests.
@@ -147,23 +154,26 @@ def git_blob(head, name):
 
 
 def prerequisite_carryover(path, record, stage, measurement_hashes):
-    """Explicit A/B continuity only; preserve the prior sealed attribution."""
-    import yaml
-    from oar.config import _UniqueLoader
+    """Exact reviewed prerequisite continuity; preserve prior sealed attribution.
+
+    Selected AST equality is a consistency check, never a transitive proof.
+    Each approved new source map requires renewed review of the complete diff.
+    """
     amendment = json.loads((ROOT/'decisions/dw_sampling_amendment.json').read_text())
     entries = amendment.get('prerequisite_carryover', [])
     entry = next((item for item in entries if item.get('stage') == stage
                   and item.get('record_sha256') == digest(path)
                   and item.get('previous_measurement_hashes') == record['measurement_hashes']
                   and item.get('current_measurement_hashes') == measurement_hashes), None)
-    if stage not in ('prepare', 'feasibility') or record['status'] != 'pass' or entry is None:
+    if stage not in ('prepare', 'feasibility', 'cost') or record['status'] != 'pass' or entry is None:
         raise ValueError('prerequisite source/config mismatch: no exact approved carryover')
     expected_previous = CORE if stage == 'feasibility' else CORE+SAMPLED
     if set(record['measurement_hashes']) != set(expected_previous):
         raise ValueError('carryover incomplete original measurement map')
     current = source_hashes('cost')
     native = {name: current[name] for name in CORE}
-    if measurement_hashes not in (native, current) or not set(record['measurement_hashes']).issubset(current):
+    learning = source_hashes('pilot')
+    if measurement_hashes not in (native, current, learning) or not set(record['measurement_hashes']).issubset(current):
         raise ValueError('carryover current source/config map differs from actual consumer sources')
     manifest_path = Path(path).parent/'source_manifest.json'
     if record.get('source_manifest_sha256') != digest(manifest_path) or 'source_manifest.json' not in record['artifacts']:
@@ -191,7 +201,11 @@ def prerequisite_carryover(path, record, stage, measurement_hashes):
     measured = ('configure_torch', 'Fixture', 'zero_dw_linear', 'native_variant_qualification',
                 'timed_pairs', 'state_streams', 'cost_session', 'select_native_variant',
                 'assert_native_equivalent', 'choose_block_length', 'primitive_qualification',
-                'environment', 'dependency_inventory', 'prepare')
+                'environment', 'dependency_inventory', 'paired_ratio', 'freeze_delta')
+    if stage == 'prepare':
+        measured += ('prepare',)
+    if stage == 'cost':
+        measured += ('offline_diagnostics', 'hardware_stage', 'forecast_stage')
     def measured_asts(source):
         nodes = {node.name: ast.dump(node, include_attributes=False) for node in ast.parse(source).body
                  if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and node.name in measured}
@@ -200,25 +214,51 @@ def prerequisite_carryover(path, record, stage, measurement_hashes):
         return nodes
     if measured_asts(original['analysis/run_dw_sampling.py']) != measured_asts((ROOT/'analysis/run_dw_sampling.py').read_bytes()):
         raise ValueError('carryover measured function/class AST changed')
-    def native_config(source):
-        value = yaml.load(source, Loader=_UniqueLoader)
-        value['timing'].pop('cost_gate_upper_ratio', None)
-        # Native A/B do not consume model/data settings. This exclusion does
-        # not establish any learning/asset permission or model qualification.
-        value.pop('learning', None)
-        value.pop('asset', None)
-        return canonical(value)
-    if native_config(original['configs/dw_sampling.yaml']) != native_config((ROOT/'configs/dw_sampling.yaml').read_bytes()):
+    if native_carryover_config(original['configs/dw_sampling.yaml'], stage) != native_carryover_config((ROOT/'configs/dw_sampling.yaml').read_bytes(), stage):
         raise ValueError('carryover native configuration changed')
+    for name, expected in measurement_hashes.items():
+        if amendment.get('bound_files', {}).get(name) != expected:
+            raise ValueError('carryover consumer source is not explicitly pinned by current amendment')
     return {**record, 'carryover': {'stage': stage, 'record_path': str(path), 'record_sha256': digest(path),
             'previous_actual_head': head, 'previous_measurement_hashes': record['measurement_hashes'],
             'current_measurement_hashes': measurement_hashes, 'measured_functions_unchanged': list(measured),
-            'native_config_exclusions': ['timing.cost_gate_upper_ratio', 'learning', 'asset']}}
+            'native_config_exclusions': ([] if stage == 'cost' else ['timing.cost_gate_upper_ratio'])+['learning', 'asset', 'schema_version'],
+            'supported_config_schemas': [2, 3]}}
+
+
+def native_carryover_config(source, stage):
+    """Native-only dependency comparison; explicitly supported schema metadata."""
+    import yaml
+    from oar.config import _UniqueLoader
+    value = yaml.load(source, Loader=_UniqueLoader)
+    if type(value.get('schema_version')) is not int or value['schema_version'] not in (2, 3):
+        raise ValueError('unsupported native carryover configuration schema')
+    value.pop('schema_version')
+    if stage != 'cost':
+        value['timing'].pop('cost_gate_upper_ratio', None)
+    value.pop('learning', None)
+    value.pop('asset', None)
+    return canonical(value)
 
 
 def source_hashes(stage):
     files = CORE + (() if stage == 'feasibility' else SAMPLED)
+    if stage in ('prepare', 'correctness', 'pilot', 'confirm'):
+        files += LEARNING
     return {name: digest(ROOT/name) for name in files}
+
+
+def validate_source_stability(identity, stage, config):
+    """Reject source/config/amendment drift before attributing a stage result."""
+    try:
+        stable = (source_hashes(stage) == identity['measurement_hashes']
+                  and digest(config) == identity['config_sha256']
+                  and digest(ROOT/'decisions/dw_sampling_amendment.json') == identity['amendment_sha256']
+                  and all(digest(ROOT/name) == expected for name, expected in identity['bound_files'].items()))
+    except (OSError, KeyError) as exc:
+        raise MeasurementInvalid('source_changed', 'source/config/amendment changed during stage attempt') from exc
+    if not stable:
+        raise MeasurementInvalid('source_changed', 'source/config/amendment changed during stage attempt')
 
 
 def validate_amendment(config):
@@ -289,7 +329,7 @@ def zero_dw_linear(x, weight, bias):
     return _zero_type.apply(x, weight, bias)
 
 
-def command(attempt, args, *, timeout=240, env=None):
+def command(attempt, args, *, timeout=None, env=None):
     """Serial subprocess with retained stdout/stderr, invocation and exit code."""
     started = time.perf_counter()
     logs = list(Path(attempt).glob('command-*.json'))
@@ -582,8 +622,9 @@ def prepare(cfg, config, out, attempt):
     from oar.hardware import resource_snapshot
     started = time.perf_counter()
     forecast = cfg['resources']['qualification_forecast_s']
-    deadline = started+2*forecast
-    write_json(attempt/'resource_forecast.json', {'forecast_s': forecast, 'deadline_s': 2*forecast,
+    maximum_stage_s = cfg['resources']['maximum_stage_s']
+    deadline = None if maximum_stage_s is None else started+maximum_stage_s
+    write_json(attempt/'resource_forecast.json', {'forecast_s': forecast, 'deadline_s': maximum_stage_s,
                'maximum_output_bytes': cfg['resources']['maximum_output_bytes']})
     env = environment(cfg)
     write_json(attempt/'dependencies.json', dependency_inventory())
@@ -624,8 +665,6 @@ def prepare(cfg, config, out, attempt):
     check_command_deadline(code, deadline)
     if code:
         return {'status': 'BLOCKED_HARDWARE', 'reason': 'essential actual-shape primitive failed; retained worker failure, no cost qualification'}
-    if time.perf_counter()-started > 2*forecast:
-        return {'status': 'INCOMPLETE_RESOURCE', 'reason': 'qualification exceeded prospective deadline'}
     return {'status': 'pass', 'reason': 'existing suite/report, pinned dependencies and actual-shape MPS sampler operations qualified',
             'asset_status': 'BLOCKED_ASSET', 'qualification': str(attempt/'qualification.json')}
 
@@ -637,7 +676,8 @@ def worker_args(stage, config, out, request):
 def validate_worker_request(request, stage, config, out, request_path):
     out, config, request_path = Path(out).resolve(), Path(config).resolve(), Path(request_path).resolve()
     attempt = Path(request['attempt']).resolve()
-    permitted = {'prepare': {'qualification'}, 'feasibility': {'feasibility'}, 'cost': {'cost', 'diagnostic'}}
+    permitted = {'prepare': {'qualification'}, 'feasibility': {'feasibility'}, 'cost': {'cost', 'diagnostic'},
+                 'pilot': {'model_native', 'model_cost', 'model_calibration'}}
     if (request['kind'] not in permitted.get(stage, set()) or Path(request['out']).resolve() != out
             or Path(request['config']).resolve() != config or request_path.parent != attempt
             or attempt.parent != out/stage or not (attempt/'source_manifest.json').is_file()):
@@ -650,6 +690,10 @@ def validate_worker_request(request, stage, config, out, request_path):
     if stage == 'cost':
         require_stage(out, 'feasibility', source_hashes(stage))
         require_stage(out, 'correctness', source_hashes(stage))
+    if stage == 'pilot':
+        prerequisites = {name: require_stage(out, name, source_hashes(stage))
+                         for name in ('prepare', 'feasibility', 'correctness', 'cost')}
+        validate_model_worker_request(request, load_config(config), attempt, identity, config, prerequisites['cost'])
 
 
 def assert_native_equivalent(parameters, optimizer, reference_parameters, reference_optimizer):
@@ -1108,23 +1152,902 @@ def summarize_run(out):
     latest = {r['stage']: r for r in records}
     terminal = next((latest[stage]['status'] for stage in reversed(STAGES[:-1])
                      if stage in latest and latest[stage]['status'] not in ('pass', 'not_run')), None)
+    unfinished = terminal is None
     if terminal is None:
         terminal = 'INCOMPLETE_RESOURCE'
     return {'schema_version': 1, 'terminal_state': terminal, 'records': records, 'primary_time_to_target': None,
             'new_performance_claim': False, 'historical_evidence': 'inherited, unchanged, separately source-attributed',
-            'recommendation': 'Stop at the recorded boundary; reopening requires the unmet prerequisite and a new hash-bound prospective version.'}
+            'study_unfinished': unfinished,
+            'recommendation': ('Continue the authorized unfinished workflow after its frozen prerequisites; qualification alone does not establish learning benefit.'
+                               if unfinished else 'Retain the recorded boundary and evidence; any repair must freeze its changed sources before repeating affected work.')}
 
 
 def render_summary(summary):
     lines = ['<!-- SPDX-License-Identifier: CC-BY-4.0 -->', '# Bounded dW sampling report', '',
              f'Terminal state: **{summary["terminal_state"]}**.', '',
              'Fixed-budget norm-importance dW sampling and the direct-randint uniform control retain native forward, exact input/bias adjoints and native AdamW. Historical OAR results are unchanged.', '',
-             'No time-to-held-out-target or endpoint language quality result exists. No corpus bodies were ingested; no trainer was added before its prerequisites.', '',
+             'Qualification and component costs do not establish time to a held-out language target. Asset acquisition, parser manifests and any reached model qualification are recorded in their pilot attempt; the official test remains protected until its final reporting gate.', '',
              '| Stage / attempt | State | Reason |', '| --- | --- | --- |']
     for r in summary['records']:
         lines.append(f'| {r["stage"]} / {Path(r["path"]).parent.name} | {r["status"]} | {r.get("reason", "")} |')
     lines += ['', 'Raw command exits/stdout/stderr, resource forecasts, source identities, stage records and their hashes accompany this report. Timing block intervals describe blocks, never independent training seeds.', '', summary['recommendation'], '']
     return '\n'.join(lines)
+
+
+def assert_language_asset_permission(cfg):
+    """Honor only the frozen, narrow documentary decision; never old metadata."""
+    asset = cfg['asset']
+    if asset.get('body_downloads') is not True:
+        raise ValueError('corpus body acquisition is disabled by the prospective configuration')
+    path = ROOT/asset['decision_path']
+    if digest(path) != asset['decision_sha256']:
+        raise ValueError('asset decision hash mismatch')
+    decision = json.loads(path.read_text())
+    if (decision.get('dataset') != asset['name'] or decision.get('revision') != asset['revision']
+            or decision.get('decision') != 'permission_evidence_reviewed_for_conditional_local_only_research'):
+        raise ValueError('asset decision does not permit this exact local research use')
+    return decision
+
+
+def fetch_pinned_file(url, destination, expected_size, expected_sha256):
+    """One verified HTTPS fetch; existing evidence and failed prefixes stay intact."""
+    import urllib.request
+    import uuid
+    destination = Path(destination)
+    if (not url.startswith('https://') or type(expected_size) is not int or expected_size <= 0
+            or not re.fullmatch('[0-9a-f]{64}', expected_sha256)):
+        raise ValueError('invalid pinned HTTPS file identity')
+    started = time.perf_counter()
+    if destination.exists():
+        if destination.stat().st_size != expected_size or digest(destination) != expected_sha256:
+            raise ValueError('existing cached file differs from the pinned bytes; preserved without overwrite')
+        return {'path': str(destination), 'sha256': expected_sha256, 'size_bytes': expected_size,
+                'reused': True, 'wall_s': time.perf_counter()-started}
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    partial = destination.with_name(destination.name+'.'+uuid.uuid4().hex+'.partial')
+    with urllib.request.urlopen(url) as response, partial.open('xb') as output:
+        shutil.copyfileobj(response, output, length=1024*1024)
+        output.flush()
+        os.fsync(output.fileno())
+    if partial.stat().st_size != expected_size or digest(partial) != expected_sha256:
+        raise ValueError('downloaded bytes differ from the pinned identity; unparsed partial retained')
+    if destination.exists():
+        raise FileExistsError('cached destination appeared during fetch; no replacement')
+    partial.rename(destination)
+    return {'path': str(destination), 'sha256': expected_sha256, 'size_bytes': expected_size,
+            'reused': False, 'wall_s': time.perf_counter()-started}
+
+
+def parse_language_parquet(path, split):
+    """Use the supported reader, and check lossless normalization before training."""
+    import pyarrow
+    import pyarrow.parquet as parquet
+    from oar.sampling_data import normalize_articles, article_manifest
+    table = parquet.read_table(path, columns=['text'], use_threads=False)
+    rows = table.column('text').to_pylist()
+    articles = normalize_articles(rows, split)
+    normalized = hashlib.sha256()
+    for row in rows:
+        normalized.update(row.replace('\r\n', '\n').replace('\r', '\n').encode('utf8'))
+    reconstructed = hashlib.sha256()
+    for article in articles:
+        reconstructed.update(article.text.encode('utf8'))
+    if normalized.digest() != reconstructed.digest() or not articles:
+        raise ValueError('article parser did not preserve normalized source bytes')
+    return articles, {'source_split': split, 'source_sha256': digest(path), 'source_rows': len(rows),
+                      'article_count': len(articles), 'normalized_utf8_sha256': normalized.hexdigest(),
+                      'reader': 'pyarrow', 'reader_version': pyarrow.__version__,
+                      'articles': article_manifest(articles), 'text_or_tokens_distributed': False}
+
+
+def prepare_language_data(cfg, out, attempt):
+    """Shared paid preprocessing, strictly after the cost and local-use gates."""
+    from dataclasses import asdict
+    import torch
+    import pyarrow
+    from oar.sampling_data import (encode_articles, split_training_articles, exclude_training_duplicates,
+                                  training_chunks, evaluation_windows, choose_monitor, article_manifest)
+    require_stage(out, 'cost', source_hashes('pilot'))
+    assert_language_asset_permission(cfg)
+    if pyarrow.__version__ != cfg['asset']['parquet_reader_version']:
+        raise ValueError('Parquet reader differs from the frozen version')
+    started = time.perf_counter()
+    asset = next(a for a in json.loads((ROOT/'manifests/assets.json').read_text())['datasets'] if a['name'] == cfg['asset']['name'])
+    if asset['revision'] != cfg['asset']['revision']:
+        raise ValueError('pinned dataset revision changed')
+    cache = ROOT/'.cache/dw_sampling/wikitext'/asset['revision']
+    receipts, parsed, source_manifests = {}, {}, {}
+    # Official test is deliberately absent from this acquisition loop.
+    for split in ('train', 'validation'):
+        item = next(v for v in asset['files'] if Path(v['path']).name == split+'-00000-of-00001.parquet')
+        receipt = fetch_pinned_file(item['source'], cache/Path(item['path']).name,
+                                   item['size_bytes'], item['upstream_lfs_sha256'])
+        write_json(attempt/f'asset-fetch-{split}.json', receipt)
+        receipts[split] = receipt
+        parsed[split], source_manifests[split] = parse_language_parquet(receipt['path'], split)
+    fitting, development = split_training_articles(parsed['train'])
+    validation, exclusions = exclude_training_duplicates(parsed['validation'], parsed['train'])
+    if not fitting or not development or not validation:
+        raise ValueError('fitting/development/validation article split is empty')
+    train_blocks = training_chunks(fitting)
+    dev_full, val_full = evaluation_windows(development), evaluation_windows(validation)
+    dev_monitor, val_monitor = choose_monitor(development, dev_full), choose_monitor(validation, val_full)
+    manifest = {'schema_version': 1, 'dataset_revision': asset['revision'],
+                'asset_decision_sha256': cfg['asset']['decision_sha256'], 'raw_files': receipts,
+                'data_source_sha256': digest(ROOT/'src/oar/sampling_data.py'),
+                'preparation_driver_sha256': digest(ROOT/'analysis/run_dw_sampling.py'),
+                'source_manifests': source_manifests, 'fitting_articles': article_manifest(fitting),
+                'development_articles': article_manifest(development), 'validation_articles': article_manifest(validation),
+                'validation_exclusions': exclusions,
+                'training_chunks': [asdict(b) for b in train_blocks],
+                'development_full': [asdict(b) for b in dev_full], 'development_monitor': [asdict(b) for b in dev_monitor],
+                'validation_full': [asdict(b) for b in val_full], 'validation_monitor': [asdict(b) for b in val_monitor],
+                'official_validation_loss_observed': False, 'official_test_body_opened': False,
+                'byte_metrics_include_EOS': True, 'copyrighted_text_or_tokens_in_public_manifest': False}
+    key = hashlib.sha256(canonical({k: v for k, v in manifest.items() if k != 'raw_files'})).hexdigest()
+    private = cache/'processed'/key
+    private.mkdir(parents=True, exist_ok=True)
+    train_data = {'schema_version': 1, 'fitting_tokens': encode_articles(fitting),
+                  'training_blocks': manifest['training_chunks'], 'development_tokens': encode_articles(development),
+                  'development_full': manifest['development_full'], 'development_monitor': manifest['development_monitor']}
+    val_data = {'schema_version': 1, 'validation_tokens': encode_articles(validation),
+                'validation_full': manifest['validation_full'], 'validation_monitor': manifest['validation_monitor']}
+    files = {}
+    for name, value in (('fitting-development', train_data), ('validation-sealed-loss', val_data)):
+        path = private/(name+'.pt')
+        if not path.exists():
+            temporary = path.with_suffix('.tmp')
+            with temporary.open('xb') as stream:
+                torch.save(value, stream)
+                stream.flush()
+                os.fsync(stream.fileno())
+            temporary.rename(path)
+        else:
+            existing = torch.load(path, weights_only=True, map_location='cpu')
+            if existing != value:
+                raise ValueError('processed cache differs from exact parser output; preserved')
+        files[name] = {'path': str(path), 'sha256': digest(path), 'size_bytes': path.stat().st_size}
+    manifest['processed_files'] = files
+    manifest['shared_preprocessing_wall_s'] = time.perf_counter()-started
+    write_json(attempt/'data_manifest.json', manifest)
+    notice = private/'NOTICE.txt'
+    if not notice.exists():
+        with notice.open('x') as stream:
+            stream.write('WikiText creators: Stephen Merity, Caiming Xiong, James Bradbury, Richard Socher; underlying Wikipedia contributors.\n'
+                         'Pinned Salesforce/wikitext revision '+asset['revision']+'. Original supplied notices remain in third_party/discovery/wikitext/README.md.\n'
+                         'Conflicting CC-BY-SA-3.0/GFDL metadata and CC-BY-SA-4.0 prose retained; no authoritative version selected.\n'
+                         'Local research only. Changes: line-ending normalization, article parsing, UTF8 byte encoding and target windows. No corpus/checkpoint redistribution.\n')
+    return {'manifest_path': str(attempt/'data_manifest.json'), 'manifest_sha256': digest(attempt/'data_manifest.json'),
+            'files': files, 'shared_preprocessing_wall_s': manifest['shared_preprocessing_wall_s']}
+
+
+def learning_lr(elapsed, *, t0, cutoff, peak):
+    """One time-budget schedule; restart preserves the original first-block t0."""
+    from oar.sampling_lm import time_budget_lr
+    return time_budget_lr(elapsed, t0=t0, cutoff=cutoff, peak=peak)
+
+
+def calibrate_horizon(*, startup_s, monitor_s, checkpoint_s, block_s, update_s,
+                      endpoint_s, endpoint_checkpoint_s, aa_jitter, block_updates):
+    """Baseline-only 4096-update-equivalent budget; A/A noise is diagnostic."""
+    values = (startup_s, monitor_s, checkpoint_s, block_s, update_s, endpoint_s, endpoint_checkpoint_s, aa_jitter)
+    if any(not math.isfinite(v) or v < 0 for v in values) or block_s <= 0 or update_s <= 0 or block_updates not in (1, 8):
+        raise ValueError('invalid baseline-only horizon calibration')
+    observations = []
+    for count in (100, 50, 25):
+        horizon = startup_s+4096*update_s+(count-1)*monitor_s+((count-1)//5)*checkpoint_s
+        interval = horizon/count
+        overhead = monitor_s/interval+checkpoint_s/(5*interval)
+        observations.append({'monitor_count': count, 'H': horizon, 'Delta': interval, 'overhead_fraction': overhead})
+        if overhead <= .02 and block_s <= interval/10:
+            if block_s > .01*horizon:
+                return {'status': 'INCONCLUSIVE_MEASUREMENT', 'reason': 'common block-size1 fallback required before learning',
+                        'fallback_required': block_updates == 8, 'observations': observations}
+            reserve = 2*(endpoint_s+endpoint_checkpoint_s)
+            return {'status': 'pass', 'H': horizon, 'Delta': interval, 'R': reserve, 'T_budget': horizon+reserve,
+                    'r_time': interval+block_s, 'B_max': block_s, 'monitor_count': count,
+                    'block_updates': block_updates, 'overshoot_limit_s': .01*horizon,
+                    'diagnostic_delta': max(aa_jitter, 2*(interval+block_s)/horizon),
+                    'required_time_ratio': 1., 'observations': observations}
+    return {'status': 'INCONCLUSIVE_MEASUREMENT', 'reason': 'baseline cadence overhead or block resolution unsuitable',
+            'fallback_required': block_updates == 8, 'observations': observations}
+
+
+def confirmed_target_time(monitors, q_star, *, cutoff):
+    """Second completed consecutive crossing; missing/censored times stay None."""
+    if not math.isfinite(q_star) or not math.isfinite(cutoff) or cutoff <= 0:
+        raise ValueError('invalid frozen monitor target')
+    previous, consecutive = -1., 0
+    for row in monitors:
+        elapsed, nll = row['completed_s'], row['nll']
+        if not math.isfinite(elapsed) or not math.isfinite(nll) or elapsed < previous or elapsed < 0:
+            raise ValueError('invalid or unordered monitor observation')
+        previous = elapsed
+        if elapsed >= cutoff:
+            break
+        consecutive = consecutive+1 if nll <= q_star else 0
+        if consecutive == 2:
+            return elapsed
+    return None
+
+
+def select_learning_arms(records, *, cutoff, epsilon_eval, r_time):
+    """Freeze the target from R0, then choose fastest quality-eligible arms."""
+    if not all(math.isfinite(v) and v > 0 for v in (cutoff, epsilon_eval, r_time)):
+        raise ValueError('invalid selection thresholds')
+    complete = [r for r in records if r['status'] == 'pass' and math.isfinite(r['endpoint_full']['nll'])]
+    dense = [r for r in complete if r['arm']['sampler'] is None]
+    if not dense:
+        return {'status': 'STOP_QUALITY', 'reason': 'no complete finite native grid arm'}
+    minimum = min(r['endpoint_full']['nll'] for r in dense)
+    reference = min((r for r in dense if r['endpoint_full']['nll'] <= minimum+epsilon_eval),
+                    key=lambda r: (r['arm']['batch'], r['arm']['lr']))
+    gain = reference['initial_full']['nll']-reference['endpoint_full']['nll']
+    if not math.isfinite(gain) or gain <= 10*epsilon_eval:
+        return {'status': 'INCONCLUSIVE_MEASUREMENT', 'reason': 'reference full-development improvement unresolved'}
+    epsilon_q = min(math.log(1.01), .1*gain)
+    calibration = next(((i, m) for i, m in enumerate(reference['monitors']) if m['completed_s'] >= .6*cutoff), None)
+    if calibration is None:
+        return {'status': 'INCONCLUSIVE_MEASUREMENT', 'reason': 'reference has no pre-endpoint calibration monitor'}
+    index, observation = calibration
+    q_star = observation['nll']
+    if (not math.isfinite(q_star) or reference['initial_monitor']['nll']-q_star < 10*epsilon_eval
+            or confirmed_target_time(reference['monitors'][index+1:], q_star, cutoff=cutoff) is None):
+        return {'status': 'INCONCLUSIVE_MEASUREMENT', 'reason': 'target lacks two later pre-cutoff confirmations'}
+    eligible = []
+    for record in complete:
+        if record['endpoint_full']['nll'] > reference['endpoint_full']['nll']+epsilon_q:
+            continue
+        crossing = confirmed_target_time([record['initial_monitor'], *record['monitors']], q_star, cutoff=cutoff)
+        if crossing is not None:
+            eligible.append({**record, 'target_time_s': crossing})
+    dense_eligible = [r for r in eligible if r['arm']['sampler'] is None]
+    candidates = [r for r in eligible if r['arm']['sampler'] in ('importance', 'uniform')]
+    def fastest_ties(rows, key):
+        if not rows:
+            return None
+        first = min(r['target_time_s'] for r in rows)
+        return min((r for r in rows if r['target_time_s'] <= first+r_time), key=key)
+    selected_dense = fastest_ties(dense_eligible, lambda r: (r['arm']['batch'], r['arm']['lr']))
+    selected_candidate = fastest_ties(candidates, lambda r: (r['arm']['sampler'] != 'uniform', -r['arm']['rho'], r['arm']['lr']))
+    result = {'R0': reference, 'q_star': q_star, 'epsilon_q': epsilon_q,
+              'dense': selected_dense, 'candidate': selected_candidate,
+              'eligible_dense': dense_eligible, 'eligible_candidates': candidates}
+    if selected_dense is None or selected_candidate is None:
+        return {'status': 'STOP_QUALITY', 'reason': 'no sampler and native pair meets target plus endpoint guard', **result}
+    ratio = selected_candidate['target_time_s']/selected_dense['target_time_s']
+    return {'status': 'pass' if ratio < 1 else 'STOP_QUALITY', 'grid_target_time_ratio': ratio, **result}
+
+
+def plan_confirmation(time_ratios, quality_differences, *, epsilon_q):
+    from statistics import mean, stdev
+    if (len(time_ratios) != 3 or len(quality_differences) != 3
+            or any(not math.isfinite(v) or v <= 0 for v in time_ratios)
+            or any(not math.isfinite(v) for v in quality_differences)
+            or not math.isfinite(epsilon_q) or epsilon_q <= 0):
+        raise ValueError('confirmation planning requires three finite independent pilot pairs')
+    logs = [math.log(v) for v in time_ratios]
+    m_t, s_t, m_q, s_q = mean(logs), stdev(logs), mean(quality_differences), stdev(quality_differences)
+    if m_t >= 0 or epsilon_q-max(0., m_q) <= 0:
+        raise ValueError('nonpositive time or quality planning margin')
+    n_time = math.ceil(((1.96+.84)*s_t/(-m_t))**2)
+    n_quality = math.ceil(((1.96+.84)*s_q/(epsilon_q-max(0., m_q)))**2)
+    return {'N': max(8, n_time, n_quality), 'N_time': n_time, 'N_quality': n_quality,
+            'mean_log_time_ratio': m_t, 'sd_log_time_ratio': s_t, 'mean_quality_difference': m_q,
+            'sd_quality_difference': s_q, 'unit': 'independent training-seed pair',
+            'caution': 'three pilot seeds estimate variability; observed pilot effect is an uncertain planning assumption'}
+
+
+def analyze_confirmation(candidate_times, dense_times, candidate_nll, dense_nll, *, epsilon_q, critical_value=None):
+    import numpy as np
+    n = len(candidate_times)
+    if n < 8 or any(len(v) != n for v in (dense_times, candidate_nll, dense_nll)):
+        raise ValueError('confirmation requires at least eight complete paired seeds')
+    vectors = [np.asarray(v, dtype=np.float64) for v in (candidate_times, dense_times, candidate_nll, dense_nll)]
+    if any(v.shape != (n,) or not np.isfinite(v).all() for v in vectors) or any((v <= 0).any() for v in vectors[:2]):
+        raise ValueError('nonfinite or censored confirmation observation; no substitution is allowed')
+    if not math.isfinite(epsilon_q) or epsilon_q <= 0:
+        raise ValueError('invalid frozen endpoint guard')
+    provided = (2.364624, 2.306004, 2.262157, 2.228139, 2.200985, 2.178813, 2.160369, 2.144787, 2.131450)
+    if critical_value is None:
+        if n > 16:
+            raise ValueError('freeze a vetted t critical value for the planned N before protected outcomes')
+        critical_value = provided[n-8]
+    if not math.isfinite(critical_value) or critical_value <= 0:
+        raise ValueError('invalid frozen t critical value')
+    z, q = np.log(vectors[0]/vectors[1]), vectors[2]-vectors[3]
+    indices = np.random.default_rng(62002).integers(0, n, (10000, n))
+    def intervals(values):
+        center, error = float(values.mean()), critical_value*float(values.std(ddof=1))/math.sqrt(n)
+        bootstrap = np.quantile(values[indices].mean(axis=1), [.025, .975], method='linear').tolist()
+        return center, [center-error, center+error], bootstrap
+    mean_z, t_z, b_z = intervals(z)
+    mean_q, t_q, b_q = intervals(q)
+    time_t, time_b = t_z[1] < 0, b_z[1] < 0
+    quality_t, quality_b = t_q[1] <= epsilon_q, b_q[1] <= epsilon_q
+    status = ('INCONCLUSIVE_PRECISION' if time_t != time_b or quality_t != quality_b else
+              'CONFIRMED_SCOPED_BENEFIT' if time_t and quality_t else 'STOP_QUALITY')
+    return {'status': status, 'N': n, 'df': n-1, 't_critical_975': critical_value,
+            'time': {'ratio': math.exp(mean_z), 't_ci95': [math.exp(v) for v in t_z],
+                     'bootstrap_ci95': [math.exp(v) for v in b_z], 'paired_log_ratios': z.tolist()},
+            'quality': {'mean_difference': mean_q, 't_ci95': t_q, 'bootstrap_ci95': b_q,
+                        'paired_differences': q.tolist(), 'epsilon_q': epsilon_q},
+            'analysis_seed': 62002, 'bootstrap_replicates': 10000, 'unit': 'independent training-seed pair'}
+
+
+def simpler_dominates(simple_times, candidate_times, simple_nll, candidate_nll, *, r_time, epsilon_eval):
+    from statistics import mean
+    n = len(simple_times)
+    if n != 3 or any(len(v) != n for v in (candidate_times, simple_nll, candidate_nll)):
+        raise ValueError('simpler control requires the three matched independent pilot seeds')
+    if any(not math.isfinite(v) or v <= 0 for v in [*simple_times, *candidate_times]):
+        raise ValueError('simpler-control target times must be reached and finite')
+    if (any(not math.isfinite(v) for v in [*simple_nll, *candidate_nll, r_time, epsilon_eval])
+            or r_time < 0 or epsilon_eval < 0):
+        raise ValueError('invalid simpler-control quality or resolution')
+    candidate_geomean = math.exp(mean(math.log(v) for v in candidate_times))
+    ratio = math.exp(mean(math.log(a/b) for a, b in zip(simple_times, candidate_times)))
+    difference = mean(a-b for a, b in zip(simple_nll, candidate_nll))
+    return {'dominates': ratio <= 1+r_time/candidate_geomean and difference <= epsilon_eval,
+            'R_simple': ratio, 'time_limit': 1+r_time/candidate_geomean, 'mean_nll_difference': difference}
+
+
+def model_fixture(cfg, data, request, *, variant, sampler=None, rho=.25):
+    """Production qualification always uses the actual MPS model and fixed B16."""
+    from oar.sampling_lm import ModelConfig, ModelFixture
+    learning = cfg['learning']
+    if learning['candidate_batch'] != 16:
+        raise ValueError('full-model qualification requires the declared batch16')
+    architecture = ModelConfig(**{name: learning[name] for name in ('blocks', 'width', 'heads', 'ffn_width', 'context')})
+    return ModelFixture(data, base_seed=request['base_seed'], variant=variant, sampler=sampler, rho=rho,
+                        batch_size=16, device='mps', model_config=architecture,
+                        synchronize_each_update=request['synchronize_each_update'])
+
+
+def model_data(request):
+    from oar.sampling_lm import load_worker_data
+    return load_worker_data(request['data_path'], request['data_sha256'], phase='development')
+
+
+def model_resource_guard(cfg, out):
+    import torch
+    from oar.hardware import resource_snapshot
+    resource = resource_snapshot('mps')
+    l = cfg['learning']
+    w, f, layers, context = (l[k] for k in ('width', 'ffn_width', 'blocks', 'context'))
+    parameters = (259+context)*w+layers*(4*w*w+2*w*f+9*w+f)+2*w
+    # Two full native parameter/moment sets, CPU common state, gradients,
+    # activation/attention buffers and temporary native optimizer work.
+    predicted = parameters*4*24+64*16*context*(w+f)*layers
+    ceiling = min(cfg['resources']['memory_fraction']*resource['physical_memory_bytes'],
+                  .8*torch.mps.recommended_max_memory(), resource['available_memory_bytes'])
+    if predicted > ceiling:
+        raise MemoryError('full-model fixtures exceed current conservative available memory')
+    return {'snapshot': resource, 'predicted_working_set_bytes': predicted,
+            'estimated_checkpoint_bytes': parameters*12+1048576, 'storage': storage_guard(cfg, out)}
+
+
+def model_dense_calibration(cfg, fixture, initial=1):
+    import torch
+    from oar.timing import measure_blocks
+    raw = []
+    def measure(count):
+        def block():
+            for _ in range(count):
+                fixture.step()
+        values = measure_blocks(block, torch.mps.synchronize, 3)
+        raw.append(values)
+        return min(values)
+    updates, observations = choose_block_length(measure, initial, minimum_s=cfg['timing']['minimum_block_s'])
+    return updates, [{**row, 'raw_s': values} for row, values in zip(observations, raw)]
+
+
+def model_unsupported_native(exc):
+    """Capability failures only; numerical/device failures must stop the run."""
+    message = str(exc).lower()
+    fatal = any(word in message for word in ('nonfinite', 'non-finite', 'invalid gradient', 'probabil', 'device error',
+                                            'command buffer', 'out of memory', 'allocation'))
+    return not fatal and (isinstance(exc, NotImplementedError) or
+        (isinstance(exc, RuntimeError) and any(word in message for word in
+        ('not implemented for', 'not supported on', 'does not support', 'fused=true requires', 'does not have an mps implementation'))))
+
+
+def model_native_variants(cfg, data, request):
+    import torch
+    from oar.sampled_linear import named_seed
+    from oar.timing import warmup, measure_blocks
+    from statistics import median
+    pilot = model_fixture(cfg, data, request, variant='single')
+    updates, initial_pilot = model_dense_calibration(cfg, pilot)
+    write_json(Path(request['result']).with_suffix('.initial-dense-pilot.json'), initial_pilot)
+    del pilot
+    order_seed = named_seed(cfg['seed'], 'order', 'full_model', str(request['session']), 'native_variants')
+    order = list(cfg['timing']['native_variants'])
+    random.Random(order_seed).shuffle(order)
+    if request['session'] % 2:
+        order.reverse()
+    results = {}
+    for variant in order:
+        try:
+            actual = model_fixture(cfg, data, request, variant=variant)
+            reference = model_fixture(cfg, data, request, variant='single')
+            if actual.model.initial_parameters_sha256 != reference.model.initial_parameters_sha256:
+                raise ValueError('native model references do not share exact fresh initialization')
+            # Fresh identical init/data streams; never restore across variants.
+            for _ in range(5):
+                actual.step()
+                reference.step()
+                assert_native_equivalent(actual.p, actual.opt, reference.p, reference.opt)
+            del reference
+            def block():
+                for _ in range(updates):
+                    actual.step()
+            warming = warmup(block, torch.mps.synchronize, **cfg['timing']['warmup'])
+            raw = measure_blocks(block, torch.mps.synchronize, 3)
+            results[variant] = {'status': 'pass', 'warmup': warming, 'pilot_s': raw,
+                                'median_s': median(raw), 'updates_per_block': updates}
+            del actual
+        except (RuntimeError, NotImplementedError) as exc:
+            if not model_unsupported_native(exc):
+                raise
+            results[variant] = {'status': 'unsupported', 'reason': str(exc), 'exception': type(exc).__name__}
+        write_json(Path(request['result']).with_suffix('.native-'+variant+'.json'), results[variant])
+    selected = select_native_variant(results)
+    return {'status': 'pass', 'selected_variant': selected, 'variants': results, 'initial_dense_pilot': initial_pilot,
+            'order_seed': order_seed, 'pilot_order': order}
+
+
+def pooled_model_native_variant(sessions):
+    if len(sessions) != 2:
+        raise ValueError('full-model native selection requires two independent sessions')
+    common = set.intersection(*(set(s['variants']) for s in sessions))
+    pooled = {}
+    for name in sessions[0]['variants']:
+        if name not in common or not all(s['variants'][name]['status'] == 'pass' for s in sessions):
+            continue
+        raw_sessions, per_update = [], []
+        for index, session in enumerate(sessions):
+            row = session['variants'][name]
+            count = row['updates_per_block']
+            if type(count) is not int or count <= 0:
+                raise ValueError('native pooling requires each session own positive update count')
+            raw = row['pilot_s']
+            if not raw or any(not math.isfinite(value) or value <= 0 for value in raw):
+                raise ValueError('native pooling requires finite positive pilot observations')
+            per_update.extend(value/count for value in raw)
+            raw_sessions.append({'session': session.get('session', index), 'updates_per_block': count, 'pilot_s': raw})
+        pooled[name] = {'status': 'pass', 'pilot_s': per_update,
+                        'unit': 'seconds per native update', 'raw_sessions': raw_sessions}
+    return select_native_variant(pooled), pooled
+
+
+def model_common_history(cfg, fixture):
+    import torch
+    for _ in range(cfg['timing']['history_updates']):
+        fixture.step()
+    torch.mps.synchronize()
+    common = fixture.snapshot()
+    steps = [state['step'].detach().cpu().item() for state in fixture.opt.state.values()]
+    nonzero = any(bool(state['exp_avg'].detach().cpu().ne(0).any()) for state in fixture.opt.state.values())
+    if not steps or not all(value == cfg['timing']['history_updates'] for value in steps) or not nonzero:
+        raise RuntimeError('model common history requires native updates and nonzero optimizer moments')
+    metadata = {'history_updates': fixture.updates, 'native_optimizer_steps': steps,
+                'nonzero_native_moments': nonzero, 'streams': state_streams(fixture),
+                'initial_parameters_sha256': fixture.model.initial_parameters_sha256,
+                'data_cursor': common['stream']['cursor'], 'data_epoch': common['stream']['epoch']}
+    return common, metadata
+
+
+def model_native_session(cfg, request):
+    from oar.hardware import resource_snapshot
+    data = model_data(request)
+    resource = model_resource_guard(cfg, request['out'])
+    if request['phase'] == 'variants':
+        result = model_native_variants(cfg, data, request)
+    else:
+        variant = request['fixed_variant']
+        dense = model_fixture(cfg, data, request, variant=variant)
+        updates, calibration = model_dense_calibration(cfg, dense)
+        write_json(Path(request['result']).with_suffix('.selected-dense-pilot.json'), calibration)
+        del dense
+        dense = model_fixture(cfg, data, request, variant=variant)
+        common, history = model_common_history(cfg, dense)
+        candidate = model_fixture(cfg, data, request, variant=variant)
+        result = {'status': 'pass', 'selected_variant': variant, 'updates_per_block': updates,
+                  'selected_dense_pilot': calibration, 'history': history,
+                  'AA': timed_pairs(cfg, dense, candidate, common, updates, request['order_seed'],
+                                    Path(request['result']).with_suffix('.AA.jsonl'))}
+    result.update(kind='model_native', phase=request['phase'], session=request['session'],
+                  base_seed=request['base_seed'], synchronize_each_update=request['synchronize_each_update'],
+                  resources=resource, resources_after=resource_snapshot('mps'))
+    write_json(request['result'], result)
+    return result
+
+
+def model_cost_session(cfg, request):
+    from oar.sampled_linear import named_seed
+    from oar.hardware import resource_snapshot
+    data = model_data(request)
+    resource = model_resource_guard(cfg, request['out'])
+    frozen = json.loads(Path(request['frozen_delta_path']).read_text())
+    if digest(request['frozen_delta_path']) != request['frozen_delta_sha256'] or frozen['fixed_variant'] != request['fixed_variant']:
+        raise ValueError('model frozen native/noise identity mismatch before candidate timing')
+    variant = request['fixed_variant']
+    dense = model_fixture(cfg, data, request, variant=variant)
+    updates, calibration = model_dense_calibration(cfg, dense, request['updates_per_block'])
+    write_json(Path(request['result']).with_suffix('.selected-dense-pilot.json'), calibration)
+    del dense
+    dense = model_fixture(cfg, data, request, variant=variant)
+    common, history = model_common_history(cfg, dense)
+    arms = list(request['arms'])
+    random.Random(request['order_seed']).shuffle(arms)
+    comparisons = {}
+    for arm in arms:
+        candidate = model_fixture(cfg, data, request, variant=variant, sampler=arm['sampler'], rho=arm['rho'])
+        name = arm['arm']
+        comparison = timed_pairs(cfg, dense, candidate, common, updates,
+            named_seed(cfg['seed'], 'order', 'full_model', 'cost', str(request['session']), name,
+                       str(request['synchronize_each_update'])), Path(request['result']).with_suffix('.'+name+'.jsonl'))
+        comparison['sampling_streams_final'] = state_streams(candidate)
+        comparison['resources_candidate_live'] = resource_snapshot('mps')
+        comparison['memory_context'] = 'dense/common/candidate live with allocator caches; overlapping fields are not summed or claimed as exact peaks'
+        comparisons[name] = comparison
+        # Persist each completed arm even if another arm later fails.
+        write_json(Path(request['result']).with_suffix('.'+name+'.json'), comparison)
+        del candidate
+    result = {'status': 'pass', 'kind': 'model_cost', 'session': request['session'], 'selected_variant': variant,
+              'updates_per_block': updates, 'initial_updates_per_block': request['updates_per_block'],
+              'selected_dense_pilot': calibration, 'history': history, 'comparisons': comparisons,
+              'arm_order': [a['arm'] for a in arms], 'order_seed': request['order_seed'], 'resources': resource,
+              'synchronize_each_update': request['synchronize_each_update'], 'delta': frozen['delta'],
+              'resources_after': resource_snapshot('mps')}
+    write_json(request['result'], result)
+    return result
+
+
+def model_cost_eligible(sessions, arms):
+    if len(sessions) != 2:
+        raise ValueError('full-model cost requires two independent sessions')
+    return [arm for arm in arms if all(s['comparisons'][arm['arm']]['statistics']['ci95'][1] < 1. for s in sessions)]
+
+
+def model_calibration_session(cfg, request):
+    """Cold baseline startup, exact initial evaluations and paid trained costs."""
+    import torch
+    from oar.hardware import resource_snapshot
+    from oar.sampling_lm import ChargedClock, evaluate, save_checkpoint
+    if request['clock_implementation'] != time.get_clock_info('perf_counter').implementation:
+        raise ValueError('parent and worker monotonic clock implementations differ')
+    clock = ChargedClock(request['launch_perf_s'])
+    data = model_data(request)
+    resource = model_resource_guard(cfg, request['out'])
+    fixture = model_fixture(cfg, data, request, variant=request['fixed_variant'])
+    sync = torch.mps.synchronize
+    events_path = Path(request['result']).with_suffix('.events.jsonl')
+    with events_path.open('x'):
+        pass
+    def event(kind, **row):
+        with events_path.open('a') as stream:
+            stream.write(json.dumps({'kind': kind, 'elapsed_s': clock.elapsed(), **row}, allow_nan=False)+'\n')
+            stream.flush()
+    def evaluate_split(windows, kind):
+        sync()
+        started = time.perf_counter()
+        value = evaluate(fixture.model, data['evaluation_tokens'], windows, batch_size=16)
+        sync()
+        seconds = time.perf_counter()-started
+        event(kind, cost_s=seconds, nll=value['nll'] if kind.startswith('initial') else None,
+              valid_targets=value['valid_targets'])
+        return value, seconds
+    initial_full, initial_full_s = evaluate_split(data['evaluation_full'], 'initial_full')
+    initial_monitor, initial_monitor_s = evaluate_split(data['evaluation_monitor'], 'initial_monitor')
+    t0 = clock.elapsed()
+    receipts = []
+    def checkpoint(kind):
+        sync()
+        started = time.perf_counter()
+        path = Path(request['result']).with_suffix('.'+kind+'.pt')
+        disk = storage_guard(cfg, request['out'])
+        if resource.get('estimated_checkpoint_bytes', 0) > disk['free_disk_bytes']-cfg['resources']['minimum_free_disk_bytes']:
+            raise MemoryError('trained checkpoint would consume the actual free-disk reserve')
+        payload = {'schema_version': 1, 'bindings': {'data_sha256': request['data_sha256'],
+                    'base_seed': request['base_seed'], 'native_variant': request['fixed_variant']},
+                   'training_state': fixture.snapshot(), 'clock': clock.state_dict(), 't0_s': t0,
+                   'scheduler_rule': {'qualification_only': True, 'block_updates': request['block_updates']}}
+        receipt = {'path': str(path), **save_checkpoint(path, payload), 'kind': kind}
+        storage_guard(cfg, request['out'])
+        sync()
+        seconds = time.perf_counter()-started
+        receipts.append(receipt)
+        event('checkpoint', receipt=receipt, inclusive_cost_s=seconds)
+        return seconds
+    initial_checkpoint_s = checkpoint('initial')
+    startup = clock.elapsed()
+    _, history = model_common_history(cfg, fixture)
+    _, monitor_s = evaluate_split(data['evaluation_monitor'], 'trained_monitor_cost')
+    checkpoint_s = checkpoint('trained')
+    _, endpoint_s = evaluate_split(data['evaluation_full'], 'trained_endpoint_cost')
+    # End-to-end controller block includes one fence, scalar transfer and JSON
+    # logging. The optional fallback fixture fences after every native update.
+    sync()
+    started = time.perf_counter()
+    event('update_block_start', updates=request['block_updates'], lr=fixture.lr)
+    raw = [fixture.step() for _ in range(request['block_updates'])]
+    sync()
+    scalars = torch.stack([torch.stack((r['loss'], r['norm'])) for r in raw]).detach().cpu().tolist()
+    event('update_block', updates=request['block_updates'], stats=scalars,
+          valid_targets=sum(r['valid_targets'] for r in raw), physical_rows=sum(r['physical_rows'] for r in raw))
+    block_s = time.perf_counter()-started
+    if not math.isfinite(block_s) or block_s <= 0:
+        raise ValueError('invalid complete model controller block duration')
+    result = {'status': 'pass', 'kind': 'model_calibration', 'session': request['session'],
+              'initial_parameters_sha256': fixture.model.initial_parameters_sha256,
+              'initial_full': initial_full, 'initial_monitor': initial_monitor,
+              'initial_full_s': initial_full_s, 'initial_monitor_s': initial_monitor_s,
+              'initial_checkpoint_s': initial_checkpoint_s, 'startup_s': startup, 't0_s': t0,
+              'monitor_s': monitor_s, 'checkpoint_s': checkpoint_s, 'endpoint_s': endpoint_s,
+              'endpoint_checkpoint_s': checkpoint_s, 'update_block_s': block_s,
+              'block_updates': request['block_updates'], 'base_seed': request['base_seed'],
+              'selected_variant': request['fixed_variant'], 'history': history, 'resources': resource,
+              'checkpoint_receipts': receipts, 'clock': clock.state_dict(),
+              'synchronize_each_update': request['synchronize_each_update'], 'resources_after': resource_snapshot('mps')}
+    write_json(request['result'], result)
+    return result
+
+
+def aggregate_model_calibration(cfg, rows, aa_jitter, *, baseline_blocks=()):
+    if len(rows) != 3 or len({r['initial_parameters_sha256'] for r in rows}) != 1:
+        raise ValueError('cold calibration requires three identical initial parameter identities')
+    if len({r['block_updates'] for r in rows}) != 1:
+        raise ValueError('cold calibration block boundaries differ')
+    values = [[r[k]['nll'] for r in rows] for k in ('initial_full', 'initial_monitor')]
+    if any(not math.isfinite(v) for group in values for v in group):
+        raise ValueError('nonfinite initial evaluation calibration')
+    epsilon = max(cfg['learning']['epsilon_eval_floor'], 2*max(max(group)-min(group) for group in values))
+    if epsilon > cfg['learning']['epsilon_eval_ceiling']:
+        return {'status': 'INCONCLUSIVE_MEASUREMENT', 'reason': 'initial evaluation repeatability exceeds declared ceiling',
+                'epsilon_eval': epsilon, 'fallback_required': False, 'cold_workers': rows}
+    block_updates = rows[0]['block_updates']
+    costs = {name: max(r[name] for r in rows) for name in
+             ('startup_s', 'monitor_s', 'checkpoint_s', 'endpoint_s', 'endpoint_checkpoint_s')}
+    blocks = [*baseline_blocks, *({'source': 'cold controller block', 'seconds': row['update_block_s'],
+                                  'updates': block_updates} for row in rows)]
+    for block in blocks:
+        if (type(block['updates']) is not int or block['updates'] <= 0
+                or not math.isfinite(block['seconds']) or block['seconds'] <= 0):
+            raise ValueError('invalid qualified native block for horizon calibration')
+    block_s = max(block['seconds'] for block in blocks)
+    update_s = max(block['seconds']/block['updates'] for block in blocks)
+    horizon = calibrate_horizon(**costs, block_s=block_s, update_s=update_s,
+                                aa_jitter=aa_jitter, block_updates=block_updates)
+    return {'status': horizon['status'], 'epsilon_eval': epsilon, 'horizon': horizon,
+            'fallback_required': horizon.get('fallback_required', False), 'cold_workers': rows,
+            'baseline_update_s_bound': update_s, 'baseline_blocks': blocks,
+            'reason': horizon.get('reason', 'baseline-only full-model calibration complete')}
+
+
+def model_baseline_blocks(variants, native, costs, fixed_variant):
+    """Every qualified fixed-native measurement, without deleting slow blocks."""
+    blocks = []
+    for index, session in enumerate(variants):
+        row = session['variants'][fixed_variant]
+        blocks.extend({'source': f'variant pilot session{index}', 'seconds': seconds,
+                       'updates': row['updates_per_block']} for seconds in row['pilot_s'])
+    for index, session in enumerate(native):
+        for pair in session['AA']['pairs']:
+            blocks.extend({'source': f'AA session{index} {arm}', 'seconds': seconds,
+                           'updates': session['updates_per_block']} for arm, seconds in pair['seconds'].items())
+    for index, session in enumerate(costs):
+        for arm, comparison in session['comparisons'].items():
+            blocks.extend({'source': f'candidate-comparison native session{index} {arm}',
+                           'seconds': pair['seconds']['dense'], 'updates': comparison['updates_per_block']}
+                          for pair in comparison['pairs'])
+    return blocks
+
+
+def model_qualification_forecast(cfg, baseline, arms, manifest):
+    """Advisory inclusive forecast; no prospective runtime or update ceiling."""
+    timing, learning = cfg['timing'], cfg['learning']
+    relevant = [row for session in baseline['sessions'] for row in session['shapes'] if row['shape']['id'] == 'middle4096']
+    native_step = max(p['seconds']/p['updates'] for row in relevant for p in row['selected_dense_pilot'])
+    attention_allowance = 2.
+    model_step = native_step*learning['blocks']*attention_allowance
+    updates = max(1, math.ceil(timing['minimum_block_s']/model_step))
+    block = max(timing['minimum_block_s'], updates*model_step)
+    warm, pairs = timing['warmup']['maximum'], timing['pairs']
+    variants = len(timing['native_variants'])
+    variant_blocks = 2*(3+variants*(warm+3)+3)
+    aa_blocks = 2*(3+2*warm+2*pairs)
+    candidate_blocks = 2*(3+len(arms)*(2*warm+2*pairs))
+    resets = max((r for row in relevant for r in row['comparisons']['AA']['reset_s']), default=0.)
+    reset_allowance = 2*(1+len(arms))*(2+2*pairs)*resets*learning['blocks']*attention_allowance*3
+    full_batches = math.ceil(len(manifest['development_full'])/16)
+    monitor_batches = math.ceil(len(manifest['development_monitor'])/16)
+    startup = 9*cfg['resources']['qualification_forecast_s']
+    cold = 3*((2*full_batches+2*monitor_batches+16)*model_step+2*30.)
+    # All three initial/trained full native checkpoints remain private; reserve
+    # space for both initially planned round and the sole possible fallback.
+    w, f, layers, context = (learning[k] for k in ('width', 'ffn_width', 'blocks', 'context'))
+    parameter_bytes = 4*((259+context)*w+layers*(4*w*w+2*w*f+9*w+f)+2*w)
+    checkpoints = 12*(3*parameter_bytes+1048576)
+    equivalence_updates = 2*variants*10
+    paired_history_updates = 4*timing['history_updates']
+    per_round = 3*block*(variant_blocks+aa_blocks+candidate_blocks)+reset_allowance+startup+cold
+    per_round += (equivalence_updates+paired_history_updates)*model_step
+    return {'forecast_s': 2*per_round, 'deadline_s': None, 'rounds_including_single_possible_fallback': 2,
+            'native_variant_workers_per_round': 2, 'native_AA_workers_per_round': 2, 'candidate_workers_per_round': 2,
+            'cold_workers_per_round': 3, 'native_operator_step_s': native_step,
+            'model_step_s_allowance': model_step, 'attention_allowance': attention_allowance,
+            'updates_per_block_estimate': updates, 'native_variant_blocks': variant_blocks,
+            'AA_blocks': aa_blocks, 'candidate_blocks': candidate_blocks, 'reset_allowance_s': reset_allowance,
+            'native_equivalence_updates': equivalence_updates, 'paired_history_updates': paired_history_updates,
+            'cold_full_batches': full_batches, 'cold_monitor_batches': monitor_batches,
+            'expected_private_checkpoint_bytes': checkpoints, 'startup_allowance_s': startup,
+            'policy': 'advisory only; all declared work and the one common-block fallback charged'}
+
+
+def language_budget_forecast(cfg, calibration, arms):
+    learning = cfg['learning']
+    grid = len(learning['dense_batches'])*len(learning['peak_lrs'])+len(arms)*len(learning['peak_lrs'])
+    planning_n = learning['confirmation_minimum']
+    stages = {'eligible_grid': grid, 'independent_development_maximum': learning['independent_development_maximum'],
+              'precision_screens_maximum': learning['precision_screens_maximum'],
+              'confirmation_runs_at_planning_N': 2*planning_n,
+              'secondary_batch16_maximum': learning['secondary_batch16_maximum'],
+              'independent_repeat_runs': 2*learning['independent_repeat_pairs']}
+    total = sum(stages.values())
+    horizon = calibration['horizon']
+    return {'stages': stages, 'full_budget_equivalents': total, 'H': horizon['H'], 'T_budget': horizon['T_budget'],
+            'forecast_s': total*horizon['T_budget'], 'deadline_s': None,
+            'confirmation_planning_N': planning_n, 'confirmation_N_selected': False,
+            'confirmation_configured_maximum': learning['confirmation_maximum'],
+            'budget_equivalents_formula': f'{total-2*planning_n}+2*N',
+            'forecast_s_without_confirmation': (total-2*planning_n)*horizon['T_budget'],
+            'additional_forecast_s_per_confirmation_seed': 2*horizon['T_budget'],
+            'note': 'complete work formula; planning N is the declared minimum, not a cap; regenerate with precision-selected N before confirmation; duplicate development seeds/runs deduplicate'}
+
+
+def validate_model_worker_request(request, cfg, attempt, identity, config, direct):
+    """Pilot-only exact prepared development data; no generic training worker."""
+    if identity.get('config_sha256') != digest(config) or cfg['learning'].get('action') != 'qualification':
+        raise ValueError('model worker configuration differs from the frozen qualification action')
+    assert_language_asset_permission(cfg)
+    if 'device' in request or Path(request['result']).resolve().parent != attempt or Path(request['result']).exists():
+        raise ValueError('model worker result path/device is outside its stage boundary')
+    flag = request.get('synchronize_each_update')
+    if type(flag) is not bool or request.get('block_updates') != (1 if flag else 8):
+        raise ValueError('model worker common synchronization boundary mismatch')
+    if (type(request.get('session')) is not int or type(request.get('base_seed')) is not int
+            or type(request.get('order_seed')) is not int or not 0 <= request['session'] < (3 if request['kind'] == 'model_calibration' else 2)):
+        raise ValueError('invalid model worker declared session/order stream')
+    seed = cfg['learning']['tuning_seed'] if request['kind'] == 'model_calibration' else cfg['seed']+request['session']
+    if request['base_seed'] != seed or not math.isfinite(request.get('launch_perf_s', -1)) or request.get('launch_perf_s', -1) < 0:
+        raise ValueError('model worker seed/cold launch timestamp mismatch')
+    manifest = Path(request['data_manifest_path']).resolve()
+    if manifest.parent != attempt or digest(manifest) != request['data_manifest_sha256']:
+        raise ValueError('model worker prepared data manifest differs')
+    data = json.loads(manifest.read_text())['processed_files']['fitting-development']
+    if (Path(request['data_path']).resolve() != Path(data['path']).resolve()
+            or request['data_sha256'] != data['sha256'] or digest(request['data_path']) != data['sha256']):
+        raise ValueError('model worker development data differs from exact prepared bytes')
+    if request['kind'] == 'model_native' and request.get('phase') not in ('variants', 'AA'):
+        raise ValueError('unknown native model qualification phase')
+    if request['kind'] != 'model_native' or request['phase'] == 'AA':
+        if request.get('fixed_variant') not in cfg['timing']['native_variants']:
+            raise ValueError('unknown fixed full-model native variant')
+        pool = Path(request['native_pool_path']).resolve()
+        if (pool.parent != attempt or digest(pool) != request['native_pool_sha256']
+                or json.loads(pool.read_text())['fixed_variant'] != request['fixed_variant']):
+            raise ValueError('fixed native model variant differs from pooled qualification')
+    if request['kind'] == 'model_cost':
+        expected = [{'arm': f'{sampler}-{rho}', 'sampler': sampler, 'rho': rho}
+                    for sampler in cfg['samplers'] for rho in cfg['rhos']
+                    if {'arm': f'{sampler}-{rho}', 'shape': 'middle4096'} in direct['eligible']]
+        frozen = Path(request['frozen_delta_path']).resolve()
+        if (request['arms'] != expected or not expected or type(request['updates_per_block']) is not int
+                or request['updates_per_block'] <= 0 or frozen.parent != attempt
+                or digest(frozen) != request['frozen_delta_sha256']):
+            raise ValueError('model candidate arms/frozen noise differ from prospectively qualified work')
+
+
+def launch_model_worker(cfg, config, out, attempt, kind, tag, payload):
+    from oar.sampled_linear import named_seed
+    attempt = Path(attempt)
+    request = {'kind': kind, 'config': str(config), 'out': str(out), 'attempt': str(attempt),
+               'result': str(attempt/(tag+'.json')), 'order_seed': named_seed(cfg['seed'], 'order', tag), **payload,
+               'clock_implementation': time.get_clock_info('perf_counter').implementation,
+               'launch_perf_s': time.perf_counter()}
+    path = attempt/(tag+'-request.json')
+    write_json(path, request)
+    code, _, _ = command(attempt, worker_args('pilot', config, out, path), env=environment(cfg), timeout=None)
+    if code or not Path(request['result']).is_file():
+        return {'status': 'INCOMPLETE_RESOURCE' if code == 124 else 'INCONCLUSIVE_MEASUREMENT',
+                'reason': 'full-model worker did not complete; raw prefix and command failure retained',
+                'request_path': str(path), 'exit_code': code}
+    return json.loads(Path(request['result']).read_text())
+
+
+def pilot_qualification(cfg, config, out, attempt):
+    """Qualification only: never promote Stage E before tuning exists."""
+    if cfg['learning'].get('action') != 'qualification':
+        return {'status': 'not_run', 'reason': 'full learning dispatcher requires a future prospective freeze'}
+    bindings = source_hashes('pilot')
+    prerequisites = {stage: require_stage(out, stage, bindings) for stage in ('prepare', 'feasibility', 'correctness', 'cost')}
+    baseline = prerequisites['feasibility']
+    direct = prerequisites['cost']
+    arms = []
+    for sampler in cfg['samplers']:
+        for rho in cfg['rhos']:
+            name = f'{sampler}-{rho}'
+            if {'arm': name, 'shape': 'middle4096'} in direct['eligible']:
+                arms.append({'arm': name, 'sampler': sampler, 'rho': rho})
+    if not arms:
+        return {'status': 'STOP_COST', 'reason': 'no sampled arm survived direct D cost at middle4096'}
+    assert_language_asset_permission(cfg)
+    prepared = prepare_language_data(cfg, out, attempt)
+    manifest = json.loads(Path(prepared['manifest_path']).read_text())
+    forecast = model_qualification_forecast(cfg, baseline, arms, manifest)
+    write_json(Path(attempt)/'model_qualification_forecast.json', forecast)
+    storage = storage_guard(cfg, out)
+    if forecast['expected_private_checkpoint_bytes'] > storage['free_disk_bytes']-cfg['resources']['minimum_free_disk_bytes']:
+        raise MemoryError('full-model checkpoint forecast would consume the actual free-disk reserve')
+    data = prepared['files']['fitting-development']
+    rounds = []
+    for fallback in (False, True):
+        label = 'model-block1' if fallback else 'model-block8'
+        common = {'data_path': data['path'], 'data_sha256': data['sha256'],
+                  'data_manifest_path': prepared['manifest_path'], 'data_manifest_sha256': prepared['manifest_sha256'],
+                  'synchronize_each_update': fallback, 'block_updates': 1 if fallback else 8}
+        def run(kind, suffix, session, **extra):
+            value = launch_model_worker(cfg, config, out, attempt, kind, label+'-'+suffix+'-'+str(session),
+                {**common, 'session': session, 'base_seed': cfg['seed']+session, **extra})
+            if value['status'] != 'pass':
+                raise MeasurementInvalid('model_worker_failed', json.dumps(value))
+            return value
+        variants = [run('model_native', 'variants', session, phase='variants') for session in range(2)]
+        variant, pooled = pooled_model_native_variant(variants)
+        pool_path = Path(attempt)/(label+'-pooled-native.json')
+        write_json(pool_path, {'fixed_variant': variant, 'pooled': pooled, 'sessions': variants})
+        common.update(native_pool_path=str(pool_path), native_pool_sha256=digest(pool_path))
+        native = [run('model_native', 'AA', session, phase='AA', fixed_variant=variant) for session in range(2)]
+        aa_delta = freeze_delta([abs(pair['seconds']['dense']/pair['seconds']['candidate']-1)
+                                for row in native for pair in row['AA']['pairs']], floor=0.)
+        frozen_path = Path(attempt)/(label+'-frozen_delta.json')
+        frozen = {'delta': max(direct['delta'], aa_delta), 'previous_D_delta': direct['delta'],
+                  'model_AA_delta': aa_delta, 'fixed_variant': variant,
+                  'source': 'pooled full-model native A/A; frozen before all model candidate timings',
+                  'synchronize_each_update': fallback}
+        write_json(frozen_path, frozen)
+        costs = [run('model_cost', 'cost', session, fixed_variant=variant, arms=arms,
+                     updates_per_block=native[session]['updates_per_block'],
+                     frozen_delta_path=str(frozen_path), frozen_delta_sha256=digest(frozen_path)) for session in range(2)]
+        eligible = model_cost_eligible(costs, arms)
+        round_result = {'synchronize_each_update': fallback, 'variant_sessions': variants, 'native_sessions': native,
+                        'fixed_variant': variant, 'frozen_delta': frozen, 'cost_sessions': costs, 'eligible': eligible}
+        rounds.append(round_result)
+        if not eligible:
+            write_json(Path(attempt)/(label+'-qualification.json'), {**round_result, 'status': 'STOP_COST'})
+            return {'status': 'STOP_COST', 'reason': 'no D-surviving arm beat full native model upper95%<1 in both sessions',
+                    'qualification': {'status': 'STOP_COST', 'rounds': rounds}, 'data': prepared}
+        cold = [run('model_calibration', 'cold', session, fixed_variant=variant,
+                    base_seed=cfg['learning']['tuning_seed']) for session in range(3)]
+        calibrated = aggregate_model_calibration(cfg, cold, frozen['delta'],
+            baseline_blocks=model_baseline_blocks(variants, native, costs, variant))
+        round_result['calibration'] = calibrated
+        write_json(Path(attempt)/(label+'-qualification.json'), {**round_result, 'status': calibrated['status']})
+        if calibrated['status'] != 'pass':
+            if calibrated.get('fallback_required') and not fallback:
+                continue
+            return {'status': 'INCONCLUSIVE_MEASUREMENT', 'reason': calibrated['reason'],
+                    'qualification': {'status': calibrated['status'], 'rounds': rounds}, 'data': prepared}
+        whole = language_budget_forecast(cfg, calibrated, eligible)
+        write_json(Path(attempt)/'language_budget_forecast.json', whole)
+        qualification = {'status': 'pass', 'native_variant': variant, 'eligible': eligible, 'calibration': calibrated,
+                         'forecast': whole, 'qualification_forecast': forecast, 'rounds': rounds}
+        write_json(Path(attempt)/'model_qualification.json', qualification)
+        return {'status': 'not_run', 'reason': 'full-model qualification passed; Stage E tuning/selection awaits full learning dispatcher and future freeze',
+                'qualification': qualification, 'data': prepared, 'learning_success': False}
+    raise RuntimeError('unreachable model fallback state')
 
 
 def main(argv=None):
@@ -1146,6 +2069,12 @@ def main(argv=None):
             write_json(Path(request['attempt'])/'qualification.json', primitive_qualification(cfg))
         elif request['kind'] == 'diagnostic':
             write_json(Path(request['attempt'])/'diagnostic.json', offline_diagnostics(cfg, request))
+        elif request['kind'] == 'model_native':
+            model_native_session(cfg, request)
+        elif request['kind'] == 'model_cost':
+            model_cost_session(cfg, request)
+        elif request['kind'] == 'model_calibration':
+            model_calibration_session(cfg, request)
         else:
             cost_session(cfg, request)
         return 0
@@ -1154,12 +2083,13 @@ def main(argv=None):
     identity = {'reviewed_head': REVIEWED, 'actual_head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
                 'git_status': subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT, text=True),
                 'amendment_sha256': digest(ROOT/'decisions/dw_sampling_amendment.json'), 'config_path': str(args.config),
+                'config_sha256': digest(args.config),
                 'measurement_hashes': source_hashes(args.stage), 'bound_files': amendment['bound_files'], 'utc': utc()}
     write_json(attempt/'source_manifest.json', identity)
     result = {}
     ownership = ExitStack()
     try:
-        if args.stage in ('prepare', 'feasibility', 'correctness', 'cost') and not args.dry_run:
+        if args.stage in ('prepare', 'feasibility', 'correctness', 'cost', 'pilot', 'confirm') and not args.dry_run:
             ownership.enter_context(exclusive_session(ROOT/'.superpowers/dw_sampling/measurement.lock'))
             competing = competing_processes()
             write_json(attempt/'exclusive_session.json', {'pid': os.getpid(), 'start_utc': utc(), **competing,
@@ -1176,10 +2106,11 @@ def main(argv=None):
             result = hardware_stage(cfg, args.config, args.out, attempt, args.stage)
         elif args.stage == 'correctness':
             result = correctness(cfg, args.config, args.out, attempt)
-        elif args.stage in ('pilot', 'confirm'):
-            prerequisite = 'cost' if args.stage == 'pilot' else 'pilot'
-            require_stage(args.out, prerequisite, source_hashes(args.stage))
-            result = {'status': 'BLOCKED_ASSET', 'reason': 'WikiText license/use restriction unresolved; language infrastructure deliberately not implemented or launched'}
+        elif args.stage == 'pilot':
+            result = pilot_qualification(cfg, args.config, args.out, attempt)
+        elif args.stage == 'confirm':
+            require_stage(args.out, 'pilot', source_hashes('confirm'))
+            result = {'status': 'not_run', 'reason': 'confirmation dispatcher awaits qualified development/selection and a future prospective freeze'}
         else:
             summary = summarize_run(args.out)
             write_json(attempt/'summary.json', summary)
@@ -1191,7 +2122,13 @@ def main(argv=None):
         result = {'status': 'INCONCLUSIVE_MEASUREMENT' if isinstance(exc, MeasurementInvalid) else 'INCOMPLETE_RESOURCE', 'reason': str(exc), 'exception': type(exc).__name__}
     finally:
         ownership.close()
-    record = seal_record(attempt, {'stage': args.stage, **result, 'measurement_hashes': source_hashes(args.stage),
+    try:
+        validate_source_stability(identity, args.stage, args.config)
+    except MeasurementInvalid as exc:
+        (attempt/'source_stability_failure.txt').write_text(traceback.format_exc())
+        result = {'status': 'INCONCLUSIVE_MEASUREMENT', 'reason': str(exc),
+                  'exception': type(exc).__name__, 'invalidated_result': result}
+    record = seal_record(attempt, {'stage': args.stage, **result, 'measurement_hashes': identity['measurement_hashes'],
                                   'invocation_wall_s': time.perf_counter()-start, 'source_manifest_sha256': digest(attempt/'source_manifest.json')})
     print(json.dumps({'stage': args.stage, 'status': record['status'], 'attempt': str(attempt), 'reason': record['reason']}))
     return 0 if record['status'] in ('pass', 'not_run', 'BLOCKED_ASSET', 'BLOCKED_HARDWARE', 'STOP_COST', 'INCONCLUSIVE_MEASUREMENT', 'INCOMPLETE_RESOURCE') else 1

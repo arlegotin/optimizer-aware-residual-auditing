@@ -1,0 +1,21 @@
+{
+  "recorded_utc": "2026-10-31T16:25:14.331628+00:00",
+  "source_freeze_parent_head": "b4982f31eaf46c344d89bf199e704007043627fb",
+  "source_sha256": {
+    "analysis/run_dw_sampling.py": "9944561dff1909e168549eea97f727a2fdbb5e9254d790a32a0403796235277f",
+    "src/oar/sampled_linear.py": "11398f9340a48b0dcabdc733c74dfa52b53663ea2005989f2ad7b53079827ca3",
+    "src/oar/sampling_data.py": "cfcf4b782eb9a444ce70f29df72e063518f794108020e51a5d12238118f06583",
+    "src/oar/sampling_lm.py": "b6a0ec4e1b66ccdf542e8d19c6830b897aec9fa4d4d4a77b13265dedb67bb21c",
+    "tests/test_sampled_linear.py": "3ed4adbf6f62599172b0322374e84c7552f7fc4b46761f80057053469822eaa9",
+    "tests/test_dw_sampling_protocol.py": "4e419fc5a493be734792a0d2e333366f7a318b7c7ca5cf6c895d0f522ea84d6e",
+    "configs/dw_sampling.yaml": "7411e08b4430d06152c4c93a0c588660eedb9f6a27577ab002721b28284fe368",
+    "decisions/dw_sampling_scope.md": "d91d9350dc117f83e39c648e48d435de75ab9ea5a3b6bc197b216c4b73c11181",
+    "decisions/dw_sampling_reopening.md": "f86a1ba2a28c5dd7e70c2ac685fe4a6ec62824d95f429bc935ef4adfedfec54f"
+  },
+  "CPU_verification": "723 passed, 14 MPS tests deselected; full-tests-v6-cpu.txt",
+  "qualification_review": "PASS at the exact source hashes; version6-qualification-review.md",
+  "actual_MPS_version6_qualification": "pending required prepare stage",
+  "language_training": "not run",
+  "corpus_bodies": "not acquired",
+  "phase": "qualification-only; full pilot/confirmation not passed"
+}

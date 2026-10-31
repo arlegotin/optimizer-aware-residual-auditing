@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: CC-BY-4.0
-# Owner-authorized exploratory reopening; prior configurations are archived.
-schema_version: 2
+# Prospective post-cost model/data qualification; earlier versions archived.
+schema_version: 3
 experiment: fixed_budget_norm_importance_dw
 reviewed_head: 9d8ad069c51b4d0e6c13e9c6e465579e9b44a339
 device: mps
@@ -104,8 +104,15 @@ resources:
 asset:
   name: wikitext-2-raw-v1
   revision: b08601e04326c79dfdd32d625aee71d232d685c3
-  decision: blocked_pending_documentary_resolution_or_owner_determination
-  body_downloads: false
+  decision: permission_evidence_reviewed_for_conditional_local_only_research
+  body_downloads: true
+  decision_path: analysis/dw_sampling/20261031T120154Z-reopened/prospective/asset_local_use_decision.json
+  decision_sha256: c08a9d0689c51733a585151ecb7197a0df449d20a0daac589ed14a9b94a2f064
+  parquet_reader_version: 26.0.0
+  allowed_body_splits:
+  - train
+  - validation
+  official_test_sealed: true
 learning:
   implemented_only_after_cost: true
   blocks: 4
@@ -130,8 +137,8 @@ learning:
   - 3104
   confirmation_seed_start: 5001
   confirmation_minimum: 8
-  confirmation_maximum: 16
-  full_budget_equivalents_maximum: 87
+  confirmation_maximum: null
+  full_budget_equivalents_maximum: null
   monitor_windows_maximum: 64
   evaluation_batch: 16
   evaluation_stride: 128
@@ -154,3 +161,9 @@ learning:
   precision_screens_maximum: 1
   secondary_batch16_maximum: 3
   independent_repeat_pairs: 3
+  action: qualification
+  required_time_ratio: 1.0
+  overshoot_fraction: 0.01
+  checkpoint_live_retention: 2
+  confirmation_planning: independent_pilot_effect_against_no_gain
+  minimum_gain_gate: false

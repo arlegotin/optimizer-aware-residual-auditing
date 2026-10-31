@@ -1,0 +1,25 @@
+{
+  "name": "pyarrow",
+  "version": "26.0.0",
+  "installed_RECORD_sha256": "3c32dfec39a4f7f308636e210a925cb0fca8fc21820bf61908715f485220cabf",
+  "files_hash_checked": 754,
+  "mismatches": [],
+  "commands": [
+    {
+      "argv": [
+        ".venv/bin/python",
+        "-m",
+        "pip",
+        "install",
+        "--no-deps",
+        ".cache/dw_sampling/wheels/pyarrow-26.0.0-cp313-cp313-macosx_12_0_arm64.whl"
+      ],
+      "exit_code": 0,
+      "wall_s": 0.870862667
+    }
+  ],
+  "wheel_metadata_sha256": "80ed01c0aad1d5a28af67042052dbf81cc1b70fb2fc64bf677532bdff1555be9",
+  "project_dependency_pins": "unchanged",
+  "corpus_bodies_downloaded": false,
+  "cache_warning": "pip user cache unavailable in sandbox; installation succeeded and RECORD hashes verified"
+}

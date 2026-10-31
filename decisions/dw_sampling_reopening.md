@@ -135,3 +135,98 @@ check, not a general proof about arbitrary future module code or transitive
 helpers. Every refreshed declaration needs a renewed exact-diff review that
 also checks unchanged helper/initialization/statistical code; an old declaration
 cannot approve a new driver hash automatically.
+
+## Post-cost implementation and qualification, version 6
+
+The complete D record at cost/attempt-0001 in the reopened run is PASS, SHA256
+`d52f2062995810f4541022d02ed21e8f33ad72257675f66f8bed773c34fa9b18`.
+Both sessions, all five fixtures and the paid 576-draw diagnostic are retained.
+The old stricter 1-delta screen passed no arm; v5's prospectively frozen
+upper95%<1 rule is the basis for continuation. This is an exploratory operator
+result, with no language quality outcome. The original 184 tracked files remain
+unchanged; the raw D evidence was committed separately at b4982f3.
+
+Implement the specified byte-data/model/runner units now. First freeze and run
+`learning.action: qualification`: acquire and verify the conditionally permitted
+train/validation bytes, freeze lossless article/chunk/window manifests, and run
+full-model native qualification, two-session A/A and candidate cost, and cold
+baseline calibration. This action returns `not_run` for the overall pilot when
+qualification succeeds: it cannot pass Stage E or unlock confirmation before
+tuning and independent development. It records STOP_COST if the full-model
+cost gate actually fails. A subsequent frozen implementation runs the remaining
+pilot work. This staged engineering does not stop the authorized work or turn
+an unfinished pilot into successful learning evidence.
+
+Use one pooled strongest native AdamW variant, chosen only from the two native
+variant pilots and supported in both sessions, in both final candidate sessions
+and subsequent matched arms. Native A/A for that fixed variant precedes candidate
+timing. Candidate fractions are only D survivors at 4096: importance1/8 and1/4,
+uniform1/8,1/4 and1/2. No model growth or extra sampler. All steps include actual
+causal attention, data collation, padding, bias/embedding/norm/tied-output gradients,
+native clipping and native AdamW. All input/bias adjoints are exact before global
+clipping; the native global clipping factor depends on the sampled gradient norm,
+so applied unsampled parameter updates need not equal dense training.
+
+Schema 3 adds model/data metadata; its version number is excluded from native
+B/D configuration continuity only for the reviewed supported schema 2→3 mapping.
+Actual native shapes, dtype, flags, seeds, optimizer and timing are unchanged.
+The fixed D cost gate remains1 in that comparison. New model/data files are
+bound directly for preparation/correctness/pilot/confirm, while unrelated file
+addition does not invalidate old native work. Renew exact-diff approval at the
+final new source hashes; selected AST equality alone is insufficient. Repeat
+current preparation and correctness after freezing the new code. Removing the
+remaining preparation/default command timeout does not alter the already-passed
+native timing observations. End-of-stage source/config/amendment drift now
+invalidates an attempt rather than silently attributing old execution to new code.
+
+The conditional local-use asset decision and documentary sources in the run's
+prospective directory permit only local nonredistributed copying, labeled
+preprocessing and private research at the pinned WikiText revision. Preserve the
+CC-BY-SA3.0/GFDL versus4.0 conflict and all original notices; do not claim an
+authoritative version choice or erase the historical blocked manifest. This new
+configuration enables only train/validation body acquisition after the sealed
+cost gate and exact asset-decision hash. PyArrow 26.0.0 is the sole added reader,
+with its official native wheel SHA256 recorded; original dependency pins remain
+unchanged. Test body/parsing stays sealed. Official-validation loss outcomes
+remain sealed until the complete confirmation protocol is frozen.
+
+Learning calibration retains a 4096-native-update-equivalent horizon and the
+baseline-only cadence/overhead measurements. A/A jitter is diagnostic and no
+longer vetoes a calibration merely for exceeding 0.15. The common cutoff overshoot
+limit is 0.01*H, rather than multiplying H by a removed required-effect threshold.
+Report r_time=Delta+Bmax and its fraction of each reached target time. Initial
+full and monitor evaluations precede updates; an initial committed checkpoint
+at the first block's original t0 is charged within that zero-LR first block and
+included in conservative startup calibration. Native loss-finiteness validation
+occurs after backward/native clipping and before AdamW, avoiding an unnecessary
+separate forward/backward host barrier. Scalar step statistics are transferred
+only after the synchronized block.
+
+If learning gates are reached, plan fixed N from the three independent development
+seed pairs: N_time=ceil((2.8*s_logtime/(-mean_logtime))^2), requiring a negative
+mean, and retain the original quality-margin formula. Use N=max(8,N_time,N_quality),
+without an arbitrary16 ceiling; actual device-hours/storage must cover the plan.
+The observed pilot effect is uncertain and can overstate planning power. Freeze
+a vetted t critical value for N before protected outcomes; use the supplied
+df7..15 values when applicable. Do not add seeds after observing confirmation.
+Primary upper time-ratio CI<1 and the unchanged endpoint quality bound must both
+pass and agree with bootstrap sensitivity. Keep the original target construction,
+twice-observed crossing, simpler-control ties, censor treatment and independent
+repeat rules. No favorable unobserved target crossing is inferred.
+
+Checkpoint files have a prospective retention policy: two latest live resume
+files plus final endpoint, with every creation/pruning receipt and SHA retained.
+Only files created by this new run under its ignored private checkpoint cache
+are eligible for this managed pruning; no prior-run or user files are removed.
+A failed write cannot replace a prior good file, and an unreceipted orphan is not
+a committed checkpoint. A restart explicitly selects a retained hash-validated
+file; the parent ledger includes all previous active work, wasted uncommitted
+work, new imports/loading and I/O, excludes external downtime, and preserves
+original t0. Native moments, their scalar steps, model/data/RNG states and
+compatibility metadata are validated before restore mutates live state. The
+fixed LM engine supports its fully trainable model; standalone sampled_linear
+continues to support frozen operands independently.
+
+Pooling native variant pilots uses seconds per update with each session's actual block count, retaining raw seconds/counts. Horizon calibration's U and Bmax use all qualified observations for the fixed native implementation, including selected-variant pilots, both native A/A arms, every candidate-comparison native block, and the three cold controller blocks. No slow valid observation is deleted. Parent and cold worker record and compare monotonic-clock implementations.
+
+While a run is active, retain at most two live resume files. After a durable final checkpoint receipt, retire that run's remaining ephemeral resume files and retain the final endpoint alone. Every receipt, hash and pruning event stays in the public ledger. Interrupted blocks retain their LR, host-completed update/token counts, failure record and last committed checkpoint; unconfirmed MPS completion is explicitly unknown. These are prospective storage/recovery rules before any real training run.
