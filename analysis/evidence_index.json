@@ -1,0 +1,996 @@
+{
+  "artifacts": [
+    {
+      "path": ".superpowers/sdd/2026-10-30-oar-implementation/task-11-report.md",
+      "sha256": "62994a68534d278c80f078d913488a242ee913d01d93f91c978eef8c02fd0fc5",
+      "unavailable_reason": "Historical disposable workflow report; excluded from current scientific support. Durable Task11 report is decisions/reports/structural_oracle.md."
+    },
+    {
+      "path": ".superpowers/sdd/2026-10-30-oar-implementation/task-11-report.md",
+      "sha256": "cafffbb259431a34f5e3433f06c2e94aa025efd5e19d0ca3f15415765bf03b33",
+      "unavailable_reason": "Historical disposable workflow report; excluded from current scientific support. Durable Task11 report is decisions/reports/structural_oracle.md."
+    },
+    {
+      "path": ".superpowers/sdd/2026-10-30-oar-implementation/task-11-report.md",
+      "sha256": "d29597eb70f68b1dda3515dada02ce29b6d4d9f28c2775591e5f20b8aee15d0e",
+      "unavailable_reason": "Historical disposable workflow report; excluded from current scientific support. Durable Task11 report is decisions/reports/structural_oracle.md."
+    },
+    {
+      "path": "README.md",
+      "sha256": "f8937f8ac316ae5954d76802849cc855847cd4bce349552263ce5aa15729985b"
+    },
+    {
+      "path": "analysis/README.md",
+      "revision": "dc561706752f656706c4fac5ae9b9f1f9c53b601",
+      "sha256": "0ab213582ff1b123bed16f12ba2f84bb97caadd1bd0383012ab265a08b1ef348"
+    },
+    {
+      "path": "analysis/README.md",
+      "sha256": "130eae9c807339feaf0ab121c3aad5e92bba07df259491711adb0b2311ef2b5f"
+    },
+    {
+      "archived_path": "analysis/history/fix1-README-2e6b5100d978.md",
+      "path": "analysis/README.md",
+      "sha256": "2e6b5100d97868a8e59dda5d5e1822d505b1246a76ac95117b0e1ecafa628f3d"
+    },
+    {
+      "archived_path": "analysis/history/README-before-layout-95de31ab2d97.md",
+      "path": "analysis/README.md",
+      "sha256": "95de31ab2d977d53dbebd38a02b59d0542904490245e129a1ccf76dd7600826c"
+    },
+    {
+      "path": "analysis/README.md",
+      "revision": "6f04c6eea4d4aab0f1df31dfe6e1361275c91666",
+      "sha256": "def28f72eb5fa1b87964c5804416ba10ceb40bfb6e971ab58bb186bd30147510"
+    },
+    {
+      "archived_path": "analysis/history/audit_confidence-e1c6e2252a0d.json",
+      "path": "analysis/audit_confidence.json",
+      "sha256": "e1c6e2252a0d5ad1b9f3098ebdc61883a4355a4f9c800cdd47ef1a69858052f7"
+    },
+    {
+      "path": "analysis/audit_confidence.json",
+      "sha256": "fa96b975a2d0128067fb9a623c31191033124a5cc6b6d2e48b1739a72aa84a95"
+    },
+    {
+      "path": "analysis/collect_audit_confidence.py",
+      "sha256": "95e83e9cee959f3c18036f55a8d4cc830cd92f1c9159db20fdac5879b418f3e5"
+    },
+    {
+      "path": "analysis/collect_numerical_calibration.py",
+      "sha256": "797515951845645f1b12e01d788b6ce76b2ebcb95916ffe3e275b46618b3f3f0"
+    },
+    {
+      "archived_path": "analysis/history/collect_numerical_calibration-before-layout-9d52f632e1aa.py",
+      "path": "analysis/collect_numerical_calibration.py",
+      "sha256": "9d52f632e1aad74e73a22595d838e2995698df3b9020e03d5da9e48db4575e82"
+    },
+    {
+      "path": "analysis/collect_operator_correctness.py",
+      "sha256": "e69ba75c227c808226d0e3d619ec90bbf25b87e22bf020ef66d8bf59db405cf5"
+    },
+    {
+      "path": "analysis/collect_optimizer_correctness.py",
+      "sha256": "acae516d3300760f4097ea9c3a55a12f98f7df0e53c18c3918ff944f6bbda93a"
+    },
+    {
+      "path": "analysis/collect_synthesis.py",
+      "sha256": "4a4d3ffb8e06947fea58b3dba7a9f6086688078d1697e70f383981e73a24090c"
+    },
+    {
+      "path": "analysis/collector_manifest.json",
+      "sha256": "6720db8392db71ecfedf3db1ee2ddd41fe90efa96e04bb033ed5712427a35baf"
+    },
+    {
+      "archived_path": "analysis/history/fix1-collector_manifest-82c5b13aa1a2.json",
+      "path": "analysis/collector_manifest.json",
+      "sha256": "82c5b13aa1a2ca0c612f9e2782c516fb78b252f1489ec9252169357eaf2a26dd"
+    },
+    {
+      "archived_path": "analysis/history/collector_manifest-before-layout-c94e3d7189ae.json",
+      "path": "analysis/collector_manifest.json",
+      "sha256": "c94e3d7189aecd1762898fd8ed21c0490ca2bf42bc08ff0c9ef66b82040356f0"
+    },
+    {
+      "archived_path": "analysis/history/fix1-evidence_history-32dcdd7a2a01.json",
+      "path": "analysis/evidence_history.json",
+      "sha256": "32dcdd7a2a01688f4d10c95c5f3590356af96b26503f3b32333b941372aa6712"
+    },
+    {
+      "path": "analysis/evidence_history.json",
+      "sha256": "3c1f20b20f93682330ba0992e930e2165815ef442b92de30d11f01c4944f7894"
+    },
+    {
+      "archived_path": "analysis/history/evidence-index-before-layout-53c7cfcab0a5.json",
+      "path": "analysis/evidence_history.json",
+      "sha256": "53c7cfcab0a5edfa66f841c2073e7d2d5b9b93593603d4147008e75ea5e0a860"
+    },
+    {
+      "path": "analysis/guardband_calibration.json",
+      "sha256": "24d5455bb39376610c2c0767a2ceb0744b741347dae37a5d399e12e6556ff387"
+    },
+    {
+      "archived_path": "analysis/history/guardband-before-layout-correction-c8e621abe6f8.json",
+      "path": "analysis/guardband_calibration.json",
+      "sha256": "c8e621abe6f856a36f4f902e1f4130063136b8ee09e1a983f9c4cbbadcae333f"
+    },
+    {
+      "path": "analysis/headroom_decision.json",
+      "sha256": "490688ee41700aa87adb1d627ecb6e1ff526a66b8a3fe797b22755d11555a059"
+    },
+    {
+      "archived_path": "analysis/history/fix1-headroom_decision-f1c74cd93b48.json",
+      "path": "analysis/headroom_decision.json",
+      "sha256": "f1c74cd93b48bccbeff5026b064d21e7838317aca90fd9b7d4464304597f5af4"
+    },
+    {
+      "path": "analysis/headroom_summary.csv",
+      "sha256": "3311f81cb50f4d1763227af08b1d937b5da40d31dd687999b92e221acef90f61"
+    },
+    {
+      "archived_path": "analysis/history/fix1-headroom_summary-a9c559b0f18b.csv",
+      "path": "analysis/headroom_summary.csv",
+      "sha256": "a9c559b0f18b547c44d62f20ae9856641549af52341d80981ef8d294dec24dc7"
+    },
+    {
+      "path": "analysis/history/README-before-layout-95de31ab2d97.md",
+      "sha256": "95de31ab2d977d53dbebd38a02b59d0542904490245e129a1ccf76dd7600826c"
+    },
+    {
+      "path": "analysis/history/audit_confidence-e1c6e2252a0d.json",
+      "sha256": "e1c6e2252a0d5ad1b9f3098ebdc61883a4355a4f9c800cdd47ef1a69858052f7"
+    },
+    {
+      "path": "analysis/history/bench-before-layout-f2d2016eee1b.py",
+      "sha256": "f2d2016eee1b67f8147b96755d4fe534311b4c57729888f46bed839dfccefb22"
+    },
+    {
+      "path": "analysis/history/bench-measured-213397e0c7d3.py",
+      "sha256": "213397e0c7d3c23b9446bc809453d558c73f0aa16a3dc1c125eb508b53a52ec8"
+    },
+    {
+      "path": "analysis/history/collect_numerical_calibration-before-layout-9d52f632e1aa.py",
+      "sha256": "9d52f632e1aad74e73a22595d838e2995698df3b9020e03d5da9e48db4575e82"
+    },
+    {
+      "path": "analysis/history/collector_manifest-before-layout-c94e3d7189ae.json",
+      "sha256": "c94e3d7189aecd1762898fd8ed21c0490ca2bf42bc08ff0c9ef66b82040356f0"
+    },
+    {
+      "path": "analysis/history/evidence-index-before-layout-53c7cfcab0a5.json",
+      "sha256": "53c7cfcab0a5edfa66f841c2073e7d2d5b9b93593603d4147008e75ea5e0a860"
+    },
+    {
+      "path": "analysis/history/fix1-README-2e6b5100d978.md",
+      "sha256": "2e6b5100d97868a8e59dda5d5e1822d505b1246a76ac95117b0e1ecafa628f3d"
+    },
+    {
+      "path": "analysis/history/fix1-bench-4504126115b6.py",
+      "sha256": "4504126115b6bd0515a7c47e6882ce724c185a69dea0ec1f3785577fd8bed43f"
+    },
+    {
+      "path": "analysis/history/fix1-collector_manifest-82c5b13aa1a2.json",
+      "sha256": "82c5b13aa1a2ca0c612f9e2782c516fb78b252f1489ec9252169357eaf2a26dd"
+    },
+    {
+      "path": "analysis/history/fix1-evidence_history-32dcdd7a2a01.json",
+      "sha256": "32dcdd7a2a01688f4d10c95c5f3590356af96b26503f3b32333b941372aa6712"
+    },
+    {
+      "path": "analysis/history/fix1-headroom_decision-f1c74cd93b48.json",
+      "sha256": "f1c74cd93b48bccbeff5026b064d21e7838317aca90fd9b7d4464304597f5af4"
+    },
+    {
+      "path": "analysis/history/fix1-headroom_summary-a9c559b0f18b.csv",
+      "sha256": "a9c559b0f18b547c44d62f20ae9856641549af52341d80981ef8d294dec24dc7"
+    },
+    {
+      "path": "analysis/history/fix1-summarize_headroom-28af5349c413.py",
+      "sha256": "28af5349c41379aaf7b897117354a3fd0a867f9643b8413e2155c513650ee69c"
+    },
+    {
+      "path": "analysis/history/fix1-test_bench_accounting-83c112ad2c89.py",
+      "sha256": "83c112ad2c890ea4ab8df8cbc46d9b8c62fab757f56415a1d7350ebeaa274ef8"
+    },
+    {
+      "path": "analysis/history/fix1-timing_calibration-7da3fd8be160.csv",
+      "sha256": "7da3fd8be160593603008c480fd92b599bf19fa63ee11abd8607cfcba848fe39"
+    },
+    {
+      "path": "analysis/history/fix1-timing_calibration-fbdc4962d5ec.json",
+      "sha256": "fbdc4962d5ec208db855f61ca1bf5ef06f2e5d8e2fe7e8082267beb0a09c195b"
+    },
+    {
+      "path": "analysis/history/fix1-timing_calibration_wide-9200e6ff9944.csv",
+      "sha256": "9200e6ff994445fb951ee3419ad3e711fa9f787986560b697e019cf4fb398ca3"
+    },
+    {
+      "path": "analysis/history/fix1-timing_calibration_wide-95ca861c643a.json",
+      "sha256": "95ca861c643a70408140f7fefafc263a75958ced729947fb239e3e94bdba630e"
+    },
+    {
+      "path": "analysis/history/guardband-before-layout-correction-c8e621abe6f8.json",
+      "sha256": "c8e621abe6f856a36f4f902e1f4130063136b8ee09e1a983f9c4cbbadcae333f"
+    },
+    {
+      "path": "analysis/history/guardband-layout-before-stride-record-715c8a8e8bcf.json",
+      "sha256": "715c8a8e8bcf4ba5939b99bc6628a20b884809678c2cc10585c41cef1ce0b276"
+    },
+    {
+      "path": "analysis/history/operator_correctness-d25265d9d4ff.json",
+      "sha256": "d25265d9d4ff55f9a5a957f2ddd92a21b2ea96263466dfcb4eede3ef72f621fe"
+    },
+    {
+      "path": "analysis/history/test_bench_accounting-before-layout-16cf18886bd4.py",
+      "sha256": "16cf18886bd425055771b309cd720cc60b5909494eff7719c72bf11b4fe66d83"
+    },
+    {
+      "path": "analysis/history/timing-clean-before-replay-refinement-24a9da72ee37.json",
+      "sha256": "24a9da72ee371072f757b1717906c038d0ea3a3d16d25e15505990307e725700"
+    },
+    {
+      "path": "analysis/history/timing-pilot-overlap-6c71818fb989.json",
+      "sha256": "6c71818fb9897e3d1b61411a92f851d84a5a01a0eb39ffafe0791dc8ef3722fb"
+    },
+    {
+      "path": "analysis/history/upstream_sources-4d6c586c9863.json",
+      "sha256": "4d6c586c986334bb0bca23f08cc4a796d0d69f985b636484cfceac228e56f3ce"
+    },
+    {
+      "path": "analysis/history/wp09-initial-evidence_index-0d54bb4ce15e.json",
+      "sha256": "0d54bb4ce15eff245d71de9c5d42ac8450473f519db80930710b76207d2ab768"
+    },
+    {
+      "path": "analysis/history/wp09-initial-report-8d531c846e95.md",
+      "sha256": "8d531c846e95c593f3854b5f7fe49c2265b800ae042e9ee5af2fa89ccd180f6d"
+    },
+    {
+      "path": "analysis/history/wp09-initial-synthesis_annotations-44407ae27dbf.json",
+      "sha256": "44407ae27dbfa37bb1b63f2d6996ea5d270c3289f73a5481d121d1825e1186ba"
+    },
+    {
+      "path": "analysis/history/wp09-initial-synthesis_schema-11d452f6a029.md",
+      "sha256": "11d452f6a02980c03b45ce9c1a96625fb67b380e72c9dd00136be29bc68a7e76"
+    },
+    {
+      "path": "analysis/history/wp09-initial-wp09_verification-677d37a41f09.json",
+      "sha256": "677d37a41f09da512947c7df6a40ab596103dee8cc74a2400ae1b608a1e8f791"
+    },
+    {
+      "path": "analysis/operator_correctness.json",
+      "sha256": "ae092c3e4c66ca168f8e5e29b2982ee9c489565443c7142238a5087f30f7f044"
+    },
+    {
+      "archived_path": "analysis/history/operator_correctness-d25265d9d4ff.json",
+      "path": "analysis/operator_correctness.json",
+      "sha256": "d25265d9d4ff55f9a5a957f2ddd92a21b2ea96263466dfcb4eede3ef72f621fe"
+    },
+    {
+      "path": "analysis/optimizer_correctness.json",
+      "sha256": "2f378ad2355b64f380e385ef6641df17bc01234862dff6ced9167b5da69c56f4"
+    },
+    {
+      "path": "analysis/reproduce_structural_oracle.py",
+      "sha256": "20125b87f9cef4ab164490a744a6e72cc98d14fc46ccf12d55f487ec1dabe431"
+    },
+    {
+      "path": "analysis/reproduction/wp09/amendment.json",
+      "sha256": "ccc6e9ddfa270fc7133f12824635409ee01f98b5d5bc6fad1affa78077b45894"
+    },
+    {
+      "path": "analysis/reproduction/wp09/comparison.json",
+      "sha256": "d1633354a42e6985a8cdffd3ce0def70e3716dcff3d574e75a5a6e7306f1fe11"
+    },
+    {
+      "path": "analysis/reproduction/wp09/comparison_recovered.json",
+      "sha256": "bc4290cb79b809f73787a04bd1e4d7103f43837108e4ca463dab1f5307e22cff"
+    },
+    {
+      "path": "analysis/reproduction/wp09/config.yaml",
+      "sha256": "b86fb64b3e7f26d96548d1c2e7cdad0d912126060c99c70e2e9842d409ebad5d"
+    },
+    {
+      "path": "analysis/reproduction/wp09/plan.json",
+      "sha256": "d278cba861a40835f72a4c7697cbb3a65d863ebf8b97e6c53b64471dff077c92"
+    },
+    {
+      "path": "analysis/reproduction/wp09/structural_oracle_audit.jsonl",
+      "sha256": "7f8398a2699c7951fc9978b46db3927a36658187cfd004eb8850b862bc43a075"
+    },
+    {
+      "path": "analysis/reproduction/wp09/structural_oracle_schema.json",
+      "sha256": "b702c98a720f0932954f575f1893769b3860b474921b872e0e87ecc8405af524"
+    },
+    {
+      "path": "analysis/reproduction/wp09/structural_oracle_summary.json",
+      "sha256": "f9f2fac192c011f2f2c9944d49cccda47deaa35a6d10a90c6ab4e06cb3ab2b56"
+    },
+    {
+      "path": "analysis/resource_context.json",
+      "sha256": "e389ac6bad68c2252c2a6ba27de9dd75143c4e0d9cbefd4a7352482566bcd5d5"
+    },
+    {
+      "path": "analysis/scientific_gate_snapshot.json",
+      "sha256": "62c3af64f199cb398c6e24e1cc6655f2c9b8b9e90a3bad2aa684bd60d8a6cf32"
+    },
+    {
+      "path": "analysis/structural_oracle_aggregate.json",
+      "sha256": "90c4bcba1138a07a01c2bd6295de8846cafa02f678e9f8ecd17cf886a91d54b8"
+    },
+    {
+      "path": "analysis/structural_oracle_audit.jsonl",
+      "sha256": "2c7c4374a58037a27d2ae4b76ee799089328690b07e7c2194ca3317e8f70c518"
+    },
+    {
+      "path": "analysis/structural_oracle_checkpoint_index.json",
+      "sha256": "f1ac6266d158869acbd7db78e71a42b1f974d0a0169fefbd5d847bf59a353226"
+    },
+    {
+      "path": "analysis/structural_oracle_learning.csv",
+      "sha256": "b3a37a6c4be6a23d5377da98125c867a5cabe4b332b085f8e5cc196768bd7925"
+    },
+    {
+      "path": "analysis/structural_oracle_pilot.json",
+      "sha256": "6e727d64b54a52f560936a9cc1b64f704ff94669d8889cbe5b748734386efc18"
+    },
+    {
+      "path": "analysis/structural_oracle_schema.json",
+      "sha256": "b702c98a720f0932954f575f1893769b3860b474921b872e0e87ecc8405af524"
+    },
+    {
+      "path": "analysis/structural_oracle_summary.json",
+      "sha256": "df45a00eb921a4a55594a18de155b24eb774a27f10fb0f81d2fbd5257d5f7558"
+    },
+    {
+      "archived_path": "analysis/history/fix1-summarize_headroom-28af5349c413.py",
+      "path": "analysis/summarize_headroom.py",
+      "sha256": "28af5349c41379aaf7b897117354a3fd0a867f9643b8413e2155c513650ee69c"
+    },
+    {
+      "path": "analysis/summarize_headroom.py",
+      "sha256": "5cf53dbeef8772dbc3520de926d0f2f583d16561a9610d93fd5ca41d9b88aa4a"
+    },
+    {
+      "path": "analysis/summarize_structural_oracle.py",
+      "sha256": "fcf77c34f1fcf4f9dcd7e0d5d0dc874e2e77091c54f2d4a6ace73f083fd376e9"
+    },
+    {
+      "path": "analysis/timing_calibration.csv",
+      "sha256": "2bfa5633fddf952888e21d43f914b9acbb5de78b02bd8392955c18d4d4ae04e6"
+    },
+    {
+      "archived_path": "analysis/history/fix1-timing_calibration-7da3fd8be160.csv",
+      "path": "analysis/timing_calibration.csv",
+      "sha256": "7da3fd8be160593603008c480fd92b599bf19fa63ee11abd8607cfcba848fe39"
+    },
+    {
+      "path": "analysis/timing_calibration.json",
+      "sha256": "66f698a25c2ca414bb6eca13e541a70dc8ec6ede70cc77ae2831cc5e05f9c0fa"
+    },
+    {
+      "archived_path": "analysis/history/fix1-timing_calibration-fbdc4962d5ec.json",
+      "path": "analysis/timing_calibration.json",
+      "sha256": "fbdc4962d5ec208db855f61ca1bf5ef06f2e5d8e2fe7e8082267beb0a09c195b"
+    },
+    {
+      "path": "analysis/timing_calibration_wide.csv",
+      "sha256": "2c368ba42588829939b9fa461855963cf7ef3c7426565fd2e666fdc909b13d10"
+    },
+    {
+      "archived_path": "analysis/history/fix1-timing_calibration_wide-9200e6ff9944.csv",
+      "path": "analysis/timing_calibration_wide.csv",
+      "sha256": "9200e6ff994445fb951ee3419ad3e711fa9f787986560b697e019cf4fb398ca3"
+    },
+    {
+      "path": "analysis/timing_calibration_wide.json",
+      "sha256": "04a0157a7c5c0b4821a1ebabdb157237e185e21a154199f3d52dad38def2b0e6"
+    },
+    {
+      "archived_path": "analysis/history/fix1-timing_calibration_wide-95ca861c643a.json",
+      "path": "analysis/timing_calibration_wide.json",
+      "sha256": "95ca861c643a70408140f7fefafc263a75958ced729947fb239e3e94bdba630e"
+    },
+    {
+      "path": "analysis/wp09_verification.json",
+      "sha256": "ef3549590023196d9828f2a447af4cf9d944ae87797edaf6983890ee6db7e5b3"
+    },
+    {
+      "path": "configs/discovery.yaml",
+      "sha256": "0fa914fb68e6b48eaf2e19a5f3b1aefcbf5189e5860d28f2349969994177d99d"
+    },
+    {
+      "path": "configs/operator.yaml",
+      "sha256": "fc6caa711980c09d315bc205cf4cb121e662bc02659bc916702cc62bf7b4ffcb"
+    },
+    {
+      "path": "configs/operator_wide.yaml",
+      "sha256": "1ea9e3ca5ffadd83316e9d1240896c0bab2e7897b9af4bafc4c61159dfe9f400"
+    },
+    {
+      "path": "configs/structural_oracle.yaml",
+      "sha256": "a387445beda9eeb81f4d2107cfa3c457fb89b3399c5684035d6c5fb5990c169b"
+    },
+    {
+      "path": "decisions/amendments.jsonl",
+      "revision": "2e89e742131eb5eebaeb7a028d8e8f2e4fc50e07",
+      "sha256": "6637c152543e95724340301e413bdc533371b2cc35451965bdf9d22aee91454e"
+    },
+    {
+      "path": "decisions/amendments.jsonl",
+      "sha256": "78ae5c0c6d1daa0e819e77da889553efa72547693451b8cfbf9627c6f2e23bda"
+    },
+    {
+      "path": "decisions/outcome.json",
+      "sha256": "d06b25e1b475d1527f9f8a4e9a618bae20f82ad3c48abcd131e3847f37fb4aad"
+    },
+    {
+      "path": "decisions/reports/structural_oracle.md",
+      "sha256": "09abcc2e5b84aab8fea0e7bbb6a1eda5388ad3e2d3fa64b05516c04b4793ff65"
+    },
+    {
+      "path": "decisions/reports/synthesis_annotations.json",
+      "sha256": "d874f63c04e88ebcd848cc6eb19bda74418cbfa9b38059675b4207a8105860b5"
+    },
+    {
+      "path": "decisions/reports/synthesis_schema.md",
+      "sha256": "c658c7e28ad6a2c629c877e376b285401a1231c95b2c84cc5fd60a07bf1fc772"
+    },
+    {
+      "path": "decisions/review_summary.md",
+      "sha256": "ffef9af52cbad21b27d51780ead392039921e5953599790264a2b688610d5c06"
+    },
+    {
+      "path": "decisions/rulings.md",
+      "sha256": "70c7e8b55f5deb93d86b5e3b40f2d2098319d10a9a8ee5efb5c02c4b6efa3c08"
+    },
+    {
+      "path": "decisions/structural_oracle_scope.md",
+      "sha256": "44f73b644ec3f9119a5ba8e9aa5abfebff28cdab487e186c4d3e13a24ae796a1"
+    },
+    {
+      "path": "docs/blueprint.md",
+      "sha256": "cea178cc359653f80f460b53809f5ff912639d57392a44adbe0ab16d56b18ae1"
+    },
+    {
+      "path": "manifests/assets.json",
+      "sha256": "92e7319d4a0c89810161fb718b682b7bcd3dbc665eaea2c97848ce92e58d9bdf"
+    },
+    {
+      "path": "manifests/environment.json",
+      "sha256": "8c1f736f911c1b080ba7ecfced2eb9bfed3f866539d83d6c213646158e789459"
+    },
+    {
+      "path": "manifests/environment.json",
+      "revision": "36b7dcb1f410c4c0a28c691000163237cc06a496",
+      "sha256": "c411b683e5d68c7f30446a9e57fc02ebf4edfa9e048f2d30643702540043baa4"
+    },
+    {
+      "archived_path": "analysis/history/upstream_sources-4d6c586c9863.json",
+      "path": "manifests/upstream_sources.json",
+      "sha256": "4d6c586c986334bb0bca23f08cc4a796d0d69f985b636484cfceac228e56f3ce"
+    },
+    {
+      "path": "manifests/upstream_sources.json",
+      "sha256": "50752ce03efd68b1eb91c97586c1a67f4d6e214d743a6eab06b0d093bab6d21e"
+    },
+    {
+      "path": "manifests/wheels.sha256",
+      "sha256": "23ab092a85a03a4e6116b4613bf654b21b250c3a45b891002dcc4e2d20931599"
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "31372fb67548625c083273f55d8766bc90abcf46a7c511e897147386f5f878d2"
+    },
+    {
+      "path": "requirements.lock.txt",
+      "sha256": "5393bd3b88fa9b1d427447b35f12e4566fbfca6f91a2af6f04674a5104d2349e"
+    },
+    {
+      "path": "src/oar/__init__.py",
+      "sha256": "ad2a02f6606d83b3c5c083e1c72ff55c9aea0621fcb54281304863a1f327c5b1"
+    },
+    {
+      "path": "src/oar/audit.py",
+      "sha256": "7d386972050adacb66c01e66c0e66e93f3e8c0aac682db83dd5cd47880a1dd35"
+    },
+    {
+      "path": "src/oar/audit_journal.py",
+      "sha256": "8043cfae563d80e720fba0d935fb8c951c3cc03bd4f48b89923e82463e697a75"
+    },
+    {
+      "path": "src/oar/basis.py",
+      "sha256": "0d39eb74b7f6eb1d1dab30f3ce03ae5adfe252ea08fe199828ee15ac80290b4c"
+    },
+    {
+      "archived_path": "analysis/history/fix1-bench-4504126115b6.py",
+      "path": "src/oar/bench.py",
+      "sha256": "4504126115b6bd0515a7c47e6882ce724c185a69dea0ec1f3785577fd8bed43f"
+    },
+    {
+      "path": "src/oar/bench.py",
+      "sha256": "e06035ce04cfceb56074a9b000ceb27230e21d557d88cc80483a6be1c2ddbf39"
+    },
+    {
+      "archived_path": "analysis/history/bench-before-layout-f2d2016eee1b.py",
+      "path": "src/oar/bench.py",
+      "sha256": "f2d2016eee1b67f8147b96755d4fe534311b4c57729888f46bed839dfccefb22"
+    },
+    {
+      "path": "src/oar/cli.py",
+      "sha256": "0b8130539bf733e0beb11377391fc2173f151aef305ceb454c055a0ed7445707"
+    },
+    {
+      "path": "src/oar/cli.py",
+      "revision": "a100d5c2aa031420d50ae56dcb45fc186e52a45f",
+      "sha256": "65af2908f8fa2505c7d705f372664b4361067624649b828b39f310eac6c5e585"
+    },
+    {
+      "path": "src/oar/cli.py",
+      "revision": "4dae4331ab338dcd6f5fd0c2ad8e541cfb2fcf21",
+      "sha256": "7a8bf194dfaa24d0663599d7628d2f9afdc09b6d61db9d60fd5343ab368f39ea"
+    },
+    {
+      "path": "src/oar/config.py",
+      "sha256": "042dadf66c6d328e635accadc8d28e6ee2752a6ded80733f6185da1f362ba23a"
+    },
+    {
+      "path": "src/oar/gates.py",
+      "sha256": "bde06fe48e416d5f0f2517fafd782617493002fcd3983d9ae0332b3926985c8f"
+    },
+    {
+      "path": "src/oar/hardware.py",
+      "sha256": "4ba118d816eec9d255cfb3d7925416373119fe181f82529fb58a96347d8e5048"
+    },
+    {
+      "path": "src/oar/linear.py",
+      "sha256": "e0e0ee246c43e1e71b4a98ba1e97b9a1a8774a13c8271fb063a4020524119b61"
+    },
+    {
+      "path": "src/oar/optimizer_preview.py",
+      "sha256": "a0f965d69874e71d3b0e91663713293884e1270d08442fe07531f4b057a45888"
+    },
+    {
+      "path": "src/oar/oracle.py",
+      "revision": "dc561706752f656706c4fac5ae9b9f1f9c53b601",
+      "sha256": "917ac86d911c624f318d921b0ef9bffecc859efef039e4b98beb7bd1a49b609d"
+    },
+    {
+      "path": "src/oar/oracle.py",
+      "revision": "2e89e742131eb5eebaeb7a028d8e8f2e4fc50e07",
+      "sha256": "f07f6f5c6f025601640b2db8e405e34e64223ad7db123bc12a21cd0c8445dbb9"
+    },
+    {
+      "path": "src/oar/oracle.py",
+      "sha256": "febb3517407260eb05c4992b0541d28e0e47290e085f27c1ca4f0a7d9ffee889"
+    },
+    {
+      "path": "src/oar/provenance.py",
+      "sha256": "ec15cbd992a51dbd7acd7cd566f5fdc84df3e9c2bbdf73b0e3ca8e3a0cd96aa0"
+    },
+    {
+      "path": "src/oar/records.py",
+      "sha256": "2f06d6ee5ce7debbc3bfad99fd160fe79a125335a15fdd69f46242a9924bd300"
+    },
+    {
+      "path": "src/oar/report.py",
+      "sha256": "176a5409f4f669849189d58aa45d7c755c793baa401e3a0835449cab787a22c3"
+    },
+    {
+      "path": "src/oar/reproduction.py",
+      "sha256": "222ccef3c5da1540f006907c2d6a85f4205621640665e1792cac552b92c66c3c"
+    },
+    {
+      "path": "src/oar/timing.py",
+      "sha256": "25351cd20abc14385dd1cb3e482c67f73619b1ead30900ca0150fe57072458e5"
+    },
+    {
+      "path": "tests/fixtures/config_minimal.yaml",
+      "sha256": "db5c32cab889f61e28315bb3741497fd546f8c393a8ef251eda469f4e057d75e"
+    },
+    {
+      "path": "tests/fixtures/config_reordered.yaml",
+      "sha256": "7005c9fe144fd0bab730f96125d7cae4e53196da51f0d15031a83f631cb191c4"
+    },
+    {
+      "path": "tests/test_accumulation.py",
+      "sha256": "b036abf408b31b143933773fa33436bbbd02100fed5a1397cd8cab9081cb35f7"
+    },
+    {
+      "path": "tests/test_algebra.py",
+      "sha256": "57bcf5ba0141a246c11dca1680338f27c8656a497e4ab0c65ab7fc09e41f6756"
+    },
+    {
+      "path": "tests/test_audit_decision.py",
+      "sha256": "3435eca89bf8fc154f1157b02ae7956d35c03eaed8beb0ac051795683bf9f346"
+    },
+    {
+      "path": "tests/test_audit_journal.py",
+      "sha256": "92439ec67a4039e9a4b9daf3d948d4ddc7a944e1d03efc16d14b9b09171401d2"
+    },
+    {
+      "path": "tests/test_basis.py",
+      "sha256": "97bd57733140469a7a23bf95a7bd29a2142935651909cbc921bfb5edd0e6ac01"
+    },
+    {
+      "archived_path": "analysis/history/test_bench_accounting-before-layout-16cf18886bd4.py",
+      "path": "tests/test_bench_accounting.py",
+      "sha256": "16cf18886bd425055771b309cd720cc60b5909494eff7719c72bf11b4fe66d83"
+    },
+    {
+      "archived_path": "analysis/history/fix1-test_bench_accounting-83c112ad2c89.py",
+      "path": "tests/test_bench_accounting.py",
+      "sha256": "83c112ad2c890ea4ab8df8cbc46d9b8c62fab757f56415a1d7350ebeaa274ef8"
+    },
+    {
+      "path": "tests/test_bench_accounting.py",
+      "sha256": "f600b9d92a5c4c3570d8c705f269dec8574ab01ca8dc8fa0c33b90d18dfda13a"
+    },
+    {
+      "path": "tests/test_confidence.py",
+      "sha256": "7f6f16f8bac0ec4cdec5dfec10ca6b122a9ce5702d8f2dc0cb2b18be4c2ca690"
+    },
+    {
+      "path": "tests/test_config_records.py",
+      "sha256": "bb50cd9aea2f98f928324ab2f13e4dee29612804cb06f1efef78e86d92dcdd23"
+    },
+    {
+      "path": "tests/test_discovery.py",
+      "sha256": "337f2ed69cc17225e2198532ce23d957cec87688d25fd744d96b1605456685b2"
+    },
+    {
+      "path": "tests/test_exact_adjoints.py",
+      "sha256": "7276d899195b667615e19ee75a8ab955dfcff24bd25c9f6259ae13173cc229ba"
+    },
+    {
+      "path": "tests/test_optimizer_preview.py",
+      "sha256": "9e77fa8756b159ad7bcb2c300f64551460f97a827cfd8bf33c9d2229b58c1c79"
+    },
+    {
+      "path": "tests/test_oracle.py",
+      "revision": "f1efd557d36312e4f88869e83355b941ad6cd021",
+      "sha256": "41dff73e0e1791a34fbca384f4937f0ca1a284f7c8fd6e017185bf38c95fcc3b"
+    },
+    {
+      "path": "tests/test_oracle.py",
+      "sha256": "581e0ab4b9ec3c62a270b39ffe113a06f53628f62217742ddc249efd3b12eb8d"
+    },
+    {
+      "path": "tests/test_oracle.py",
+      "revision": "dc561706752f656706c4fac5ae9b9f1f9c53b601",
+      "sha256": "6a40b3651a9b68b64e63e9d9345b94d0549e144f9ad3f22ee771a3eac8cf1120"
+    },
+    {
+      "path": "tests/test_report.py",
+      "sha256": "e5c2d01e361f43d49ef3f57787f685c6c9d6a2393b4dcbae6fd65825bb31a284"
+    },
+    {
+      "path": "tests/test_reproduction.py",
+      "sha256": "c600b96dd4954bad06641773615ae6c70419be038c70286ece0e42972f3dd207"
+    },
+    {
+      "path": "tests/test_synthesis_collection.py",
+      "sha256": "dc9cc7cba68250e139861e5b984c8c06ef5569cf717e5827a1f736dadd414dc0"
+    },
+    {
+      "path": "tests/test_timing_harness.py",
+      "sha256": "123cdf5261ff458693c7386e64b7f0d05758a21311aa95bc050fa4059da3de90"
+    }
+  ],
+  "audits": [
+    {
+      "artifacts": [
+        "docs/blueprint.md",
+        "analysis/optimizer_correctness.json",
+        "decisions/reports/structural_oracle.md"
+      ],
+      "kind": "scientific",
+      "summary": "Blueprint\u00a715 challenge repeated: originality is not certified; prior subspace/compression mechanisms overlap known work. Tested actual AdamW displacement can be harmful despite high cosine; ordinary/complement bounds retain information but fail actionable declared past-grid acceptance. Past/current-SVD oracles remain distinct; current exact gradients/SVD are paid diagnostics. Exact incoming adjoints constrain headroom. First-order minibatch usefulness, finite MSE updates and generalization are distinct. Rare-coordinate controls demonstrate a possible omitted direction, not rare-pattern population prevalence. Ordinary SGD can make auditing redundant; no broad optimizer superiority or universal past-reuse failure is claimed."
+    },
+    {
+      "artifacts": [
+        "docs/blueprint.md",
+        "analysis/README.md",
+        "analysis/structural_oracle_schema.json",
+        "tests/test_oracle.py"
+      ],
+      "kind": "experimental",
+      "summary": "Blueprint\u00a715 challenge repeated: missing/sandbox-hidden MPS is explicitly distinguished from actual device evidence; hardware-only marker suite was run. Low memory is screened and sampled, not a full-training OOM proof. Missing corpus blocks language claims. All approximate audit attempts reject under unresolved NumericalPolicy; the exact permitted past-grid rejects all, and forced conditional commit is pricing only. Independent RNG domains, tuning/evaluation/development query IDs and pre-query scope/LR lock are checked, but only two seeds with duplicated early stages and correlated proposals limit inference. Nonzero dropout, real rare-pattern generalization, ordinary-SGD training, Muon beating both AdamW methods, positive-synthetic/negative-real transfer, and resumed full-run RNG/counter consistency are unexecuted. No fixed-time censoring or paired independent-run statistics were invented."
+    },
+    {
+      "artifacts": [
+        "tests/test_optimizer_preview.py",
+        "tests/test_audit_journal.py",
+        "tests/test_accumulation.py",
+        "tests/test_exact_adjoints.py",
+        "analysis/headroom_decision.json",
+        "analysis/wp09_verification.json"
+      ],
+      "kind": "implementation",
+      "summary": "Blueprint\u00a715 challenge repeated: exact adjoints/streaming accumulation, zero-versus-missing gradients with weight decay, duplicate/shared-parameter exclusions, native preview, mutation invalidation and journal crashes have component tests. Actual hardware shapes and explicit CPU decomposition/transfer costs were measured. Preview retains32P rather than approximate28P. Timed reference validation/alignment/journal bottlenecks are not irreducible lower bounds. Full scheduler/data cursor replay, checkpoint hooks, dropout RNG restoration, whole-model interruption/resume and full-training memory remain gated, not passed. Extreme finite FP32 endpoint overflow remains a disclosed fail-closed limitation. No finite-precision certificate is claimed."
+    },
+    {
+      "artifacts": [
+        "docs/blueprint.md",
+        "decisions/rulings.md",
+        "decisions/review_summary.md",
+        "analysis/headroom_decision.json",
+        "decisions/outcome.json"
+      ],
+      "kind": "decision",
+      "summary": "Blueprint\u00a714 outcome: stop the present online branch and narrow the finding to component headroom plus complete-cost failure and an inconclusive/negative actionable policy region in this bounded synthetic grid. Correct mathematics alone and positive component timing do not establish practical learning efficiency. Current-SVD diagnostic improvement is paid and cannot reopen online work. Wide intervals, absent guardrails, unavailable baselines and lack of independent confirmation are unresolved, not equivalence or universal failure. No performance redesign, alternate basis, architecture pivot, MLX retry or corpus branch is authorized; any pivot requires a new specification and evidence. Rulings retain superseded/unused decisions and their practical rework costs; final whole-branch review remains with the controller."
+    },
+    {
+      "artifacts": [
+        "README.md",
+        "decisions/reports/synthesis_schema.md",
+        "analysis/reproduction/wp09/plan.json",
+        "analysis/reproduction/wp09/comparison.json",
+        "analysis/reproduction/wp09/comparison_recovered.json"
+      ],
+      "kind": "reproduction",
+      "summary": "Local commands, pinned arm64 environment, source/hash resolution and independent-path reproduction are documented in README and synthesis_schema. Original artifacts were not overwritten. Prepare writes the full path-only amendment/policy before execution; run validates hashes and appends/restores the previous exact permission. Initial comparison failure is retained; postprocessing-only step\u2192committed_updates recovery uses identical observations/tolerances and compares all792 rows/30 curves, not a favorable subset. No benchmark was repeated because no timed kernel changed. Large trusted local checkpoints are ignored and regenerable; no corpus/pretrained weights are required or redistributed. Original study, historical source revisions and later review fixes retain separate attribution."
+    }
+  ],
+  "evidence": [
+    {
+      "artifact": "analysis/timing_calibration_wide.json",
+      "evidence_class": "backend timing",
+      "metrics": {
+        "candidate": {
+          "unit": "ms",
+          "value": 28.87526389935778
+        },
+        "candidate_paired_native": {
+          "unit": "ms",
+          "value": 36.88247204344305
+        },
+        "candidate_saving": {
+          "interval": [
+            7.3949336433239905,
+            8.604643594784042
+          ],
+          "unit": "ms",
+          "value": 8.007208144085276
+        },
+        "complete_paired_native": {
+          "unit": "ms",
+          "value": 36.73832876504295
+        },
+        "complete_saving": {
+          "interval": [
+            -19.052433659413108,
+            -15.940849807359177
+          ],
+          "unit": "ms",
+          "value": -17.667898015740015
+        },
+        "conditional_complete_attempt": {
+          "unit": "ms",
+          "value": 54.406226780782966
+        },
+        "full_training_peak_memory": {
+          "unit": "bytes",
+          "value": null
+        },
+        "retained_parameters_optimizer_preview": {
+          "unit": "bytes",
+          "value": 151117824
+        },
+        "training_quality_gain": {
+          "unit": "not measured",
+          "value": null
+        }
+      },
+      "scope": "Apple M3 Max, Mac15,11,38,654,705,664 physical bytes; macOS26.7.1; native arm64 CPython3.13.5/PyTorch2.15.0 MPS FP32 with fallback0. One two-linear GELU residual block, n8192/di768/do3072/rank16/q16, not a language model. Fastest validated fused native AdamW selected; all compared variants validated against three single-tensor updates.",
+      "status": "measured",
+      "summary": "Candidate reconstruction is28.875ms versus paired native36.882ms; the complete conditional audited attempt is54.406ms versus its paired native36.738ms. No absolute training-quality gain or full-training-memory trade-off was measured. Wide retained parameters/optimizer/preview total151,117,824 bytes; study sampled RSS/Metal readings overlap and are not single-model training peaks.",
+      "title": "Component headroom versus complete-cost deficit",
+      "uncertainty": "Exploratory randomized shared-round paired block bootstrap, not independent training runs. Recorded memory pressure/swap and unknown thermal limits qualify all times; candidate95% saving7.395\u20138.605ms and full-cost saving\u221219.052 to\u221215.941ms. p0 commit bypasses unresolved rejection only for pricing, never for online acceptance."
+    },
+    {
+      "artifact": "analysis/headroom_decision.json",
+      "evidence_class": "backend timing",
+      "metrics": {
+        "K16_break_even_p": {
+          "interval": [
+            -0.5350468991297499,
+            -0.44732254684257744
+          ],
+          "unit": "probability",
+          "value": -0.4928020451125202
+        },
+        "direct_exact_replay": {
+          "unit": "ms",
+          "value": 37.36582401001619
+        },
+        "extra_refresh": {
+          "unit": "ms",
+          "value": 11.190847105657063
+        },
+        "forced_reject": {
+          "unit": "ms",
+          "value": 91.40139334421191
+        }
+      },
+      "scope": "Same isolated MPS operator study; main/wide research clocks25.779/12.577s include initialization, warmup and profiling before final JSON serialization. K/p grid is arithmetic sensitivity, not an observed training cycle.",
+      "status": "measured",
+      "summary": "Every complete p0 attempt in the six measured configurations is slower. Forced rejection is91.401ms; direct exact replay37.366ms and paired extra refresh11.191ms in the wide block. Named preview including CPU alignment19.667ms (input validation6.484ms, raw CPU FP64 alignment/transfer2.071ms) and generation/journal/transfer/capture3.257ms are reference costs, not irreducible lower bounds. Journal reparse grows3.121/9.438/27.934ms at0/64/256 reservations. Do not subtract independently aged conditional/rejected paths to infer replay.",
+      "title": "Replay, refresh, journal aging and cold-start costs",
+      "uncertainty": "Correct threshold p*=(D\u2212A\u2212C/(K\u22121))/R for K>1; K1 has no approximate segment. Wide K16 p*=\u2212.492802,95%[\u2212.535047,\u2212.447323], no feasible probability. Four-microbatch candidate failed warmup/noise qualification despite positive raw timing. No time-to-quality claim."
+    },
+    {
+      "artifact": "analysis/optimizer_correctness.json",
+      "evidence_class": "algebra/reference",
+      "metrics": {},
+      "scope": "Reached Tasks1\u20135 component references only, no full trainer replay. Original optimizer collector artifact reused unchanged by Task6.",
+      "status": "measured",
+      "summary": "Exact incoming adjoints and streaming accumulation, independent Gaussian bounds, crash-safe spending and native-equivalent full AdamW preview/commit are implemented.18 CPU FP64/FP32/MPS FP32 multistep reference cases had zero observed discrepancy. Constructed high-cosine harmful AdamW, flat-spectrum/rotating/rare-coordinate controls are retained. Correctness in these cases is not a formal finite-precision certificate.",
+      "title": "Tested mathematical and optimizer contracts",
+      "uncertainty": "Real-arithmetic identities and tested implementation behavior; no claim of universal floating-point closure, online safety or empirical control frequency."
+    },
+    {
+      "artifact": "analysis/structural_oracle_aggregate.json",
+      "evidence_class": "exploratory learning",
+      "metrics": {
+        "development_harm": {
+          "unit": "proposals",
+          "value": 72
+        },
+        "lost_progress_versus_dense": {
+          "unit": "proposals",
+          "value": 144
+        },
+        "negative_true_alignment": {
+          "unit": "proposals",
+          "value": 36
+        },
+        "past_evaluation_proposals": {
+          "unit": "correlated proposals",
+          "value": 144
+        },
+        "same_batch_harm": {
+          "unit": "proposals",
+          "value": 43
+        }
+      },
+      "scope": "Synthetic native teacher-regression histories, n2048/di512/do2048, six condition-seed histories/two initialization-data seeds;792 layer rows/396 proposals,18 checkpoints and disjoint tuning/evaluation/development descriptors. MSE per output element; counts are synthetic observations. Study measured at2e89e74, results retained atdc56170.",
+      "status": "measured",
+      "summary": "Past evaluation proposals144:36 negative true alignments,43 same-batch harms,72 independent synthetic-development harms; all144 lose development progress versus matched dense. Ordinary/exact-complement/q8-probe-complement accept0/144 at every declared tau.25/.5/.75 before policy fitting. Relative thresholds.1/.25/.5/1/2 accept0/0/8/56/104, including development harms0/0/8/37/54. Paid current-SVD complement accepts2/54 only at tau.75/rank64; both still lose development progress versus dense. Scores have nontrivial descriptive AUCs; the complement-versus-ordinary difference is unconfirmed and stage-confounded.",
+      "title": "Bounded oracle retains information but no actionable declared past-margin region",
+      "uncertainty": "Correlated projections/checkpoints and duplicated early full-rank/shift stages are not independent run replication. One query per split/checkpoint. Dense itself harms early queries; projection is not the sole explanation. No real-corpus NLL, approximate learner trajectory, fixed-time quality, generalization or H4 confirmation."
+    },
+    {
+      "artifact": "analysis/structural_oracle_summary.json",
+      "evidence_class": "exploratory learning",
+      "metrics": {
+        "endpoint_Metal_driver": {
+          "unit": "bytes",
+          "value": 1126924288
+        },
+        "endpoint_RSS": {
+          "unit": "bytes",
+          "value": 597868544
+        },
+        "worker_research_wall": {
+          "unit": "s",
+          "value": 60.959142667008564
+        }
+      },
+      "scope": "Original locked full synthetic study at2e89e742131eb5eebaeb7a028d8e8f2e4fc50e07. Forecast95.30s under predeclared600s engineering ceiling. All18 checkpoints, six histories and792 rows completed; no actual study attempt was dropped or failed.",
+      "status": "measured",
+      "summary": "Native development MSE per output element initial\u2192128: low_rank/seed1101: 0.846770\u21920.101799; low_rank/seed2202: 0.864220\u21920.101958; full_rank/seed1101: 0.870242\u21920.108646; full_rank/seed2202: 0.849622\u21920.107520; direction_shift/seed1101: 0.870242\u21920.286898; direction_shift/seed2202: 0.849622\u21920.283887. All six histories learn; shift phase120\u2192128 improves. Pilot at a100d5c selected LR.003, the upper bracket boundary, before queries. Study worker60.959s,18 ignored local checkpoints485,101,734 bytes; endpoint RSS597,868,544/Metal driver1,126,924,288 bytes overlap. Current SVD/CPU decompositions/transfers, preview, query scoring and serialization are paid offline costs; repeated layer/shared row clocks must not be summed.",
+      "title": "Absolute synthetic quality and paid study resources",
+      "uncertainty": "Eight post-shift updates do not establish convergence/recovery. Native scaffold is learnability calibration, not competitive baseline tuning. Original worker clock excludes fresh-process startup and final-summary tail; endpoint resources miss peaks and cannot establish training memory. No tensor/corpus/weights redistribution."
+    },
+    {
+      "artifact": "analysis/structural_oracle_audit.jsonl",
+      "evidence_class": "exploratory learning",
+      "metrics": {
+        "rank16_min_B_over_positive_a": {
+          "unit": "ratio",
+          "value": 1.1028868063716888
+        },
+        "rank16_positive_a": {
+          "unit": "proposals",
+          "value": 42
+        },
+        "rank16_positive_lower_margin": {
+          "unit": "of48 proposals",
+          "value": 0
+        },
+        "rank64_positive_lower_margin": {
+          "unit": "of48 diagnostic proposals",
+          "value": 2
+        }
+      },
+      "scope": "Deduplicated simultaneous past evaluation proposals, using exact complement bound and raw alignment in retained raw rows. Only rank16 matches the previously measured structural-study operator shape.",
+      "status": "measured",
+      "summary": "At priced rank16,0/48 held-out past proposals have positive exact lower margin a\u2212B; among42 with positive a, min(B/a)=1.1028868. This diagnoses failure of a necessary condition, not a new selected threshold. Rank64 has2/48 tiny positive margins only beyond the declared grid. Do not infer no possible tau anywhere or no information. Rank4/64 at this structural shape lack matching measured runtimes; no rank-cost frontier or deployable paid-current-SVD pipeline exists.",
+      "title": "Derived necessary-condition check at priced rank16",
+      "uncertainty": "Derived descriptive check only; actual numerical allowance remains unresolved. The original unfitted-grid statement is primary."
+    },
+    {
+      "artifact": "analysis/guardband_calibration.json",
+      "evidence_class": "unresolved",
+      "metrics": {},
+      "scope": "CPU/reference and bounded MPS component numerical evidence; wide block has timing evidence only.",
+      "status": "unresolved",
+      "summary": "NumericalPolicy remains unresolved.120 calibration/stress cases, including corrected observed stride metadata, do not provide formal machine or run-wide execution certification. Actual audit decisions reject unresolved/nonfinite margins. Extreme finite FP32 endpoints may still yield nonfinite stored displacement/alignment; fail-closed rejection is retained.",
+      "title": "Numerical allowance and full execution certificate",
+      "uncertainty": "No online acceptance or validated production allowance. Tiny near-zero finite MSE signs remain exploratory."
+    },
+    {
+      "artifact": "manifests/upstream_sources.json",
+      "evidence_class": "unresolved",
+      "metrics": {},
+      "scope": "Discovery provenance and isolated AdamW operator controls only. The conditional Task7 licensing ruling was never used.",
+      "status": "blocked",
+      "summary": "Native default/single/foreach/fused AdamW controls were validated and the fastest used by timing pairs. Muon, activation-checkpointed full BP, INSTANT, DropBP and VCAS training ports were not executed. Upstream code/notices were inspected and archived; source pins do not establish implementation fidelity, equal tuning or competitiveness. INSTANT energy rescaling, calibration exposure and literal helper indexing remain port requirements. WikiText license/version conflict and dataset bodies remain unverified; no corpus ingestion occurred.",
+      "title": "Unavailable native alternatives and nearest-art baselines",
+      "uncertainty": "No superiority against unexecuted alternatives, language workload, strongest local training baseline or real-task frontier."
+    },
+    {
+      "artifact": "analysis/evidence_history.json",
+      "evidence_class": "unresolved",
+      "metrics": {},
+      "scope": "All historical exploratory operator/calibration branches; no favorable-prefix selection.",
+      "status": "failed",
+      "summary": "Initial serialization-failed pilot lost temporary raw blocks and supplies no gate evidence; its aggregate console history is unavailable as raw proof. An overlapping-collector pilot is retained and excluded. Earlier sequential/control-drift/replay-identification and coupled-initialization studies remain archived and superseded. The incorrect layout-label numerical artifact and intermediate correction are archived; final120-case calibration remains unresolved. Current seed-separated shared-round studies alone support latest WP02.",
+      "title": "Failed, contaminated and superseded timing trials retained",
+      "uncertainty": "No missing raw pilot values are reconstructed or substituted. Resource telemetry is sampled and OS-wide pressure is not attributed to a process."
+    },
+    {
+      "artifact": "docs/blueprint.md",
+      "evidence_class": "unresolved",
+      "metrics": {},
+      "scope": "Original blueprint preserved unchanged; reached Tasks1\u20136 and bounded Task11 amendment are narrower than its full study plan.",
+      "status": "blocked",
+      "summary": "Tasks7\u201310 and12\u201316 remain skipped/deferred by the gate stop. Ordinary WP03 harness/baseline prerequisites are unfulfilled and full WP04 is inconclusive; WP05\u2013WP08 are unexecuted. No trainer, data preparation, controller, online policy, frozen protocol, dropout/RNG-resume lifecycle, primary H4 test or independent confirmation was implemented. Only synthesis can complete on the stopped branch.",
+      "title": "Deferred implementation and confirmation",
+      "uncertainty": "Missing data remain unavailable; passing WP09 means documented synthesis, never scientific success."
+    },
+    {
+      "artifact": "analysis/reproduction/wp09/comparison.json",
+      "evidence_class": "unresolved",
+      "metrics": {},
+      "scope": "Repeat measured at committed7c0706e with independent output/checkpoint paths and exact clone hashb86fb64b..., original configa387445b....",
+      "status": "failed",
+      "summary": "Fresh actual-MPS full repeat succeeded, all792 row comparisons were exact, then the helper failed KeyError:step at curve postprocessing. This failed processing outcome and original plan are retained. The actual curve field is committed_updates; no failed scientific comparison is relabeled as success.",
+      "title": "Initial reproduction postprocessing failure",
+      "uncertainty": "Postprocessing recovery is separately reported. A1.27s report-only CPU pytest may have overlapped; wall times are accounting only, not timing replication."
+    },
+    {
+      "artifact": "analysis/reproduction/wp09/comparison_recovered.json",
+      "evidence_class": "algebra/reference",
+      "metrics": {
+        "checkpoint_hashes_validated": {
+          "unit": "local checkpoints",
+          "value": 18
+        },
+        "curves_compared": {
+          "unit": "curve observations",
+          "value": 30
+        },
+        "max_curve_difference": {
+          "unit": "MSE per output element",
+          "value": 0.0
+        },
+        "rows_compared": {
+          "unit": "layer rows",
+          "value": 792
+        }
+      },
+      "scope": "Full same-seed bounded synthetic repeat in a fresh actual-MPS fallback0 worker, original study source2e89e74 versus reproduction source7c0706e. Actual clone path/hash is separately bound from original hardcoded worker config provenance.",
+      "status": "measured",
+      "summary": "Authorized field-name mapping logical step\u2192committed_updates recovered all30 learning-curve comparisons. All792 keyed rows matched exactly across28 numeric and23 categorical fields, exact harm signs and all declared acceptance decisions; all30 MSE values have zero difference.18 local checkpoint hashes validate. Original failed comparison and predeclared tolerance2e-6 absolute/2e-4 relative remain unchanged; no research rerun.",
+      "title": "Recovered same-seed numerical reproducibility",
+      "uncertainty": "Numerical reproducibility is not independent scientific confirmation. Repeat61.229s worker/62.914s invocation include separately identified overhead; they do not repair original startup/tail accounting. CPU report-test overlap precludes timing replication; no benchmark/MPS-test/collector overlap."
+    }
+  ],
+  "gate_snapshot": {
+    "lines": 16,
+    "sha256": "95909fde5d222f7ff6366a93cc6f1ba3a8ea72682db7c6e6e8786e5a17ee1b95"
+  },
+  "root": "..",
+  "schema_version": 1
+}

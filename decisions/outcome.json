@@ -1,0 +1,56 @@
+{
+  "current_gates": {
+    "WP00": "pass",
+    "WP01": "pass",
+    "WP02": "stop",
+    "WP03": "unfulfilled",
+    "WP04": "inconclusive",
+    "WP05": "unexecuted",
+    "WP06": "unexecuted",
+    "WP07": "unexecuted",
+    "WP08": "unexecuted",
+    "WP09": "synthesis only; recorded after output checks"
+  },
+  "decision": "stop",
+  "evidence": [
+    "Qualified isolated candidate reconstruction benefit; complete attempt negative even at p0.",
+    "No accepting past exact-margin proposal on the declared tau grid; not a universal no-information claim.",
+    "Same-seed numerical reproduction recovered after explicit curve-schema postprocessing correction; not independent confirmation."
+  ],
+  "interpretation": "narrow",
+  "next_action": "Archive and review this stopped-study synthesis. No new experiment, proposer, criterion, backend, performance redesign or pivot without a separately authorized specification and evidence.",
+  "reached_tasks": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    11,
+    17
+  ],
+  "review": "Reached-task owner reviews accepted through Task11; Task17/final whole-branch review remains pending with controller.",
+  "schema_version": 1,
+  "scientific_gate_snapshot": {
+    "lines": 16,
+    "sha256": "95909fde5d222f7ff6366a93cc6f1ba3a8ea72682db7c6e6e8786e5a17ee1b95"
+  },
+  "skipped_or_deferred_tasks": [
+    7,
+    8,
+    9,
+    10,
+    12,
+    13,
+    14,
+    15,
+    16
+  ],
+  "statement": "No training speedup was established. Stop the present online branch; retain component headroom and bounded exploratory synthetic findings.",
+  "task11_scope": "only hash-bound synthetic structural-oracle amendment",
+  "unresolved": [
+    "NumericalPolicy and formal finite-precision/run-wide certificate.",
+    "Full trainer replay, real-corpus NLL/fixed-time quality/generalization and strongest training baselines.",
+    "Independent seed replication, protected protocol, primary H4 confirmation and full training time/memory frontier."
+  ]
+}

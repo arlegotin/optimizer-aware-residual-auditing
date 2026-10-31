@@ -1,0 +1,39 @@
+{
+  "commands": [
+    {
+      "actual_MPS": false,
+      "command": ".venv/bin/python -m pytest -q -m 'not mps'",
+      "result": "339 passed, 9 deselected in 4.16s"
+    },
+    {
+      "actual_MPS": true,
+      "command": "PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python -m pytest -q",
+      "result": "348 passed in 7.66s"
+    },
+    {
+      "actual_MPS": true,
+      "command": "PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python -m pytest -q -m mps",
+      "result": "9 passed, 339 deselected in 2.98s"
+    }
+  ],
+  "limitations": [
+    "Report-only CPU pytest1.27s may overlap fresh repeat; wall times accounting only.",
+    "Original curve postprocessing failure retained; logical step maps to committed_updates in separately recorded recovery.",
+    "NumericalPolicy unresolved; normal online/corpus/trainer/controller/confirmation work stopped."
+  ],
+  "no_benchmark_rerun": "No measured kernel or timing implementation changed; existing qualified costs retained with original attribution.",
+  "normalization_verification": {
+    "change": "Trailing-newline normalization only; original WP09 snapshots archived without scientific change.",
+    "focused": "41 passed in1.78s",
+    "full_actual_mps_fallback0": "348 passed in10.25s"
+  },
+  "original_blueprint_sha256": "cea178cc359653f80f460b53809f5ff912639d57392a44adbe0ab16d56b18ae1",
+  "reproduction": {
+    "initial": "analysis/reproduction/wp09/comparison.json",
+    "plan": "analysis/reproduction/wp09/plan.json",
+    "recovered": "analysis/reproduction/wp09/comparison_recovered.json",
+    "same_seed_not_confirmation": true
+  },
+  "schema_version": 1,
+  "scope": "implemented component and stopped-study synthesis suites only; not confirmation"
+}

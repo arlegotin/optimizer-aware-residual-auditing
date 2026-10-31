@@ -236,5 +236,5 @@ def build_report(gates: Path, run_index: Path | None, out: Path) -> Path:
             text += [f"- {label}: `{a['sha256']}` ({attribution})"]
         text += ['']
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text('\n'.join(text)+'\n', encoding='utf-8')
+    out.write_text('\n'.join(text).rstrip()+'\n', encoding='utf-8')
     return out
