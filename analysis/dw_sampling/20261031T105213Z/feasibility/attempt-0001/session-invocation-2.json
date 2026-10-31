@@ -1,0 +1,33 @@
+{
+  "failure": "native variant selection warmup unstable",
+  "invalid_condition": "failed_warmup",
+  "kind": "feasibility",
+  "resources_after": {
+    "available_memory_bytes": 9424486400,
+    "memory_percent": 75.6,
+    "metal_current_bytes": 4477952,
+    "metal_driver_bytes": 9125888,
+    "physical_memory_bytes": 38654705664,
+    "process_rss_bytes": 459128832,
+    "swap_in_bytes": 2780363620352,
+    "swap_out_bytes": 12910051328,
+    "swap_used_bytes": 35680026624
+  },
+  "resources_before": {
+    "available_memory_bytes": 9749430272,
+    "memory_percent": 74.8,
+    "metal_current_bytes": 0,
+    "metal_driver_bytes": 475136,
+    "physical_memory_bytes": 38654705664,
+    "process_rss_bytes": 223215616,
+    "swap_in_bytes": 2780359770112,
+    "swap_out_bytes": 12910051328,
+    "swap_used_bytes": 35680026624
+  },
+  "session": 2,
+  "shapes": [],
+  "start_utc": "2026-10-31T11:22:56.169090+00:00",
+  "status": "INCONCLUSIVE_MEASUREMENT",
+  "traceback": "Traceback (most recent call last):\n  File \"/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py\", line 697, in cost_session\n    raise MeasurementInvalid('failed_warmup', 'native variant selection warmup unstable')\nMeasurementInvalid: native variant selection warmup unstable\n",
+  "wall_s": 10.331088042003103
+}

@@ -1,0 +1,288 @@
+{
+  "fallback_before_import": "0",
+  "matmul_precision": "highest",
+  "native_resource_calibration": [
+    {
+      "boundary": "resource forecast calibration only; not comparative performance",
+      "native_complete_step_s": [
+        0.0010900839697569609,
+        0.0011175830150023103,
+        0.0010691250208765268
+      ],
+      "shape": {
+        "di": 128,
+        "do": 512,
+        "id": "tiny",
+        "microbatches": 1,
+        "n": 128,
+        "stride": 1
+      }
+    },
+    {
+      "boundary": "resource forecast calibration only; not comparative performance",
+      "native_complete_step_s": [
+        0.02025112509727478,
+        0.020142541965469718,
+        0.01974649995099753
+      ],
+      "shape": {
+        "di": 512,
+        "do": 2048,
+        "id": "middle2048",
+        "microbatches": 1,
+        "n": 2048,
+        "stride": 1
+      }
+    },
+    {
+      "boundary": "resource forecast calibration only; not comparative performance",
+      "native_complete_step_s": [
+        0.03750270896125585,
+        0.03815866692457348,
+        0.03759025002364069
+      ],
+      "shape": {
+        "di": 512,
+        "do": 2048,
+        "id": "middle4096",
+        "microbatches": 1,
+        "n": 4096,
+        "stride": 1
+      }
+    },
+    {
+      "boundary": "resource forecast calibration only; not comparative performance",
+      "native_complete_step_s": [
+        0.1628612499916926,
+        0.16548454097937793,
+        0.16396658297162503
+      ],
+      "shape": {
+        "di": 768,
+        "do": 3072,
+        "id": "wide",
+        "microbatches": 1,
+        "n": 8192,
+        "stride": 1
+      }
+    },
+    {
+      "boundary": "resource forecast calibration only; not comparative performance",
+      "native_complete_step_s": [
+        0.02319079195149243,
+        0.0218995000468567,
+        0.022502040956169367
+      ],
+      "shape": {
+        "di": 512,
+        "do": 2048,
+        "id": "middle2048_accum4_stride2",
+        "microbatches": 4,
+        "n": 2048,
+        "stride": 2
+      }
+    }
+  ],
+  "operations": [
+    {
+      "device": "mps:0",
+      "input_stride": [
+        128,
+        1
+      ],
+      "p_min": 0.006664850048078731,
+      "p_sum": 1.0,
+      "sampler": "importance",
+      "score_count_transferred": 128,
+      "shape": {
+        "di": 128,
+        "do": 512,
+        "id": "tiny",
+        "microbatches": 1,
+        "n": 128,
+        "stride": 1
+      },
+      "status": "pass"
+    },
+    {
+      "device": "mps:0",
+      "input_stride": [
+        128,
+        1
+      ],
+      "p_min": 0.006664850048078731,
+      "p_sum": 1.0,
+      "sampler": "uniform",
+      "score_count_transferred": 128,
+      "shape": {
+        "di": 128,
+        "do": 512,
+        "id": "tiny",
+        "microbatches": 1,
+        "n": 128,
+        "stride": 1
+      },
+      "status": "pass"
+    },
+    {
+      "device": "mps:0",
+      "input_stride": [
+        512,
+        1
+      ],
+      "p_min": 0.0004269188073835855,
+      "p_sum": 0.9999999999999999,
+      "sampler": "importance",
+      "score_count_transferred": 2048,
+      "shape": {
+        "di": 512,
+        "do": 2048,
+        "id": "middle2048",
+        "microbatches": 1,
+        "n": 2048,
+        "stride": 1
+      },
+      "status": "pass"
+    },
+    {
+      "device": "mps:0",
+      "input_stride": [
+        512,
+        1
+      ],
+      "p_min": 0.0004269188073835855,
+      "p_sum": 0.9999999999999999,
+      "sampler": "uniform",
+      "score_count_transferred": 2048,
+      "shape": {
+        "di": 512,
+        "do": 2048,
+        "id": "middle2048",
+        "microbatches": 1,
+        "n": 2048,
+        "stride": 1
+      },
+      "status": "pass"
+    },
+    {
+      "device": "mps:0",
+      "input_stride": [
+        512,
+        1
+      ],
+      "p_min": 0.0002210053417050222,
+      "p_sum": 1.0,
+      "sampler": "importance",
+      "score_count_transferred": 4096,
+      "shape": {
+        "di": 512,
+        "do": 2048,
+        "id": "middle4096",
+        "microbatches": 1,
+        "n": 4096,
+        "stride": 1
+      },
+      "status": "pass"
+    },
+    {
+      "device": "mps:0",
+      "input_stride": [
+        512,
+        1
+      ],
+      "p_min": 0.0002210053417050222,
+      "p_sum": 1.0,
+      "sampler": "uniform",
+      "score_count_transferred": 4096,
+      "shape": {
+        "di": 512,
+        "do": 2048,
+        "id": "middle4096",
+        "microbatches": 1,
+        "n": 4096,
+        "stride": 1
+      },
+      "status": "pass"
+    },
+    {
+      "device": "mps:0",
+      "input_stride": [
+        768,
+        1
+      ],
+      "p_min": 0.0001112392298220365,
+      "p_sum": 1.0,
+      "sampler": "importance",
+      "score_count_transferred": 8192,
+      "shape": {
+        "di": 768,
+        "do": 3072,
+        "id": "wide",
+        "microbatches": 1,
+        "n": 8192,
+        "stride": 1
+      },
+      "status": "pass"
+    },
+    {
+      "device": "mps:0",
+      "input_stride": [
+        768,
+        1
+      ],
+      "p_min": 0.0001112392298220365,
+      "p_sum": 1.0,
+      "sampler": "uniform",
+      "score_count_transferred": 8192,
+      "shape": {
+        "di": 768,
+        "do": 3072,
+        "id": "wide",
+        "microbatches": 1,
+        "n": 8192,
+        "stride": 1
+      },
+      "status": "pass"
+    },
+    {
+      "device": "mps:0",
+      "input_stride": [
+        1024,
+        2
+      ],
+      "p_min": 0.0004468436862198802,
+      "p_sum": 1.0,
+      "sampler": "importance",
+      "score_count_transferred": 2048,
+      "shape": {
+        "di": 512,
+        "do": 2048,
+        "id": "middle2048_accum4_stride2",
+        "microbatches": 4,
+        "n": 2048,
+        "stride": 2
+      },
+      "status": "pass"
+    },
+    {
+      "device": "mps:0",
+      "input_stride": [
+        1024,
+        2
+      ],
+      "p_min": 0.0004468436862198802,
+      "p_sum": 1.0,
+      "sampler": "uniform",
+      "score_count_transferred": 2048,
+      "shape": {
+        "di": 512,
+        "do": 2048,
+        "id": "middle2048_accum4_stride2",
+        "microbatches": 4,
+        "n": 2048,
+        "stride": 2
+      },
+      "status": "pass"
+    }
+  ]
+}

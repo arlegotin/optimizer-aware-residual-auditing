@@ -1,0 +1,41 @@
+{
+  "deadline_s": 9243.325871291756,
+  "diagnostic_allowance_s": 0,
+  "forecast_s": 4621.662935645878,
+  "includes": "both sessions plus one possible invalid-session replacement, 3x component allowance, histories, warmup, reset, variants, startup and serialization",
+  "kind": "feasibility",
+  "per_shape": [
+    {
+      "bound_block_s": 0.2,
+      "bound_blocks": 388,
+      "forecast_s": 247.94305062592034,
+      "shape": "tiny"
+    },
+    {
+      "bound_block_s": 0.22276237607002258,
+      "bound_blocks": 388,
+      "forecast_s": 276.88754975795746,
+      "shape": "middle2048"
+    },
+    {
+      "bound_block_s": 0.2289520015474409,
+      "bound_blocks": 388,
+      "forecast_s": 286.3844391675666,
+      "shape": "middle4096"
+    },
+    {
+      "bound_block_s": 0.33096908195875585,
+      "bound_blocks": 388,
+      "forecast_s": 421.4300326453522,
+      "shape": "wide"
+    },
+    {
+      "bound_block_s": 0.2319079195149243,
+      "bound_blocks": 388,
+      "forecast_s": 287.9092396851629,
+      "shape": "middle2048_accum4_stride2"
+    }
+  ],
+  "replacement_sessions_maximum": 1,
+  "sessions": 2
+}

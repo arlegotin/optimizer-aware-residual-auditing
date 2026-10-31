@@ -201,3 +201,23 @@ def test_timeout_exit_is_a_resource_stop():
     with pytest.raises(TimeoutError):
         d.check_command_deadline(0, 100., clock=lambda: 101.)
     d.check_command_deadline(0, 100., clock=lambda: 99.)
+
+
+@pytest.mark.mps
+def test_native_optimizer_step_counter_device_does_not_disqualify_fused():
+    import torch
+    if not torch.backends.mps.is_available():
+        pytest.skip('actual MPS unavailable; not qualification evidence')
+    d = driver()
+    p = torch.nn.Parameter(torch.tensor([1., -2.], device='mps'))
+    q = torch.nn.Parameter(p.detach().clone())
+    actual = torch.optim.AdamW([p], foreach=False, fused=True)
+    reference = torch.optim.AdamW([q], foreach=False, fused=False)
+    for step in range(5):
+        gradient = torch.tensor([.2+step/10, -.3], device='mps')
+        p.grad, q.grad = gradient.clone(), gradient.clone()
+        actual.step()
+        reference.step()
+        d.assert_native_equivalent({'p': p}, actual, {'p': q}, reference)
+    assert actual.state[p]['step'].device.type == 'mps'
+    assert reference.state[q]['step'].device.type == 'cpu'

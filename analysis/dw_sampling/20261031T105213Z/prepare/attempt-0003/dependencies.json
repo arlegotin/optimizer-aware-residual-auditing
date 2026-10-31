@@ -1,0 +1,176 @@
+{
+  "lock_sha256": "5393bd3b88fa9b1d427447b35f12e4566fbfca6f91a2af6f04674a5104d2349e",
+  "note": "Installed files checked against wheel RECORD SHA256 entries; wheel archive identities retained separately.",
+  "packages": [
+    {
+      "mismatches": [],
+      "missing": [],
+      "name": "oar",
+      "record_sha256": null,
+      "verified_sha256_files": 0,
+      "version": "0.1.0"
+    },
+    {
+      "mismatches": [],
+      "missing": [],
+      "name": "setuptools",
+      "record_sha256": "335bfbc9aa0b5b39449db430f60c9e3793e1a97c4e71ad037b9d18554d689d83",
+      "verified_sha256_files": 348,
+      "version": "84.2.1"
+    },
+    {
+      "mismatches": [],
+      "missing": [],
+      "name": "packaging",
+      "record_sha256": "1497209d3627536ea7394baa6e811a88294f7c16591a8ee456b09c3e1059fb0a",
+      "verified_sha256_files": 29,
+      "version": "26.3"
+    },
+    {
+      "mismatches": [],
+      "missing": [],
+      "name": "networkx",
+      "record_sha256": "726e4bc73a4f54873052c5e6f9e592e7bb3143daeab1231ed4c6d66c2402f262",
+      "verified_sha256_files": 604,
+      "version": "3.7"
+    },
+    {
+      "mismatches": [],
+      "missing": [],
+      "name": "Pygments",
+      "record_sha256": "89aadf6b2456bc7303682d3c9047fd7905763f928144ce1fbf6e36f9c8185c94",
+      "verified_sha256_files": 350,
+      "version": "2.21.0"
+    },
+    {
+      "mismatches": [],
+      "missing": [],
+      "name": "pip",
+      "record_sha256": "12f0642141b07cebc6402eef76eefe4e1da51ef346572802cb4d8690fb9f2270",
+      "verified_sha256_files": 444,
+      "version": "25.1.1"
+    },
+    {
+      "mismatches": [],
+      "missing": [],
+      "name": "filelock",
+      "record_sha256": "b712293cd021ca9ec4337d1446dea85389a287c8f92699db4def77c01d953f5a",
+      "verified_sha256_files": 28,
+      "version": "4.2.5"
+    },
+    {
+      "mismatches": [],
+      "missing": [],
+      "name": "iniconfig",
+      "record_sha256": "7b0943835099e5e110ea8d98bbe9c6bba363b9065822885900a90f98ff5d9e18",
+      "verified_sha256_files": 10,
+      "version": "2.3.1"
+    },
+    {
+      "mismatches": [],
+      "missing": [],
+      "name": "numpy",
+      "record_sha256": "e67a0c2102fcb822e4ec30e7e72a03b8256404b2d4734f0c7c916873dd1c8451",
+      "verified_sha256_files": 926,
+      "version": "2.5.4"
+    },
+    {
+      "mismatches": [],
+      "missing": [],
+      "name": "sympy",
+      "record_sha256": "ee49385626d28f86f2e353dfb75f1b0e1694766e4de34b3a6e265052b6bc6773",
+      "verified_sha256_files": 1571,
+      "version": "1.14.0"
+    },
+    {
+      "mismatches": [],
+      "missing": [],
+      "name": "pluggy",
+      "record_sha256": "0cdf7fdb5ebeaf9f7952b0f11fd6945e18125bf91532ccf5860dd126aabc0e05",
+      "verified_sha256_files": 19,
+      "version": "1.7.0"
+    },
+    {
+      "mismatches": [],
+      "missing": [],
+      "name": "mpmath",
+      "record_sha256": "abca0cace6fa4e8ffd47b026daae4511ea36a2e0ca627e4a62dfbc5e8540ac01",
+      "verified_sha256_files": 92,
+      "version": "1.3.0"
+    },
+    {
+      "mismatches": [],
+      "missing": [],
+      "name": "PyYAML",
+      "record_sha256": "8757c6f8a34984f56c750032bbcfaaa80974aa17f999285d9f1e2cc858e198ca",
+      "verified_sha256_files": 25,
+      "version": "6.0.3"
+    },
+    {
+      "mismatches": [],
+      "missing": [],
+      "name": "fsspec",
+      "record_sha256": "93e64e48c9d02ba7ccf69632b04b8049bf05a6a835df11062f45081ae5b46f87",
+      "verified_sha256_files": 62,
+      "version": "2026.9.0"
+    },
+    {
+      "mismatches": [],
+      "missing": [],
+      "name": "pytest",
+      "record_sha256": "d004ccd7bf13db50b3c7e4649df9825fc48daf29810d47e2c444f409677eb211",
+      "verified_sha256_files": 93,
+      "version": "9.2.0"
+    },
+    {
+      "mismatches": [],
+      "missing": [],
+      "name": "Jinja2",
+      "record_sha256": "c42da310fe0dbd5b11491c5468c50023da1ed522353a3326e261353a69874eb5",
+      "verified_sha256_files": 31,
+      "version": "3.1.6"
+    },
+    {
+      "mismatches": [],
+      "missing": [],
+      "name": "typing_extensions",
+      "record_sha256": "e6f5f1a68db8ed6ddd0e4b986a6c316c9f8b1a66e7125dbeb7fd041ffb28e43f",
+      "verified_sha256_files": 5,
+      "version": "4.16.0"
+    },
+    {
+      "mismatches": [],
+      "missing": [],
+      "name": "MarkupSafe",
+      "record_sha256": "1b822ec8db29b0444396dca4ed84269788dac7588b8ddf24cf3d1e68996aa306",
+      "verified_sha256_files": 11,
+      "version": "3.0.4"
+    },
+    {
+      "mismatches": [],
+      "missing": [],
+      "name": "psutil",
+      "record_sha256": "13137bcbe03bd62862a375bfab9ec7493f5a58e5deab439608b425e63b7f3173",
+      "verified_sha256_files": 17,
+      "version": "7.2.2"
+    },
+    {
+      "mismatches": [],
+      "missing": [],
+      "name": "torch",
+      "record_sha256": "1092b4d9205781c512a34a4294142eb0796e5ec1ad61e6976d684a689fc58cc8",
+      "verified_sha256_files": 13065,
+      "version": "2.15.0"
+    },
+    {
+      "mismatches": [],
+      "missing": [],
+      "name": "oar",
+      "record_sha256": "0604ffa5805d5d73958eee8e7b7d902dfcf77b4590a9a2cbdf9b04bef447a814",
+      "verified_sha256_files": 9,
+      "version": "0.1.0"
+    }
+  ],
+  "wheel_hashes": "46ce42d27e5cdde09ee7197349663e97cb106679bd9e75db3a09679fbc7aa1a8  filelock-4.2.5-py3-none-any.whl\n8dd6e646e99ea382bd85f97a45e6b526a442d79423a7dc673f1e2756d05fcb5f  fsspec-2026.9.0-py3-none-any.whl\n9121e2c1fdb355232495be3194c8dfe87ccc2d5dee45947b78e68f499790d7a7  iniconfig-2.3.1-py3-none-any.whl\n85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67  jinja2-3.1.6-py3-none-any.whl\n73e77980c7207854f00fc4e71fb1626868d5740ab4012623d55c7a99ad122a72  markupsafe-3.0.4-cp313-cp313-macosx_11_0_arm64.whl\na0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c  mpmath-1.3.0-py3-none-any.whl\ne3fd2c13a7814cee3746340d8d7f8598a67f16a58bf47fb7f8793fab6efca1b0  networkx-3.7-py3-none-any.whl\n6d6a71b9d9a97c03633aa12565ef2825ffa036cc1d99cfd50dacf0f128af4fe2  numpy-2.5.4-cp313-cp313-macosx_14_0_arm64.whl\nd7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c  packaging-26.3-py3-none-any.whl\n2913a38a2abf4ea6b64ab507bd9e967f3b53dc1ede74b01b0931e1ce548751af  pip-25.1.1-py3-none-any.whl\n7dd7b0d8832ba3cb632c306926ded123429211b83641b35dc5c41ad2d34f9bec  pluggy-1.7.0-py3-none-any.whl\n1a7b04c10f32cc88ab39cbf606e117fd74721c831c98a27dc04578deb0c16979  psutil-7.2.2-cp36-abi3-macosx_11_0_arm64.whl\n2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9  pygments-2.21.0-py3-none-any.whl\n07acdcf88ec174f907dc01af70bf52d49b014bbab03faeeade31c96b18c2e588  pytest-9.2.0-py3-none-any.whl\n2283a07e2c21a2aa78d9c4442724ec1eb15f5e42a723b99cb3d822d48f5f7ad1  pyyaml-6.0.3-cp313-cp313-macosx_11_0_arm64.whl\nca140b45d5325a9478f880e351484f62fef15f336462e449ca0c03c873d589c2  setuptools-84.2.1-py3-none-any.whl\ne091cc3e99d2141a0ba2847328f5479b05d94a6635cb96148ccb3f34671bd8f5  sympy-1.14.0-py3-none-any.whl\nfbefd73b521d3c75c5a1d7c77056b2c6339b81468d14d4e33c55f525418a5855  torch-2.15.0-cp313-cp313-macosx_14_0_arm64.whl\n481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8  typing_extensions-4.16.0-py3-none-any.whl\n",
+  "wheel_inventory_sha256": "23ab092a85a03a4e6116b4613bf654b21b250c3a45b891002dcc4e2d20931599"
+}

@@ -561,6 +561,21 @@ def validate_worker_request(request, stage, config, out, request_path):
         require_stage(out, 'correctness', source_hashes(stage))
 
 
+def assert_native_equivalent(parameters, optimizer, reference_parameters, reference_optimizer):
+    import torch
+    for key, parameter in parameters.items():
+        reference = reference_parameters[key]
+        torch.testing.assert_close(parameter, reference, rtol=1e-4, atol=1e-6)
+        for field in ('exp_avg', 'exp_avg_sq', 'step'):
+            actual_state, reference_state = optimizer.state[parameter][field], reference_optimizer.state[reference][field]
+            if field == 'step':
+                # Native fused AdamW keeps its scalar counter on the device;
+                # scalar native keeps it on CPU. Compare exact counter values.
+                torch.testing.assert_close(actual_state.detach().cpu(), reference_state.detach().cpu(), rtol=0, atol=0)
+            else:
+                torch.testing.assert_close(actual_state, reference_state, rtol=1e-4, atol=1e-6)
+
+
 def native_variant_qualification(cfg, shape, session, updates):
     import torch
     from oar.timing import warmup, measure_blocks
@@ -571,10 +586,7 @@ def native_variant_qualification(cfg, shape, session, updates):
             for _ in range(5):
                 actual.step()
                 reference.step()
-                for k, p in actual.p.items():
-                    torch.testing.assert_close(p, reference.p[k], rtol=1e-4, atol=1e-6)
-                    for field in ('exp_avg', 'exp_avg_sq', 'step'):
-                        torch.testing.assert_close(actual.opt.state[p][field], reference.opt.state[reference.p[k]][field], rtol=1e-4, atol=1e-6)
+                assert_native_equivalent(actual.p, actual.opt, reference.p, reference.opt)
             def block():
                 for _ in range(updates):
                     actual.step()

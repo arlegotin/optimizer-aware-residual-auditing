@@ -1,0 +1,15 @@
+{
+  "utc": "2026-10-31T11:27:16.973857+00:00",
+  "previous_source_commit": "3500387",
+  "previous_amendment_sha256": "5a507edd7e23dee07374f92de0882ab4e0f785f52061a04a9af617b85a2e67dc",
+  "reason": "Native fused AdamW stores its step counter on MPS while scalar reference stores it on CPU. Qualification must compare exact counter values, not storage location. Extracted original checker reproduced the device mismatch, then tiny native fused/scalar multistep test passed after explicit scalar CPU comparison.",
+  "changed_files": [
+    "analysis/run_dw_sampling.py",
+    "tests/test_dw_sampling_protocol.py"
+  ],
+  "unchanged": "all optimizer implementations, sampler, timing kernels/rules/thresholds, scope/config and historical files",
+  "prior_evidence": "Prepare attempt3 sampler operations/environment remain at v2; unchanged sampler bytes. B initial+single replacement native default/single/foreach warmups failed the frozen rule. Their timings remain attributed to v2. The fused unsupported classification is a validation bug, not lack of backend support.",
+  "affected_evidence": "No qualified B result exists. Fused qualification entry is superseded by the tiny correctness regression only, not a new timing result. No B/D/pilot/confirm rerun is authorized or performed after the timing stop.",
+  "terminal_state": "INCONCLUSIVE_MEASUREMENT",
+  "next_work": "C minimum correctness and summaries/reviews only; current source tests do not qualify new comparative timings"
+}

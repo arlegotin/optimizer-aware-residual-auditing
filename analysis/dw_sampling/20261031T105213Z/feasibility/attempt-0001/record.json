@@ -1,0 +1,71 @@
+{
+  "artifacts": {
+    "command-001.json": "c690d8965d49b1c1d842f1be7ec8ed6cea03185640952dfdf6f181ad69e4ea77",
+    "command-001.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "command-001.stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "command-002.json": "31b4bb80adaca11a844f16a09297a0b5e82efce8ba60523285e3547dc09ff3fb",
+    "command-002.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "command-002.stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands.log": "4d8c620552e25f1fbfba15044b2ed0e7ffd45450dee504e34c87b7e8985d0660",
+    "exclusive_session.json": "1f2698c7dd4966ab6d3ce93d74b50065fd3dc9440e4f516ec0d7449b73818294",
+    "resource_forecast.json": "257fbbe1aa9cbaab0063bb663ce7deffefc3f3f225ebae93edda90725ef0a129",
+    "session-invocation-1-request.json": "02f3829b4d462ec721c1a3e54e3b4fe909cc6ee2a1c700fe8784d2036bad5805",
+    "session-invocation-1-tiny-native-variants.json": "8c311bf7354f82aeae7e90baee30a0005de7ad7057e2661d6ca64a554cc31271",
+    "session-invocation-1.json": "05de2b5965ececb079eb61361cac8881ba30ef1ade57fa24ed9d49524f9ca2f6",
+    "session-invocation-2-request.json": "4c86baea6cac3fb1d8438b4dc6e25bf9d4f15cb158db66c4f090195793fbda44",
+    "session-invocation-2-tiny-native-variants.json": "3b84c809be1fb3ddf56162001d1b669fbc3de19c53d939466ef4939a93da91e2",
+    "session-invocation-2.json": "c27273d91369776c45705bd8345ca5d28bae22de933dbf2b87101a50fb4fb23d",
+    "source_manifest.json": "bf8239e07f4434f8aa454be530de6f0ba58f56e083f8a9121603d5622dc6a1ca"
+  },
+  "invalid_attempts": [
+    {
+      "failure": "native variant selection warmup unstable",
+      "invalid_condition": "failed_warmup",
+      "kind": "feasibility",
+      "resources_after": {
+        "available_memory_bytes": 9585573888,
+        "memory_percent": 75.2,
+        "metal_current_bytes": 4477952,
+        "metal_driver_bytes": 9125888,
+        "physical_memory_bytes": 38654705664,
+        "process_rss_bytes": 459669504,
+        "swap_in_bytes": 2780357738496,
+        "swap_out_bytes": 12910051328,
+        "swap_used_bytes": 35680026624
+      },
+      "resources_before": {
+        "available_memory_bytes": 9779265536,
+        "memory_percent": 74.7,
+        "metal_current_bytes": 0,
+        "metal_driver_bytes": 475136,
+        "physical_memory_bytes": 38654705664,
+        "process_rss_bytes": 223002624,
+        "swap_in_bytes": 2780357181440,
+        "swap_out_bytes": 12910051328,
+        "swap_used_bytes": 35680026624
+      },
+      "session": 0,
+      "shapes": [],
+      "start_utc": "2026-10-31T11:22:44.894754+00:00",
+      "status": "INCONCLUSIVE_MEASUREMENT",
+      "traceback": "Traceback (most recent call last):\n  File \"/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py\", line 697, in cost_session\n    raise MeasurementInvalid('failed_warmup', 'native variant selection warmup unstable')\nMeasurementInvalid: native variant selection warmup unstable\n",
+      "wall_s": 10.31960991595406
+    }
+  ],
+  "invocation_wall_s": 22.611758666927926,
+  "measurement_hashes": {
+    "analysis/run_dw_sampling.py": "812b4095dcfa275acb18e384335b839fb31d8dac55913151fcd43bfa2276b1a3",
+    "configs/dw_sampling.yaml": "afbff17b101ffc45963b0bb8132574c405ba821f196704ff254e721e9e7ad4c3",
+    "decisions/dw_sampling_scope.md": "d91d9350dc117f83e39c648e48d435de75ab9ea5a3b6bc197b216c4b73c11181",
+    "src/oar/hardware.py": "4ba118d816eec9d255cfb3d7925416373119fe181f82529fb58a96347d8e5048",
+    "src/oar/timing.py": "25351cd20abc14385dd1cb3e482c67f73619b1ead30900ca0150fe57072458e5"
+  },
+  "reason": "native variant selection warmup unstable",
+  "recorded_utc": "2026-10-31T11:23:06.816667+00:00",
+  "replacement_sessions_used": 1,
+  "schema_version": 1,
+  "sessions": [],
+  "source_manifest_sha256": "bf8239e07f4434f8aa454be530de6f0ba58f56e083f8a9121603d5622dc6a1ca",
+  "stage": "feasibility",
+  "status": "INCONCLUSIVE_MEASUREMENT"
+}

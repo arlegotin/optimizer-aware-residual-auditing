@@ -1,5 +1,5 @@
 {
-  "actual_head_at_freeze": "afa51cb078fa8ace8a26d2ef267c522cb90cc562",
+  "actual_head_at_freeze": "3500387ec42f0559299ab919d6e3e6af26c3f069",
   "allowed_commands": [
     "PYTHONPATH=src .venv/bin/python analysis/run_dw_sampling.py --stage prepare --config configs/dw_sampling.yaml --out <new-run-root>",
     "PYTHONPATH=src .venv/bin/python analysis/run_dw_sampling.py --stage feasibility --config configs/dw_sampling.yaml --out <new-run-root>",
@@ -78,7 +78,7 @@
     "analysis/reproduction/wp09/structural_oracle_schema.json": "b702c98a720f0932954f575f1893769b3860b474921b872e0e87ecc8405af524",
     "analysis/reproduction/wp09/structural_oracle_summary.json": "f9f2fac192c011f2f2c9944d49cccda47deaa35a6d10a90c6ab4e06cb3ab2b56",
     "analysis/resource_context.json": "e389ac6bad68c2252c2a6ba27de9dd75143c4e0d9cbefd4a7352482566bcd5d5",
-    "analysis/run_dw_sampling.py": "812b4095dcfa275acb18e384335b839fb31d8dac55913151fcd43bfa2276b1a3",
+    "analysis/run_dw_sampling.py": "227f6977d4713e84d01cf2ebeb61d390d769f391da6fe14e65704daac47df663",
     "analysis/scientific_gate_snapshot.json": "62c3af64f199cb398c6e24e1cc6655f2c9b8b9e90a3bad2aa684bd60d8a6cf32",
     "analysis/structural_oracle_aggregate.json": "90c4bcba1138a07a01c2bd6295de8846cafa02f678e9f8ecd17cf886a91d54b8",
     "analysis/structural_oracle_audit.jsonl": "2c7c4374a58037a27d2ae4b76ee799089328690b07e7c2194ca3317e8f70c518",
@@ -154,7 +154,7 @@
     "tests/test_confidence.py": "7f6f16f8bac0ec4cdec5dfec10ca6b122a9ce5702d8f2dc0cb2b18be4c2ca690",
     "tests/test_config_records.py": "bb50cd9aea2f98f928324ab2f13e4dee29612804cb06f1efef78e86d92dcdd23",
     "tests/test_discovery.py": "337f2ed69cc17225e2198532ce23d957cec87688d25fd744d96b1605456685b2",
-    "tests/test_dw_sampling_protocol.py": "5de609f6870bbd6dd7e56ba75869751f83cc5ee5927bde717fb0625273480ada",
+    "tests/test_dw_sampling_protocol.py": "9772893f8002de46004ff334a39209d9df9438fc6bbf51b9dac91cf004dd1c3f",
     "tests/test_exact_adjoints.py": "7276d899195b667615e19ee75a8ab955dfcff24bd25c9f6259ae13173cc229ba",
     "tests/test_optimizer_preview.py": "178c6cd2f3275abaf5614c81fea49e6aef665db32d1f269d29c48fa603b75ada",
     "tests/test_oracle.py": "0687bb463152a59768e97f7bb81adc7704bbdfc06160e9e87adc4c59007ed58f",
@@ -207,7 +207,7 @@
   "config_sha256": "afbff17b101ffc45963b0bb8132574c405ba821f196704ff254e721e9e7ad4c3",
   "device": "mps",
   "dtype": "float32",
-  "frozen_utc": "2026-10-31T11:21:25.469236+00:00",
+  "frozen_utc": "2026-10-31T11:27:17.010359+00:00",
   "historical_amendment_file_sha256": "78ae5c0c6d1daa0e819e77da889553efa72547693451b8cfbf9627c6f2e23bda",
   "historical_gate_file_sha256": "7afc234d1e978292d65da6bc961455480f63418c4a6c5fb5b14b8afcacd779dc",
   "kind": "prospective_fixed_budget_dw_sampling",
