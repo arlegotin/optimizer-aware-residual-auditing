@@ -5,9 +5,18 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "oar"
 version = "0.1.0"
-description = "Local optimizer-aware residual auditing research"
+description = "Optimizer-aware residual auditing research and reproducible component evidence"
+readme = "README.md"
+authors = [{name = "Artem Legotin"}]
+license = "AGPL-3.0-only AND CC-BY-4.0"
+license-files = ["LICENSE", "NOTICE", "LICENSING.md", "THIRD_PARTY_NOTICES.md", "licenses/*.txt"]
 requires-python = ">=3.12"
 dependencies = ["torch", "numpy", "PyYAML", "psutil"]
+
+[project.urls]
+Repository = "https://github.com/arlegotin/optimizer-aware-residual-auditing"
+Documentation = "https://github.com/arlegotin/optimizer-aware-residual-auditing/blob/main/REPRODUCE.md"
+Issues = "https://github.com/arlegotin/optimizer-aware-residual-auditing/issues"
 
 [project.optional-dependencies]
 test = ["pytest"]

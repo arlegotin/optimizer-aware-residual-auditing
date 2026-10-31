@@ -16,8 +16,32 @@
       "unavailable_reason": "Historical disposable workflow report; excluded from current scientific support. Durable Task11 report is decisions/reports/structural_oracle.md."
     },
     {
+      "path": "CITATION.cff",
+      "sha256": "50b85511a02c17f184fda76c163e48beffc6360735ca5f18880620654178ef3c"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0"
+    },
+    {
+      "path": "LICENSING.md",
+      "sha256": "1978932693122396b386f3f10beacba838da8dcb19e9b95cc9a7fb35e47939eb"
+    },
+    {
+      "path": "NOTICE",
+      "sha256": "607e70a1d5190a926360e62f004eeeb7754fc58c1752aa124b1e4081aea0095f"
+    },
+    {
       "path": "README.md",
-      "sha256": "3039cbffc67fbfcea2827feb8e3871cfc15e1db3fd5e84ca280bb4dffa786643"
+      "sha256": "981aaa19db4a093bd3d607039281eadcf0fa84e09c57727299abd4a5ccc43544"
+    },
+    {
+      "path": "REPRODUCE.md",
+      "sha256": "5b159cad2c5b93e4c768d73120edffe4ac327ad3b2ddb22667f299aba32c9ba8"
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "sha256": "560068932adb815b2712287d7de8008c463eebfe1b6e21e35e26d8f1f983ed64"
     },
     {
       "path": "analysis/README.md",
@@ -429,11 +453,11 @@
     },
     {
       "path": "decisions/reports/synthesis_annotations.json",
-      "sha256": "b28f4005ba9d9fbeaf27df5b0fe9a581fdaa4088d9bd8fe43d2a47e58b549baa"
+      "sha256": "7fffa24f86f8e319fc179868fc978f3044e2c4e59647b5e347ec479aa8e70762"
     },
     {
       "path": "decisions/reports/synthesis_schema.md",
-      "sha256": "d93c380bfd29fe92a1dbb689e306605a54164bb806dbbd7cad16a163fda0e703"
+      "sha256": "657573fd3122d3b66e08fb09a67b699b370dc041585bc7757f393d3e4a3c3753"
     },
     {
       "path": "decisions/review_summary.md",
@@ -450,6 +474,14 @@
     {
       "path": "docs/blueprint.md",
       "sha256": "cea178cc359653f80f460b53809f5ff912639d57392a44adbe0ab16d56b18ae1"
+    },
+    {
+      "path": "docs/releases/v0.1.0.md",
+      "sha256": "94fe295df26ca3b8de2fb7a7d5758d177ddb60bdacf390ed684f9aaf1ff8af63"
+    },
+    {
+      "path": "licenses/CC-BY-4.0.txt",
+      "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411"
     },
     {
       "path": "manifests/assets.json",
@@ -479,7 +511,7 @@
     },
     {
       "path": "pyproject.toml",
-      "sha256": "31372fb67548625c083273f55d8766bc90abcf46a7c511e897147386f5f878d2"
+      "sha256": "abf0b04cf2cc7a304199f939829b70d875842f9e0441dc8c55a3b9a52136b3e8"
     },
     {
       "path": "requirements.lock.txt",
@@ -694,6 +726,10 @@
     {
       "path": "tests/test_timing_harness.py",
       "sha256": "123cdf5261ff458693c7386e64b7f0d05758a21311aa95bc050fa4059da3de90"
+    },
+    {
+      "path": "third_party/discovery/pytorch/LICENSE",
+      "sha256": "bd018feef8825e88181c84eb7e3aa4eafb8f08a20d9fd6ef948569610c4a3e43"
     }
   ],
   "audits": [
@@ -762,6 +798,23 @@
       ],
       "kind": "implementation",
       "summary": "Final review fixes at7628be7: unsupported internally overlapping writable parameter layouts reject before pending publication or any commit write; supported transposes and gapped slices retain native-equivalent updates. One absolute oracle study deadline covers later native histories, persisted audit rows, summary completion and final synchronization, retaining actual partial progress as incomplete/inconclusive. Normal/recovery checkpoint reproduction shares identity/duplicate/cardinality/hash validation. Public preview API documents finite-endpoint/nonfinite-derived metadata and fail-closed consumer requirement. Focused115 tests passed; single full actual-MPS fallback0 suite364 passed in7.80s with no skips/warnings. No benchmark/research rerun: original2e89e74 study and timing source hashes remain authoritative for measured bytes, not changed validation overhead. Final scoped re-review is pending in the README-linked coordination addendum, which is outside scientific evidence hashes."
+    },
+    {
+      "artifacts": [
+        "README.md",
+        "REPRODUCE.md",
+        "pyproject.toml",
+        "LICENSE",
+        "licenses/CC-BY-4.0.txt",
+        "NOTICE",
+        "LICENSING.md",
+        "THIRD_PARTY_NOTICES.md",
+        "CITATION.cff",
+        "docs/releases/v0.1.0.md",
+        "third_party/discovery/pytorch/LICENSE"
+      ],
+      "kind": "reproduction",
+      "summary": "Publication maintenance only: concise README, detailed reproduction instructions, original-material license/citation scope and package metadata. Historical measured bytes remain attributed to their recorded revisions; added publication bindings do not establish new research or remeasure later validation changes. Full Git history is required for historical artifact verification."
     }
   ],
   "evidence": [

@@ -303,6 +303,12 @@ Final review fixes at7628be7: unsupported internally overlapping writable parame
 
 Sources: [src/oar/optimizer_preview.py](../src/oar/optimizer_preview.py), [src/oar/oracle.py](../src/oar/oracle.py), [analysis/reproduce_structural_oracle.py](reproduce_structural_oracle.py), [tests/test_optimizer_preview.py](../tests/test_optimizer_preview.py), [tests/test_oracle.py](../tests/test_oracle.py), [tests/test_reproduction.py](../tests/test_reproduction.py), [analysis/wp09_verification.json](wp09_verification.json).
 
+### Reproduction audit
+
+Publication maintenance only: concise README, detailed reproduction instructions, original-material license/citation scope and package metadata. Historical measured bytes remain attributed to their recorded revisions; added publication bindings do not establish new research or remeasure later validation changes. Full Git history is required for historical artifact verification.
+
+Sources: [README.md](../README.md), [REPRODUCE.md](../REPRODUCE.md), [pyproject.toml](../pyproject.toml), [LICENSE](../LICENSE), [licenses/CC-BY-4.0.txt](../licenses/CC-BY-4.0.txt), [NOTICE](../NOTICE), [LICENSING.md](../LICENSING.md), [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md), [CITATION.cff](../CITATION.cff), [docs/releases/v0.1.0.md](../docs/releases/v0.1.0.md), [third_party/discovery/pytorch/LICENSE](../third_party/discovery/pytorch/LICENSE).
+
 ## Raw artifact and historical hash index
 
 Current artifacts are checked from disk; historical revisions are checked using `git show REV:PATH`. Explicitly unavailable historical artifacts stay unavailable. No index/report/WP09 hash cycle is used.
@@ -310,7 +316,13 @@ Current artifacts are checked from disk; historical revisions are checked using 
 - `.superpowers/sdd/2026-10-30-oar-implementation/task-11-report.md`: `62994a68534d278c80f078d913488a242ee913d01d93f91c978eef8c02fd0fc5` (unavailable: Historical disposable workflow report; excluded from current scientific support. Durable Task11 report is decisions/reports/structural_oracle.md.)
 - `.superpowers/sdd/2026-10-30-oar-implementation/task-11-report.md`: `cafffbb259431a34f5e3433f06c2e94aa025efd5e19d0ca3f15415765bf03b33` (unavailable: Historical disposable workflow report; excluded from current scientific support. Durable Task11 report is decisions/reports/structural_oracle.md.)
 - `.superpowers/sdd/2026-10-30-oar-implementation/task-11-report.md`: `d29597eb70f68b1dda3515dada02ce29b6d4d9f28c2775591e5f20b8aee15d0e` (unavailable: Historical disposable workflow report; excluded from current scientific support. Durable Task11 report is decisions/reports/structural_oracle.md.)
-- [README.md](../README.md): `3039cbffc67fbfcea2827feb8e3871cfc15e1db3fd5e84ca280bb4dffa786643` (verified current bytes)
+- [CITATION.cff](../CITATION.cff): `50b85511a02c17f184fda76c163e48beffc6360735ca5f18880620654178ef3c` (verified current bytes)
+- [LICENSE](../LICENSE): `0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0` (verified current bytes)
+- [LICENSING.md](../LICENSING.md): `1978932693122396b386f3f10beacba838da8dcb19e9b95cc9a7fb35e47939eb` (verified current bytes)
+- [NOTICE](../NOTICE): `607e70a1d5190a926360e62f004eeeb7754fc58c1752aa124b1e4081aea0095f` (verified current bytes)
+- [README.md](../README.md): `981aaa19db4a093bd3d607039281eadcf0fa84e09c57727299abd4a5ccc43544` (verified current bytes)
+- [REPRODUCE.md](../REPRODUCE.md): `5b159cad2c5b93e4c768d73120edffe4ac327ad3b2ddb22667f299aba32c9ba8` (verified current bytes)
+- [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md): `560068932adb815b2712287d7de8008c463eebfe1b6e21e35e26d8f1f983ed64` (verified current bytes)
 - `analysis/README.md`: `0ab213582ff1b123bed16f12ba2f84bb97caadd1bd0383012ab265a08b1ef348` (verified historical revision dc561706752f656706c4fac5ae9b9f1f9c53b601)
 - [analysis/README.md](README.md): `130eae9c807339feaf0ab121c3aad5e92bba07df259491711adb0b2311ef2b5f` (verified current bytes)
 - `analysis/README.md`: `2e6b5100d97868a8e59dda5d5e1822d505b1246a76ac95117b0e1ecafa628f3d` (verified archive analysis/history/fix1-README-2e6b5100d978.md)
@@ -408,19 +420,21 @@ Current artifacts are checked from disk; historical revisions are checked using 
 - [decisions/amendments.jsonl](../decisions/amendments.jsonl): `78ae5c0c6d1daa0e819e77da889553efa72547693451b8cfbf9627c6f2e23bda` (verified current bytes)
 - [decisions/outcome.json](../decisions/outcome.json): `d06b25e1b475d1527f9f8a4e9a618bae20f82ad3c48abcd131e3847f37fb4aad` (verified current bytes)
 - [decisions/reports/structural_oracle.md](../decisions/reports/structural_oracle.md): `09abcc2e5b84aab8fea0e7bbb6a1eda5388ad3e2d3fa64b05516c04b4793ff65` (verified current bytes)
-- [decisions/reports/synthesis_annotations.json](../decisions/reports/synthesis_annotations.json): `b28f4005ba9d9fbeaf27df5b0fe9a581fdaa4088d9bd8fe43d2a47e58b549baa` (verified current bytes)
-- [decisions/reports/synthesis_schema.md](../decisions/reports/synthesis_schema.md): `d93c380bfd29fe92a1dbb689e306605a54164bb806dbbd7cad16a163fda0e703` (verified current bytes)
+- [decisions/reports/synthesis_annotations.json](../decisions/reports/synthesis_annotations.json): `7fffa24f86f8e319fc179868fc978f3044e2c4e59647b5e347ec479aa8e70762` (verified current bytes)
+- [decisions/reports/synthesis_schema.md](../decisions/reports/synthesis_schema.md): `657573fd3122d3b66e08fb09a67b699b370dc041585bc7757f393d3e4a3c3753` (verified current bytes)
 - [decisions/review_summary.md](../decisions/review_summary.md): `ffef9af52cbad21b27d51780ead392039921e5953599790264a2b688610d5c06` (verified current bytes)
 - [decisions/rulings.md](../decisions/rulings.md): `70c7e8b55f5deb93d86b5e3b40f2d2098319d10a9a8ee5efb5c02c4b6efa3c08` (verified current bytes)
 - [decisions/structural_oracle_scope.md](../decisions/structural_oracle_scope.md): `44f73b644ec3f9119a5ba8e9aa5abfebff28cdab487e186c4d3e13a24ae796a1` (verified current bytes)
 - [docs/blueprint.md](../docs/blueprint.md): `cea178cc359653f80f460b53809f5ff912639d57392a44adbe0ab16d56b18ae1` (verified current bytes)
+- [docs/releases/v0.1.0.md](../docs/releases/v0.1.0.md): `94fe295df26ca3b8de2fb7a7d5758d177ddb60bdacf390ed684f9aaf1ff8af63` (verified current bytes)
+- [licenses/CC-BY-4.0.txt](../licenses/CC-BY-4.0.txt): `9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411` (verified current bytes)
 - [manifests/assets.json](../manifests/assets.json): `92e7319d4a0c89810161fb718b682b7bcd3dbc665eaea2c97848ce92e58d9bdf` (verified current bytes)
 - [manifests/environment.json](../manifests/environment.json): `8c1f736f911c1b080ba7ecfced2eb9bfed3f866539d83d6c213646158e789459` (verified current bytes)
 - `manifests/environment.json`: `c411b683e5d68c7f30446a9e57fc02ebf4edfa9e048f2d30643702540043baa4` (verified historical revision 36b7dcb1f410c4c0a28c691000163237cc06a496)
 - `manifests/upstream_sources.json`: `4d6c586c986334bb0bca23f08cc4a796d0d69f985b636484cfceac228e56f3ce` (verified archive analysis/history/upstream_sources-4d6c586c9863.json)
 - [manifests/upstream_sources.json](../manifests/upstream_sources.json): `50752ce03efd68b1eb91c97586c1a67f4d6e214d743a6eab06b0d093bab6d21e` (verified current bytes)
 - [manifests/wheels.sha256](../manifests/wheels.sha256): `23ab092a85a03a4e6116b4613bf654b21b250c3a45b891002dcc4e2d20931599` (verified current bytes)
-- [pyproject.toml](../pyproject.toml): `31372fb67548625c083273f55d8766bc90abcf46a7c511e897147386f5f878d2` (verified current bytes)
+- [pyproject.toml](../pyproject.toml): `abf0b04cf2cc7a304199f939829b70d875842f9e0441dc8c55a3b9a52136b3e8` (verified current bytes)
 - [requirements.lock.txt](../requirements.lock.txt): `5393bd3b88fa9b1d427447b35f12e4566fbfca6f91a2af6f04674a5104d2349e` (verified current bytes)
 - [src/oar/__init__.py](../src/oar/__init__.py): `ad2a02f6606d83b3c5c083e1c72ff55c9aea0621fcb54281304863a1f327c5b1` (verified current bytes)
 - [src/oar/audit.py](../src/oar/audit.py): `7d386972050adacb66c01e66c0e66e93f3e8c0aac682db83dd5cd47880a1dd35` (verified current bytes)
@@ -471,3 +485,4 @@ Current artifacts are checked from disk; historical revisions are checked using 
 - [tests/test_reproduction.py](../tests/test_reproduction.py): `60d1e54b0e55359ade742b79033bbcc6e93a9afb70695fbd754fdae2dad03540` (verified current bytes)
 - [tests/test_synthesis_collection.py](../tests/test_synthesis_collection.py): `dc9cc7cba68250e139861e5b984c8c06ef5569cf717e5827a1f736dadd414dc0` (verified current bytes)
 - [tests/test_timing_harness.py](../tests/test_timing_harness.py): `123cdf5261ff458693c7386e64b7f0d05758a21311aa95bc050fa4059da3de90` (verified current bytes)
+- [third_party/discovery/pytorch/LICENSE](../third_party/discovery/pytorch/LICENSE): `bd018feef8825e88181c84eb7e3aa4eafb8f08a20d9fd6ef948569610c4a3e43` (verified current bytes)

@@ -1,6 +1,12 @@
 {
   "artifacts": [
+    "CITATION.cff",
+    "LICENSE",
+    "LICENSING.md",
+    "NOTICE",
     "README.md",
+    "REPRODUCE.md",
+    "THIRD_PARTY_NOTICES.md",
     "analysis/README.md",
     "analysis/audit_confidence.json",
     "analysis/collect_audit_confidence.py",
@@ -84,6 +90,8 @@
     "decisions/rulings.md",
     "decisions/structural_oracle_scope.md",
     "docs/blueprint.md",
+    "docs/releases/v0.1.0.md",
+    "licenses/CC-BY-4.0.txt",
     "manifests/assets.json",
     "manifests/environment.json",
     "manifests/upstream_sources.json",
@@ -124,7 +132,8 @@
     "tests/test_report.py",
     "tests/test_reproduction.py",
     "tests/test_synthesis_collection.py",
-    "tests/test_timing_harness.py"
+    "tests/test_timing_harness.py",
+    "third_party/discovery/pytorch/LICENSE"
   ],
   "audits": [
     {
@@ -192,6 +201,23 @@
       ],
       "kind": "implementation",
       "summary": "Final review fixes at7628be7: unsupported internally overlapping writable parameter layouts reject before pending publication or any commit write; supported transposes and gapped slices retain native-equivalent updates. One absolute oracle study deadline covers later native histories, persisted audit rows, summary completion and final synchronization, retaining actual partial progress as incomplete/inconclusive. Normal/recovery checkpoint reproduction shares identity/duplicate/cardinality/hash validation. Public preview API documents finite-endpoint/nonfinite-derived metadata and fail-closed consumer requirement. Focused115 tests passed; single full actual-MPS fallback0 suite364 passed in7.80s with no skips/warnings. No benchmark/research rerun: original2e89e74 study and timing source hashes remain authoritative for measured bytes, not changed validation overhead. Final scoped re-review is pending in the README-linked coordination addendum, which is outside scientific evidence hashes."
+    },
+    {
+      "artifacts": [
+        "README.md",
+        "REPRODUCE.md",
+        "pyproject.toml",
+        "LICENSE",
+        "licenses/CC-BY-4.0.txt",
+        "NOTICE",
+        "LICENSING.md",
+        "THIRD_PARTY_NOTICES.md",
+        "CITATION.cff",
+        "docs/releases/v0.1.0.md",
+        "third_party/discovery/pytorch/LICENSE"
+      ],
+      "kind": "reproduction",
+      "summary": "Publication maintenance only: concise README, detailed reproduction instructions, original-material license/citation scope and package metadata. Historical measured bytes remain attributed to their recorded revisions; added publication bindings do not establish new research or remeasure later validation changes. Full Git history is required for historical artifact verification."
     }
   ],
   "evidence": [

@@ -1,73 +1,34 @@
 # Optimizer-aware residual auditing
 
-A stopped exploratory research implementation on an Apple M3 Max, native arm64 CPython3.13 and PyTorch MPS. **No training speedup was established.** Candidate weight-gradient reconstruction was faster at some isolated residual-block shapes; complete audited attempts were slower even at conditional zero rejection. The bounded synthetic oracle found no accepting past-only exact-margin region in its declared tau grid. It retains descriptive information, not a competitive training result.
+Optimizer-aware residual auditing (OAR) constructs low-rank weight gradients, then checks the AdamW step they would produce. A projected gradient can look close to the dense gradient and still produce a harmful AdamW step. OAR previews that step and audits its alignment with fresh residual probes. Input gradients stay exact, so the approximation stays local to the weight gradient.
 
-Read the [findings and execution outcome](analysis/report.md), [original blueprint](docs/blueprint.md), [complete synthetic-oracle report](decisions/reports/structural_oracle.md), [rulings](decisions/rulings.md), [pre-final review snapshot](decisions/review_summary.md) and [final review and rulings addendum](decisions/reports/final_review.md). WP02 stops normal online work; ordinary WP03 remains unfulfilled and WP04 inconclusive. Tasks1–6, the narrow Task11 amendment, and Task17 synthesis were reached. NumericalPolicy remains unresolved. No corpus, full trainer/controller, protected evaluation or confirmatory result exists.
+The repository includes the parts needed to inspect that mechanism: low-rank linear operators, streaming microbatch accumulation, transactional AdamW preview/commit, a durable confidence-spending journal, synchronized MPS cost accounting, and a bounded synthetic oracle. The oracle separates past-only proposals from paid current-gradient SVD diagnostics. Reports bind observations to configuration and source hashes, including historical source bytes when the implementation has changed.
 
-## Local environment
+You can reuse the component code and its reference tests, examine where the audit spends its time, or regenerate the findings without running an experiment. The [blueprint](docs/blueprint.md) explains the mathematical argument and the questions the study was meant to answer.
 
-The measured environment is pinned in [requirements.lock.txt](requirements.lock.txt), [environment discovery](manifests/environment.json) and [wheel hashes](manifests/wheels.sha256). Use a native arm64 CPython3.13 interpreter with its compatible macOS wheels; these pins describe the measured runtime, not a portability promise. From the repository root:
+## What the measurements say
+
+On the recorded Apple M3 Max environment, one wide residual block gave these paired timings:
+
+| Recorded boundary | OAR | Native AdamW |
+| --- | ---: | ---: |
+| Candidate reconstruction | 28.875 ms | 36.882 ms |
+| Complete audited attempt, conditional zero rejection | 54.406 ms | 36.738 ms |
+
+That component saving didn't survive the full bill. Every complete attempt in the six measured configurations was slower. These are isolated block measurements with recorded memory pressure and timing uncertainty; the conditional commit is pricing only. Later validation fixes were tested, not remeasured.
+
+The synthetic oracle accepted **0 of 144 past-only evaluation proposals** throughout its declared exact-margin threshold grid. A fresh same-seed repeat reproduced all 792 layer rows and 30 learning-curve observations exactly after a separately recorded comparison-schema correction. That's numerical reproducibility, with two initialization/data seeds and correlated proposals. It establishes no independent confirmation or training speedup.
+
+Normal online work remains stopped, finite-precision acceptance is unresolved, and there are no language-model or end-to-end training results. The [findings](analysis/report.md) retain the costs, failed comparisons and scope limits.
+
+## Run and reuse
+
+After the pinned setup in [REPRODUCE.md](REPRODUCE.md), regenerate the report from a full Git clone:
 
 ```sh
-python3.13 -m venv .venv
-.venv/bin/python -m pip install --require-hashes -r requirements.lock.txt
-.venv/bin/python -m pip install --no-deps --no-build-isolation -e .
-PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python -m oar.cli doctor --config configs/discovery.yaml --out /tmp/oar-environment.json
-```
-
-`doctor` is a capability/provenance query. A sandbox may hide MPS: run hardware checks with actual device access. CPU checks and sandbox skips do not establish MPS eligibility. Disable silent fallback before importing Torch.
-
-## Supported commands and verification
-
-```sh
-.venv/bin/python -m oar.cli --help
-.venv/bin/python -m pytest -q -m 'not mps'
-PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python -m pytest -q -m mps
-PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python -m pytest -q
 .venv/bin/python -m oar.cli report --gates decisions/gates.jsonl --run-index analysis/evidence_index.json --out analysis/report.md
 ```
 
-The MPS commands require real hardware access. Run hardware work sequentially with no overlapping benchmarks, collectors or tests. Hardware skips are explicit missing evidence. The report also accepts an early stop without an index:
+That page also covers tests, actual MPS access and the guarded synthetic repeat. The [final review](decisions/reports/final_review.md) records accepted implementation fixes.
 
-```sh
-.venv/bin/python -m oar.cli report --gates decisions/gates.jsonl --out /tmp/oar-gates-only.md
-```
-
-The gates-only report supplies gate reasons and marks measurements unavailable. The indexed report verifies the frozen scientific gate prefix and all current/historical artifact hashes before rendering; later WP09 synthesis records are excluded from that prefix to avoid self-hashing. New scientific gate records require a deliberately updated index. Schema1 is an annotated stopped-study index; confirmation claims are classified unresolved. See [schema and generation instructions](decisions/reports/synthesis_schema.md).
-
-For explicit operator-cost regeneration only, the supported benchmark commands are:
-
-```sh
-PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python -m oar.cli bench --config configs/operator.yaml
-PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python -m oar.cli bench --config configs/operator_wide.yaml
-.venv/bin/python analysis/summarize_headroom.py
-```
-
-These overwrite the named timing artifacts. Preserve original bytes and source attribution before regeneration and update evidence bindings before using new measurements. Task17 did not repeat this benchmark because no measured kernel or cost implementation changed. The [analysis instructions](analysis/README.md) list component collectors, complete accounting boundaries, timing exclusions, failed/superseded trials and provenance.
-
-## Small bounded research reproduction
-
-The guarded public research command is:
-
-```sh
-PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python -m oar.cli audit-checkpoints --config configs/structural_oracle.yaml
-.venv/bin/python analysis/summarize_structural_oracle.py
-```
-
-It regenerates the original artifact paths and roughly485MB of ignored local tensor checkpoints. It requires the latest exact hash-bound synthetic amendment, passed component gates, and the actual WP02 stop. This permission never authorizes normal WP03/WP04, online acceptance, data ingestion or a general training command. Source archives do not redistribute corpus bodies or pretrained weights; neither is needed here.
-
-To preserve original results, use a fresh directory for an independent full same-seed repeat:
-
-```sh
-.venv/bin/python analysis/reproduce_structural_oracle.py --prepare analysis/reproduction/local-repeat
-# Review and commit the generated plan.json, config.yaml and amendment.json before execution.
-PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python analysis/reproduce_structural_oracle.py --run analysis/reproduction/local-repeat/plan.json
-```
-
-Preparation refuses existing output/checkpoint paths and preserves every scientific config field. The plan predeclares28 numeric fields,23 categorical fields, exact sign/acceptance decisions and30 curve observations, with absolute tolerance2e-6/relative tolerance2e-4. Execution validates reference/source/config hashes, temporarily appends only the declared output-path amendment, invokes the ordinary guarded fresh-MPS command, and restores the preceding amendment by append. Preserve the resulting amendment ledger. A changed code hash requires a new preparation; do not loosen tolerances after outcomes. Interrupted execution may leave the temporary amendment latest: inspect retained artifacts and explicitly restore the preceding permission before another command.
-
-The committed [Task17 plan](analysis/reproduction/wp09/plan.json), [initial failed comparison](analysis/reproduction/wp09/comparison.json) and [recovered comparison](analysis/reproduction/wp09/comparison_recovered.json) and separate raw outputs preserve the actual local reproduction. Same-seed agreement is numerical reproducibility, not independent replication or confirmation. Times and endpoint resources are accounting observations, not a benchmark replication. All failed comparisons remain failures; large tensors remain local and ignored.
-
-The first comparison helper failed after the row checks because the curve schema names the logical step `committed_updates`. The separately retained recovery maps that field without changing observations or tolerances, using `.venv/bin/python analysis/reproduce_structural_oracle.py --recover-comparison analysis/reproduction/wp09/plan.json`. That command preserves an existing recovered result by refusing to overwrite it. A 1.27s report-only CPU test may have overlapped the original repeat; those wall times support resource accounting only.
-
-Final review maintenance at `7628be7` rejects unsupported internally overlapping parameter layouts before publication/commit, shares one oracle deadline through native histories and completion, and shares normal/recovery checkpoint identity validation. Its component verification is separate from the original research and timing sources. No benchmark or research study was repeated; existing timings do not measure these later validation changes. The [final addendum](decisions/reports/final_review.md) retains the complete review, disposition and subsequent rulings; scoped re-review is pending. The hash-bound review/outcome files retain their earlier snapshot status.
+Original software is AGPL-3.0-only; original writing and result presentation are CC-BY-4.0. See [licensing](LICENSING.md) for scope and upstream rights; [CITATION.cff](CITATION.cff) records the citation. Development and reporting used AI assistance under Artem Legotin's direction; README editing used [write-like-me](https://github.com/arlegotin/write-like-me).
