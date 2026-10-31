@@ -1,0 +1,20 @@
+forecast study wall=69.11s ceiling=600s
+audit low_rank seed=1101 step=8 rows=36 elapsed=7.84s
+audit low_rank seed=1101 step=32 rows=48 elapsed=9.38s
+audit low_rank seed=1101 step=128 rows=48 elapsed=10.96s
+audit low_rank seed=2202 step=8 rows=36 elapsed=17.59s
+audit low_rank seed=2202 step=32 rows=48 elapsed=19.21s
+audit low_rank seed=2202 step=128 rows=48 elapsed=20.90s
+audit full_rank seed=1101 step=8 rows=36 elapsed=27.35s
+audit full_rank seed=1101 step=32 rows=48 elapsed=29.02s
+audit full_rank seed=1101 step=128 rows=48 elapsed=30.72s
+audit full_rank seed=2202 step=8 rows=36 elapsed=37.21s
+audit full_rank seed=2202 step=32 rows=48 elapsed=38.77s
+audit full_rank seed=2202 step=128 rows=48 elapsed=40.32s
+audit direction_shift seed=1101 step=8 rows=36 elapsed=47.15s
+audit direction_shift seed=1101 step=32 rows=48 elapsed=48.87s
+audit direction_shift seed=1101 step=128 rows=48 elapsed=50.57s
+audit direction_shift seed=2202 step=8 rows=36 elapsed=57.72s
+audit direction_shift seed=2202 step=32 rows=48 elapsed=59.46s
+audit direction_shift seed=2202 step=128 rows=48 elapsed=61.21s
+audit-checkpoints: analysis/reproduction/wp09/structural_oracle_summary.json

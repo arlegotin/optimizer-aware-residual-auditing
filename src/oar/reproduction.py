@@ -93,3 +93,39 @@ def compare_rows(original, repeated):
                 failures.append(f'{key}: relative acceptance/{threshold} differs')
     return dict(status='failed' if failures else 'reproduced', failures=failures,
                 rows_compared=len(left.keys() & right.keys()), max_absolute_difference=maxima, policy=POLICY)
+
+
+def compare_curves(original, repeated):
+    """Map predeclared logical `step` to the existing `committed_updates` schema.
+
+    This is a field-name correction only: keys, observations and tolerances
+    retain their intended meaning. The original declaration remains unchanged.
+    """
+    failures = []
+    def keyed(rows, label):
+        result = {}
+        for row in rows:
+            try:
+                key = tuple(row['committed_updates' if k == 'step' else k] for k in POLICY['curve_key'])
+                if key in result:
+                    failures.append(f'{label}: duplicate curve {key}')
+                result[key] = row[POLICY['curve_field']]
+            except KeyError as exc:
+                failures.append(f'{label}: missing curve field {exc}')
+        return result
+    a, b = keyed(original, 'reference'), keyed(repeated, 'repeat')
+    if a.keys() != b.keys():
+        failures.append('curve coverage/identity differs')
+    differences = []
+    for key in a.keys() & b.keys():
+        x, y = a[key], b[key]
+        if (type(x) not in (int, float) or type(y) not in (int, float) or
+                not math.isfinite(x) or not math.isfinite(y)):
+            failures.append(f'curve {key} is nonfinite')
+            continue
+        differences.append(abs(x-y))
+        if not math.isclose(x, y, abs_tol=POLICY['atol'], rel_tol=POLICY['rtol']):
+            failures.append(f'curve {key} differs')
+    return dict(failures=failures, curves_compared=len(a.keys() & b.keys()),
+                curve_max_absolute_difference=max(differences, default=None),
+                curve_schema_mapping='predeclared logical step = existing committed_updates; no observation/tolerance change')

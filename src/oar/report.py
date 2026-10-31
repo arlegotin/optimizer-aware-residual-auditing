@@ -66,7 +66,7 @@ def _load_index(path):
     current = {}
     identities = set()
     for artifact in index['artifacts']:
-        _fields(artifact, ('path', 'sha256'), ('revision', 'unavailable_reason'))
+        _fields(artifact, ('path', 'sha256'), ('revision', 'archived_path', 'unavailable_reason'))
         local = _local(root, artifact['path'])
         if not isinstance(artifact['sha256'], str) or not re.fullmatch('[a-f0-9]{64}', artifact['sha256']):
             raise ValueError('invalid artifact hash')
@@ -74,6 +74,8 @@ def _load_index(path):
         if identity in identities:
             raise ValueError('duplicate artifact identity')
         identities.add(identity)
+        if sum(k in artifact for k in ('revision', 'archived_path', 'unavailable_reason')) > 1:
+            raise ValueError('artifact has ambiguous historical attribution')
         if 'unavailable_reason' in artifact:
             _text(artifact['unavailable_reason'])
             if 'revision' in artifact:
@@ -86,6 +88,11 @@ def _load_index(path):
                 data = subprocess.check_output(['git', '-C', str(root), 'show', f"{artifact['revision']}:{artifact['path']}"], stderr=subprocess.PIPE)
             except subprocess.CalledProcessError as exc:
                 raise ValueError(f'unavailable historical artifact: {artifact["path"]}') from exc
+        elif 'archived_path' in artifact:
+            try:
+                data = _local(root, artifact['archived_path']).read_bytes()
+            except OSError as exc:
+                raise ValueError('unavailable archived artifact') from exc
         else:
             try:
                 data = local.read_bytes()
@@ -157,6 +164,16 @@ def build_report(gates: Path, run_index: Path | None, out: Path) -> Path:
         for record in records:
             if any((p, h) not in identities for p, h in record.artifact_hashes.items()):
                 raise ValueError('gate artifact reference absent from index')
+    protected = {gates.resolve(), *(p.resolve() for p in current.values())}
+    if run_index is not None:
+        protected.add(Path(run_index).resolve())
+        root = (Path(run_index).parent/index['root']).resolve()
+        for artifact in index['artifacts']:
+            protected.add((root/artifact['path']).resolve())
+            if 'archived_path' in artifact:
+                protected.add((root/artifact['archived_path']).resolve())
+    if out.resolve() in protected:
+        raise ValueError('report output would overwrite input evidence')
     entries = index['evidence'] if index else []
     classified = {kind: [] for kind in CLASSES}
     for entry in entries:
@@ -213,8 +230,9 @@ def build_report(gates: Path, run_index: Path | None, out: Path) -> Path:
                  'Explicitly unavailable historical artifacts stay unavailable. No index/report/WP09 hash cycle is used.', '']
         for a in index['artifacts']:
             attribution = ('unavailable: '+a['unavailable_reason'] if 'unavailable_reason' in a else
-                           'verified historical revision '+a['revision'] if 'revision' in a else 'verified current bytes')
-            label = link(a['path']) if a['path'] in current and 'revision' not in a and 'unavailable_reason' not in a else f"`{a['path']}`"
+                           'verified historical revision '+a['revision'] if 'revision' in a else
+                           'verified archive '+a['archived_path'] if 'archived_path' in a else 'verified current bytes')
+            label = link(a['path']) if a['path'] in current and 'revision' not in a and 'archived_path' not in a and 'unavailable_reason' not in a else f"`{a['path']}`"
             text += [f"- {label}: `{a['sha256']}` ({attribution})"]
         text += ['']
     out.parent.mkdir(parents=True, exist_ok=True)

@@ -141,3 +141,79 @@ def test_cli_report_and_invalid_index_exit(tmp_path, capsys):
     index = evidence(tmp_path, gates, schema_version=99)
     assert main(['report', '--gates', str(gates), '--run-index', str(index), '--out', str(out)]) == 2
     assert 'invalid evidence' in capsys.readouterr().err
+
+
+@pytest.mark.parametrize('target', ['gates.jsonl', 'index.json', 'raw.json'])
+def test_output_cannot_overwrite_input_evidence(tmp_path, target):
+    gates = stopped(tmp_path)
+    index = evidence(tmp_path, gates)
+    out = tmp_path/target
+    before = out.read_bytes()
+    with pytest.raises(ValueError, match='overwrite'):
+        build(gates, index, out)
+    assert out.read_bytes() == before
+
+
+def test_historical_revision_is_verified_without_relabeling_current_bytes(tmp_path):
+    import subprocess
+    root = Path('.').resolve()
+    revision = subprocess.check_output(['git', 'rev-parse', '6f04c6e'], text=True).strip()
+    data = subprocess.check_output(['git', 'show', f'{revision}:src/oar/cli.py'])
+    gates = stopped(tmp_path)
+    index = evidence(tmp_path, gates)
+    payload = json.loads(index.read_text())
+    payload['root'] = str(root)
+    payload['artifacts'] = [dict(path='src/oar/cli.py', sha256=hashlib.sha256(data).hexdigest(), revision=revision)]
+    index.write_text(json.dumps(payload))
+    text = build(gates, index, tmp_path/'report.md').read_text()
+    assert f'verified historical revision {revision}' in text
+    assert hashlib.sha256(data).hexdigest() in text
+    payload['artifacts'][0]['sha256'] = '0'*64
+    index.write_text(json.dumps(payload))
+    with pytest.raises(ValueError, match='hash'):
+        build(gates, index, tmp_path/'report.md')
+
+
+def test_unknown_schema_duplicate_keys_and_unbound_gate_reference_rejected(tmp_path):
+    gates = stopped(tmp_path)
+    index = evidence(tmp_path, gates)
+    payload = json.loads(index.read_text())
+    payload['artifacts'][0]['path'] = '../raw.json'
+    index.write_text(json.dumps(payload))
+    with pytest.raises(ValueError):
+        build(gates, index, tmp_path/'report.md')
+    index.write_text('{"schema_version": 1, "schema_version": 1}')
+    with pytest.raises(ValueError, match='duplicate'):
+        build(gates, index, tmp_path/'report.md')
+    record = GateRecord('WP00', 'stop', 'Missing evidence', 'Stop', {'absent': '0'*64}, {}, {})
+    gates.write_text(to_json(record)+'\n')
+    index = evidence(tmp_path, gates)
+    with pytest.raises(ValueError, match='reference'):
+        build(gates, index, tmp_path/'report.md')
+
+
+def test_archived_bytes_keep_original_path_attribution(tmp_path):
+    gates = stopped(tmp_path)
+    index = evidence(tmp_path, gates)
+    payload = json.loads(index.read_text())
+    raw = payload['artifacts'][0]
+    raw.update(path='original.json', archived_path='raw.json')
+    index.write_text(json.dumps(payload))
+    text = build(gates, index, tmp_path/'report.md').read_text()
+    assert 'original.json' in text and 'verified archive raw.json' in text
+    payload['evidence'] = [item(artifact='original.json')]
+    index.write_text(json.dumps(payload))
+    with pytest.raises(ValueError, match='current artifact'):
+        build(gates, index, tmp_path/'report.md')
+
+
+def test_output_cannot_overwrite_archived_input_bytes(tmp_path):
+    gates = stopped(tmp_path)
+    index = evidence(tmp_path, gates)
+    payload = json.loads(index.read_text())
+    payload['artifacts'][0].update(path='historical.json', archived_path='raw.json')
+    index.write_text(json.dumps(payload))
+    before = (tmp_path/'raw.json').read_bytes()
+    with pytest.raises(ValueError, match='overwrite'):
+        build(gates, index, tmp_path/'raw.json')
+    assert (tmp_path/'raw.json').read_bytes() == before

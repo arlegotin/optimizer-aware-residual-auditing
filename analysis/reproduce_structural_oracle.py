@@ -18,7 +18,7 @@ import time
 import yaml
 
 from oar.oracle import load_oracle_config, require_structural_oracle, sha, write_json
-from oar.reproduction import POLICY, compare_rows, validate_clone
+from oar.reproduction import POLICY, compare_curves, compare_rows, validate_clone
 
 
 def prepare(out):
@@ -109,15 +109,9 @@ def run(plan_path):
             failures.append('incomplete/different study outcome')
         if summary['fallback_environment'] != '0' or summary['config']['device'] != 'mps' or summary['config'] != clone:
             failures.append('fresh actual-MPS/config provenance differs')
-        def curves(s):
-            return {tuple(r[k] for k in POLICY['curve_key']):r['development_mse'] for r in s['curves']}
-        a, b = curves(baseline), curves(summary)
-        result['curves_compared'] = len(a.keys() & b.keys())
-        if a.keys() != b.keys() or len(b) != len(summary['curves']): failures.append('curve coverage/identity differs')
-        for key in a.keys() & b.keys():
-            if not math.isclose(a[key], b[key], abs_tol=POLICY['atol'], rel_tol=POLICY['rtol']):
-                failures.append(f'curve {key} differs')
-        result['curve_max_absolute_difference'] = max((abs(a[k]-b[k]) for k in a.keys() & b.keys()), default=None)
+        curve_result = compare_curves(baseline['curves'], summary['curves'])
+        failures.extend(curve_result.pop('failures'))
+        result.update(curve_result)
         attempts = lambda s: {(r['condition'],r['seed']):r['learnable'] for r in s['attempts']}
         if attempts(summary) != attempts(baseline): failures.append('learnability/attempt coverage differs')
         if len(summary['artifact_index']) != len(baseline['artifact_index']): failures.append('checkpoint coverage differs')
@@ -141,13 +135,71 @@ def run(plan_path):
     return 0 if result['status'] == 'reproduced' else 1
 
 
+def recover_comparison(plan_path):
+    """Reprocess retained bytes after the documented curve-field schema error.
+
+    Original failure, declaration and raw evidence are immutable inputs. This
+    path launches no experiment and changes no gate or amendment.
+    """
+    out = plan_path.parent
+    target = out/'comparison_recovered.json'
+    if target.exists():
+        raise ValueError('recovered comparison exists; preserve previous outcome')
+    plan = json.loads(plan_path.read_text())
+    failed = json.loads((out/'comparison.json').read_text())
+    if (plan['comparison'] != POLICY or failed['status'] != 'failed' or
+            failed['failures'] != ["KeyError: 'step'"] or sha(plan_path) != failed['plan_sha256']):
+        raise ValueError('recovery applies only to the retained curve-schema failure')
+    for name, digest in {**plan['reference'], **failed['artifacts']}.items():
+        if sha(name) != digest:
+            raise ValueError(f'retained comparison input changed: {name}')
+    baseline = json.loads(Path('analysis/structural_oracle_summary.json').read_text())
+    summary = json.loads((out/'structural_oracle_summary.json').read_text())
+    rows = lambda p: [json.loads(line) for line in p.read_text().splitlines()]
+    result = compare_rows(rows(Path('analysis/structural_oracle_audit.jsonl')), rows(out/'structural_oracle_audit.jsonl'))
+    curves = compare_curves(baseline['curves'], summary['curves'])
+    result['failures'].extend(curves.pop('failures')); result.update(curves)
+    clone = yaml.safe_load(Path(plan['config_path']).read_text())
+    validate_clone(yaml.safe_load(Path(plan['original_config_path']).read_text()), clone)
+    if (sha(plan['config_path']) != plan['config_sha256'] or summary['config'] != clone or
+            not summary['coverage_complete'] or summary['row_count'] != len(rows(out/'structural_oracle_audit.jsonl')) or
+            summary['outcome'] != baseline['outcome'] or summary['fallback_environment'] != '0' or clone['device'] != 'mps'):
+        result['failures'].append('coverage/backend/config provenance differs')
+    attempts = lambda s: {(r['condition'],r['seed']):r['learnable'] for r in s['attempts']}
+    if attempts(summary) != attempts(baseline): result['failures'].append('learnability/attempt coverage differs')
+    result['checkpoint_hashes_validated'] = 0
+    original_keys = {(r['condition'],r['seed'],r['step']) for r in baseline['artifact_index']}
+    repeated_keys = {(r['condition'],r['seed'],r['step']) for r in summary['artifact_index']}
+    if original_keys != repeated_keys or len(repeated_keys) != len(summary['artifact_index']):
+        result['failures'].append('checkpoint coverage/identity differs')
+    for artifact in summary['artifact_index']:
+        if sha(artifact['path']) != artifact['sha256']:
+            result['failures'].append('checkpoint hash differs: '+artifact['path'])
+        else: result['checkpoint_hashes_validated'] += 1
+    result.update(schema_version=1, status='failed' if result['failures'] else 'reproduced',
+                  original_failure_path=str(out/'comparison.json'), original_failure_sha256=sha(out/'comparison.json'),
+                  plan_sha256=sha(plan_path), recovery_sources={p:sha(p) for p in ('src/oar/reproduction.py','analysis/reproduce_structural_oracle.py')},
+                  original_research_revision=plan['original_research_revision'], reproduction_revision=summary['code_revision'],
+                  interpretation=POLICY['interpretation'],
+                  resource_accounting=dict(worker_wall_s=summary['total_wall_s'], invocation_wall_s=failed['invocation_wall_s'],
+                      endpoint_rss_bytes=summary['rss_at_finish_bytes'], endpoint_mps_driver_bytes=summary['mps_driver_at_finish_bytes']),
+                  timing_qualification='A report-only CPU pytest invocation (1.27s) may have overlapped this repeat. No MPS test/collector/benchmark overlap. Wall/resource values are accounting only, never a timing replication or new speed estimate.',
+                  postprocessing_correction='Original helper compared all792 rows successfully then failed on nonexistent curve key step. Recovered comparison maps logical step to committed_updates on all30 retained curves, with unchanged numeric tolerance and exact categorical checks. No research rerun.')
+    write_json(target, result)
+    print(json.dumps({k:result[k] for k in ('status','failures','rows_compared','curves_compared','checkpoint_hashes_validated')},sort_keys=True))
+    return 0 if result['status'] == 'reproduced' else 1
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--prepare', type=Path, metavar='NEW_OUTPUT_DIRECTORY')
     group.add_argument('--run', type=Path, metavar='PREDECLARED_PLAN_JSON')
+    group.add_argument('--recover-comparison', type=Path, metavar='FAILED_PLAN_JSON')
     args = parser.parse_args()
     if args.prepare:
         prepare(args.prepare)
-    else:
+    elif args.run:
         raise SystemExit(run(args.run))
+    else:
+        raise SystemExit(recover_comparison(args.recover_comparison))

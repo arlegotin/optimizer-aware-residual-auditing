@@ -71,3 +71,16 @@ def test_comparison_policy_predeclares_exact_field_coverage():
     assert {'proposal_true_alignment', 'proposal_complement_bound', 'dense_development_delta', 'lost_progress'} <= set(o.NUMERIC_FIELDS)
     assert o.POLICY['atol'] == 2e-6 and o.POLICY['rtol'] == 2e-4
     assert o.POLICY['taus'] == [.25, .5, .75]
+
+
+def test_curve_comparison_uses_actual_committed_update_field():
+    o = api()
+    reference = json.loads(Path('analysis/structural_oracle_summary.json').read_text())['curves']
+    repeated = copy.deepcopy(reference)
+    result = o.compare_curves(reference, repeated)
+    assert result['curves_compared'] == 30 and result['curve_max_absolute_difference'] == 0
+    assert result['failures'] == []
+    repeated[0]['development_mse'] += .01
+    assert o.compare_curves(reference, repeated)['failures']
+    assert o.compare_curves(reference, reference[:-1])['failures']
+    assert o.compare_curves(reference, reference+[reference[0]])['failures']
