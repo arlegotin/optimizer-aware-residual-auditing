@@ -287,7 +287,7 @@ Sources: [tests/test_optimizer_preview.py](../tests/test_optimizer_preview.py), 
 
 ### Decision audit
 
-Blueprint§14 outcome: stop the present online branch and narrow the finding to component headroom plus complete-cost failure and an inconclusive/negative actionable policy region in this bounded synthetic grid. Correct mathematics alone and positive component timing do not establish practical learning efficiency. Current-SVD diagnostic improvement is paid and cannot reopen online work. Wide intervals, absent guardrails, unavailable baselines and lack of independent confirmation are unresolved, not equivalence or universal failure. No performance redesign, alternate basis, architecture pivot, MLX retry or corpus branch is authorized; any pivot requires a new specification and evidence. Rulings retain superseded/unused decisions and their practical rework costs; final whole-branch review remains with the controller.
+Blueprint§14 outcome: stop the present online branch and narrow the finding to component headroom plus complete-cost failure and an inconclusive/negative actionable policy region in this bounded synthetic grid. Correct mathematics alone and positive component timing do not establish practical learning efficiency. Current-SVD diagnostic improvement is paid and cannot reopen online work. Wide intervals, absent guardrails, unavailable baselines and lack of independent confirmation are unresolved, not equivalence or universal failure. No performance redesign, alternate basis, architecture pivot, MLX retry or corpus branch is authorized; any pivot requires a new specification and evidence. Rulings retain superseded/unused decisions and their practical rework costs; final whole-branch review remains with the controller. The hash-bound review_summary.md and outcome.json are pre-final review snapshots. README links to the durable final review/rulings addendum, deliberately outside this scientific index and WP09 artifact hashes; scoped re-review is pending there.
 
 Sources: [docs/blueprint.md](../docs/blueprint.md), [decisions/rulings.md](../decisions/rulings.md), [decisions/review_summary.md](../decisions/review_summary.md), [analysis/headroom_decision.json](headroom_decision.json), [decisions/outcome.json](../decisions/outcome.json).
 
@@ -297,6 +297,12 @@ Local commands, pinned arm64 environment, source/hash resolution and independent
 
 Sources: [README.md](../README.md), [decisions/reports/synthesis_schema.md](../decisions/reports/synthesis_schema.md), [analysis/reproduction/wp09/plan.json](reproduction/wp09/plan.json), [analysis/reproduction/wp09/comparison.json](reproduction/wp09/comparison.json), [analysis/reproduction/wp09/comparison_recovered.json](reproduction/wp09/comparison_recovered.json).
 
+### Implementation audit
+
+Final review fixes at7628be7: unsupported internally overlapping writable parameter layouts reject before pending publication or any commit write; supported transposes and gapped slices retain native-equivalent updates. One absolute oracle study deadline covers later native histories, persisted audit rows, summary completion and final synchronization, retaining actual partial progress as incomplete/inconclusive. Normal/recovery checkpoint reproduction shares identity/duplicate/cardinality/hash validation. Public preview API documents finite-endpoint/nonfinite-derived metadata and fail-closed consumer requirement. Focused115 tests passed; single full actual-MPS fallback0 suite364 passed in7.80s with no skips/warnings. No benchmark/research rerun: original2e89e74 study and timing source hashes remain authoritative for measured bytes, not changed validation overhead. Final scoped re-review is pending in the README-linked coordination addendum, which is outside scientific evidence hashes.
+
+Sources: [src/oar/optimizer_preview.py](../src/oar/optimizer_preview.py), [src/oar/oracle.py](../src/oar/oracle.py), [analysis/reproduce_structural_oracle.py](reproduce_structural_oracle.py), [tests/test_optimizer_preview.py](../tests/test_optimizer_preview.py), [tests/test_oracle.py](../tests/test_oracle.py), [tests/test_reproduction.py](../tests/test_reproduction.py), [analysis/wp09_verification.json](wp09_verification.json).
+
 ## Raw artifact and historical hash index
 
 Current artifacts are checked from disk; historical revisions are checked using `git show REV:PATH`. Explicitly unavailable historical artifacts stay unavailable. No index/report/WP09 hash cycle is used.
@@ -304,7 +310,7 @@ Current artifacts are checked from disk; historical revisions are checked using 
 - `.superpowers/sdd/2026-10-30-oar-implementation/task-11-report.md`: `62994a68534d278c80f078d913488a242ee913d01d93f91c978eef8c02fd0fc5` (unavailable: Historical disposable workflow report; excluded from current scientific support. Durable Task11 report is decisions/reports/structural_oracle.md.)
 - `.superpowers/sdd/2026-10-30-oar-implementation/task-11-report.md`: `cafffbb259431a34f5e3433f06c2e94aa025efd5e19d0ca3f15415765bf03b33` (unavailable: Historical disposable workflow report; excluded from current scientific support. Durable Task11 report is decisions/reports/structural_oracle.md.)
 - `.superpowers/sdd/2026-10-30-oar-implementation/task-11-report.md`: `d29597eb70f68b1dda3515dada02ce29b6d4d9f28c2775591e5f20b8aee15d0e` (unavailable: Historical disposable workflow report; excluded from current scientific support. Durable Task11 report is decisions/reports/structural_oracle.md.)
-- [README.md](../README.md): `f8937f8ac316ae5954d76802849cc855847cd4bce349552263ce5aa15729985b` (verified current bytes)
+- [README.md](../README.md): `3039cbffc67fbfcea2827feb8e3871cfc15e1db3fd5e84ca280bb4dffa786643` (verified current bytes)
 - `analysis/README.md`: `0ab213582ff1b123bed16f12ba2f84bb97caadd1bd0383012ab265a08b1ef348` (verified historical revision dc561706752f656706c4fac5ae9b9f1f9c53b601)
 - [analysis/README.md](README.md): `130eae9c807339feaf0ab121c3aad5e92bba07df259491711adb0b2311ef2b5f` (verified current bytes)
 - `analysis/README.md`: `2e6b5100d97868a8e59dda5d5e1822d505b1246a76ac95117b0e1ecafa628f3d` (verified archive analysis/history/fix1-README-2e6b5100d978.md)
@@ -364,7 +370,7 @@ Current artifacts are checked from disk; historical revisions are checked using 
 - [analysis/operator_correctness.json](operator_correctness.json): `ae092c3e4c66ca168f8e5e29b2982ee9c489565443c7142238a5087f30f7f044` (verified current bytes)
 - `analysis/operator_correctness.json`: `d25265d9d4ff55f9a5a957f2ddd92a21b2ea96263466dfcb4eede3ef72f621fe` (verified archive analysis/history/operator_correctness-d25265d9d4ff.json)
 - [analysis/optimizer_correctness.json](optimizer_correctness.json): `2f378ad2355b64f380e385ef6641df17bc01234862dff6ced9167b5da69c56f4` (verified current bytes)
-- [analysis/reproduce_structural_oracle.py](reproduce_structural_oracle.py): `20125b87f9cef4ab164490a744a6e72cc98d14fc46ccf12d55f487ec1dabe431` (verified current bytes)
+- [analysis/reproduce_structural_oracle.py](reproduce_structural_oracle.py): `961d7dcd81f2a81abff72aa385d9962af733d82cf84a8970ed38ec79248f83fa` (verified current bytes)
 - [analysis/reproduction/wp09/amendment.json](reproduction/wp09/amendment.json): `ccc6e9ddfa270fc7133f12824635409ee01f98b5d5bc6fad1affa78077b45894` (verified current bytes)
 - [analysis/reproduction/wp09/comparison.json](reproduction/wp09/comparison.json): `d1633354a42e6985a8cdffd3ce0def70e3716dcff3d574e75a5a6e7306f1fe11` (verified current bytes)
 - [analysis/reproduction/wp09/comparison_recovered.json](reproduction/wp09/comparison_recovered.json): `bc4290cb79b809f73787a04bd1e4d7103f43837108e4ca463dab1f5307e22cff` (verified current bytes)
@@ -393,7 +399,7 @@ Current artifacts are checked from disk; historical revisions are checked using 
 - `analysis/timing_calibration_wide.csv`: `9200e6ff994445fb951ee3419ad3e711fa9f787986560b697e019cf4fb398ca3` (verified archive analysis/history/fix1-timing_calibration_wide-9200e6ff9944.csv)
 - [analysis/timing_calibration_wide.json](timing_calibration_wide.json): `04a0157a7c5c0b4821a1ebabdb157237e185e21a154199f3d52dad38def2b0e6` (verified current bytes)
 - `analysis/timing_calibration_wide.json`: `95ca861c643a70408140f7fefafc263a75958ced729947fb239e3e94bdba630e` (verified archive analysis/history/fix1-timing_calibration_wide-95ca861c643a.json)
-- [analysis/wp09_verification.json](wp09_verification.json): `ef3549590023196d9828f2a447af4cf9d944ae87797edaf6983890ee6db7e5b3` (verified current bytes)
+- [analysis/wp09_verification.json](wp09_verification.json): `697516d857645b8aaf407f2ba88615619f32def41801289e162f381f01afe31d` (verified current bytes)
 - [configs/discovery.yaml](../configs/discovery.yaml): `0fa914fb68e6b48eaf2e19a5f3b1aefcbf5189e5860d28f2349969994177d99d` (verified current bytes)
 - [configs/operator.yaml](../configs/operator.yaml): `fc6caa711980c09d315bc205cf4cb121e662bc02659bc916702cc62bf7b4ffcb` (verified current bytes)
 - [configs/operator_wide.yaml](../configs/operator_wide.yaml): `1ea9e3ca5ffadd83316e9d1240896c0bab2e7897b9af4bafc4c61159dfe9f400` (verified current bytes)
@@ -402,8 +408,8 @@ Current artifacts are checked from disk; historical revisions are checked using 
 - [decisions/amendments.jsonl](../decisions/amendments.jsonl): `78ae5c0c6d1daa0e819e77da889553efa72547693451b8cfbf9627c6f2e23bda` (verified current bytes)
 - [decisions/outcome.json](../decisions/outcome.json): `d06b25e1b475d1527f9f8a4e9a618bae20f82ad3c48abcd131e3847f37fb4aad` (verified current bytes)
 - [decisions/reports/structural_oracle.md](../decisions/reports/structural_oracle.md): `09abcc2e5b84aab8fea0e7bbb6a1eda5388ad3e2d3fa64b05516c04b4793ff65` (verified current bytes)
-- [decisions/reports/synthesis_annotations.json](../decisions/reports/synthesis_annotations.json): `d874f63c04e88ebcd848cc6eb19bda74418cbfa9b38059675b4207a8105860b5` (verified current bytes)
-- [decisions/reports/synthesis_schema.md](../decisions/reports/synthesis_schema.md): `c658c7e28ad6a2c629c877e376b285401a1231c95b2c84cc5fd60a07bf1fc772` (verified current bytes)
+- [decisions/reports/synthesis_annotations.json](../decisions/reports/synthesis_annotations.json): `b28f4005ba9d9fbeaf27df5b0fe9a581fdaa4088d9bd8fe43d2a47e58b549baa` (verified current bytes)
+- [decisions/reports/synthesis_schema.md](../decisions/reports/synthesis_schema.md): `d93c380bfd29fe92a1dbb689e306605a54164bb806dbbd7cad16a163fda0e703` (verified current bytes)
 - [decisions/review_summary.md](../decisions/review_summary.md): `ffef9af52cbad21b27d51780ead392039921e5953599790264a2b688610d5c06` (verified current bytes)
 - [decisions/rulings.md](../decisions/rulings.md): `70c7e8b55f5deb93d86b5e3b40f2d2098319d10a9a8ee5efb5c02c4b6efa3c08` (verified current bytes)
 - [decisions/structural_oracle_scope.md](../decisions/structural_oracle_scope.md): `44f73b644ec3f9119a5ba8e9aa5abfebff28cdab487e186c4d3e13a24ae796a1` (verified current bytes)
@@ -430,10 +436,12 @@ Current artifacts are checked from disk; historical revisions are checked using 
 - [src/oar/gates.py](../src/oar/gates.py): `bde06fe48e416d5f0f2517fafd782617493002fcd3983d9ae0332b3926985c8f` (verified current bytes)
 - [src/oar/hardware.py](../src/oar/hardware.py): `4ba118d816eec9d255cfb3d7925416373119fe181f82529fb58a96347d8e5048` (verified current bytes)
 - [src/oar/linear.py](../src/oar/linear.py): `e0e0ee246c43e1e71b4a98ba1e97b9a1a8774a13c8271fb063a4020524119b61` (verified current bytes)
-- [src/oar/optimizer_preview.py](../src/oar/optimizer_preview.py): `a0f965d69874e71d3b0e91663713293884e1270d08442fe07531f4b057a45888` (verified current bytes)
+- [src/oar/optimizer_preview.py](../src/oar/optimizer_preview.py): `37935501f1f2988fc30ba941dda75062a0afffccfbbc0edf637c15179063805e` (verified current bytes)
+- `src/oar/optimizer_preview.py`: `a0f965d69874e71d3b0e91663713293884e1270d08442fe07531f4b057a45888` (verified historical revision a042839e315cd60db8d9ff699c5c6a6c2940c011)
 - `src/oar/oracle.py`: `917ac86d911c624f318d921b0ef9bffecc859efef039e4b98beb7bd1a49b609d` (verified historical revision dc561706752f656706c4fac5ae9b9f1f9c53b601)
+- [src/oar/oracle.py](../src/oar/oracle.py): `a9d2ed4728053d184835ff1f9727c9fa22d08b8a86a56b1e48c658a80594acd1` (verified current bytes)
 - `src/oar/oracle.py`: `f07f6f5c6f025601640b2db8e405e34e64223ad7db123bc12a21cd0c8445dbb9` (verified historical revision 2e89e742131eb5eebaeb7a028d8e8f2e4fc50e07)
-- [src/oar/oracle.py](../src/oar/oracle.py): `febb3517407260eb05c4992b0541d28e0e47290e085f27c1ca4f0a7d9ffee889` (verified current bytes)
+- `src/oar/oracle.py`: `febb3517407260eb05c4992b0541d28e0e47290e085f27c1ca4f0a7d9ffee889` (verified historical revision 3d7b57c663ba104f89d92de62977efb8211e4028)
 - [src/oar/provenance.py](../src/oar/provenance.py): `ec15cbd992a51dbd7acd7cd566f5fdc84df3e9c2bbdf73b0e3ca8e3a0cd96aa0` (verified current bytes)
 - [src/oar/records.py](../src/oar/records.py): `2f06d6ee5ce7debbc3bfad99fd160fe79a125335a15fdd69f46242a9924bd300` (verified current bytes)
 - [src/oar/report.py](../src/oar/report.py): `176a5409f4f669849189d58aa45d7c755c793baa401e3a0835449cab787a22c3` (verified current bytes)
@@ -453,11 +461,13 @@ Current artifacts are checked from disk; historical revisions are checked using 
 - [tests/test_config_records.py](../tests/test_config_records.py): `bb50cd9aea2f98f928324ab2f13e4dee29612804cb06f1efef78e86d92dcdd23` (verified current bytes)
 - [tests/test_discovery.py](../tests/test_discovery.py): `337f2ed69cc17225e2198532ce23d957cec87688d25fd744d96b1605456685b2` (verified current bytes)
 - [tests/test_exact_adjoints.py](../tests/test_exact_adjoints.py): `7276d899195b667615e19ee75a8ab955dfcff24bd25c9f6259ae13173cc229ba` (verified current bytes)
-- [tests/test_optimizer_preview.py](../tests/test_optimizer_preview.py): `9e77fa8756b159ad7bcb2c300f64551460f97a827cfd8bf33c9d2229b58c1c79` (verified current bytes)
+- [tests/test_optimizer_preview.py](../tests/test_optimizer_preview.py): `178c6cd2f3275abaf5614c81fea49e6aef665db32d1f269d29c48fa603b75ada` (verified current bytes)
+- `tests/test_optimizer_preview.py`: `9e77fa8756b159ad7bcb2c300f64551460f97a827cfd8bf33c9d2229b58c1c79` (verified historical revision a042839e315cd60db8d9ff699c5c6a6c2940c011)
+- [tests/test_oracle.py](../tests/test_oracle.py): `0687bb463152a59768e97f7bb81adc7704bbdfc06160e9e87adc4c59007ed58f` (verified current bytes)
 - `tests/test_oracle.py`: `41dff73e0e1791a34fbca384f4937f0ca1a284f7c8fd6e017185bf38c95fcc3b` (verified historical revision f1efd557d36312e4f88869e83355b941ad6cd021)
-- [tests/test_oracle.py](../tests/test_oracle.py): `581e0ab4b9ec3c62a270b39ffe113a06f53628f62217742ddc249efd3b12eb8d` (verified current bytes)
+- `tests/test_oracle.py`: `581e0ab4b9ec3c62a270b39ffe113a06f53628f62217742ddc249efd3b12eb8d` (verified historical revision 3d7b57c663ba104f89d92de62977efb8211e4028)
 - `tests/test_oracle.py`: `6a40b3651a9b68b64e63e9d9345b94d0549e144f9ad3f22ee771a3eac8cf1120` (verified historical revision dc561706752f656706c4fac5ae9b9f1f9c53b601)
 - [tests/test_report.py](../tests/test_report.py): `e5c2d01e361f43d49ef3f57787f685c6c9d6a2393b4dcbae6fd65825bb31a284` (verified current bytes)
-- [tests/test_reproduction.py](../tests/test_reproduction.py): `c600b96dd4954bad06641773615ae6c70419be038c70286ece0e42972f3dd207` (verified current bytes)
+- [tests/test_reproduction.py](../tests/test_reproduction.py): `60d1e54b0e55359ade742b79033bbcc6e93a9afb70695fbd754fdae2dad03540` (verified current bytes)
 - [tests/test_synthesis_collection.py](../tests/test_synthesis_collection.py): `dc9cc7cba68250e139861e5b984c8c06ef5569cf717e5827a1f736dadd414dc0` (verified current bytes)
 - [tests/test_timing_harness.py](../tests/test_timing_harness.py): `123cdf5261ff458693c7386e64b7f0d05758a21311aa95bc050fa4059da3de90` (verified current bytes)

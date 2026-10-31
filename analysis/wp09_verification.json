@@ -16,6 +16,30 @@
       "result": "9 passed, 339 deselected in 2.98s"
     }
   ],
+  "final_review_fix": {
+    "commands": [
+      {
+        "actual_MPS": false,
+        "command": ".venv/bin/python -m pytest -q -m 'not mps' tests/test_optimizer_preview.py tests/test_oracle.py tests/test_reproduction.py tests/test_report.py",
+        "result": "115 passed, 3 deselected in 2.03s"
+      },
+      {
+        "actual_MPS": true,
+        "command": "PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python -m pytest -q",
+        "result": "364 passed in 7.80s; no skips/warnings; single full actual-MPS suite after final code changes"
+      }
+    ],
+    "corrected_implementation_head": "7628be7792030e3cfbb17dba82d3517642c866ca",
+    "findings": {
+      "I1": "Early provable writable-layout validation; pre-write commit revalidation; transpose/gapped slices retained.",
+      "I2": "One absolute worker deadline; retain checkpoints/curves/committed counts/rows before incomplete reporting at native/audit/completion boundaries.",
+      "M1": "Shared checkpoint identity/duplicates/cardinality/hash validation for normal and recovery paths.",
+      "M2": "Public preview API documents nonfinite derived metadata from finite endpoints; existing fail-closed consumer required; no new arithmetic checks."
+    },
+    "no_remeasurement": "No research or benchmark rerun. Earlier timing/source identities remain historical measurements of their original bytes, not the new validation code.",
+    "review_status": "Component fixes verified by implementer; scoped independent re-review pending. Final acceptance lives in the README-linked coordination addendum outside scientific hashes.",
+    "reviewed_head": "e388b43148899e242800d4df348876470565ead1"
+  },
   "limitations": [
     "Report-only CPU pytest1.27s may overlap fresh repeat; wall times accounting only.",
     "Original curve postprocessing failure retained; logical step maps to committed_updates in separately recorded recovery.",
@@ -35,5 +59,6 @@
     "same_seed_not_confirmation": true
   },
   "schema_version": 1,
-  "scope": "implemented component and stopped-study synthesis suites only; not confirmation"
+  "scope": "implemented component and stopped-study synthesis suites only; not confirmation",
+  "snapshot_note": "Original fields above describe earlier WP09 publication verification. The final_review_fix record is subsequent component/review maintenance only; it does not replace prior tests or remeasure research."
 }

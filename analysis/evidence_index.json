@@ -17,7 +17,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "f8937f8ac316ae5954d76802849cc855847cd4bce349552263ce5aa15729985b"
+      "sha256": "3039cbffc67fbfcea2827feb8e3871cfc15e1db3fd5e84ca280bb4dffa786643"
     },
     {
       "path": "analysis/README.md",
@@ -271,7 +271,7 @@
     },
     {
       "path": "analysis/reproduce_structural_oracle.py",
-      "sha256": "20125b87f9cef4ab164490a744a6e72cc98d14fc46ccf12d55f487ec1dabe431"
+      "sha256": "961d7dcd81f2a81abff72aa385d9962af733d82cf84a8970ed38ec79248f83fa"
     },
     {
       "path": "analysis/reproduction/wp09/amendment.json",
@@ -392,7 +392,7 @@
     },
     {
       "path": "analysis/wp09_verification.json",
-      "sha256": "ef3549590023196d9828f2a447af4cf9d944ae87797edaf6983890ee6db7e5b3"
+      "sha256": "697516d857645b8aaf407f2ba88615619f32def41801289e162f381f01afe31d"
     },
     {
       "path": "configs/discovery.yaml",
@@ -429,11 +429,11 @@
     },
     {
       "path": "decisions/reports/synthesis_annotations.json",
-      "sha256": "d874f63c04e88ebcd848cc6eb19bda74418cbfa9b38059675b4207a8105860b5"
+      "sha256": "b28f4005ba9d9fbeaf27df5b0fe9a581fdaa4088d9bd8fe43d2a47e58b549baa"
     },
     {
       "path": "decisions/reports/synthesis_schema.md",
-      "sha256": "c658c7e28ad6a2c629c877e376b285401a1231c95b2c84cc5fd60a07bf1fc772"
+      "sha256": "d93c380bfd29fe92a1dbb689e306605a54164bb806dbbd7cad16a163fda0e703"
     },
     {
       "path": "decisions/review_summary.md",
@@ -547,6 +547,11 @@
     },
     {
       "path": "src/oar/optimizer_preview.py",
+      "sha256": "37935501f1f2988fc30ba941dda75062a0afffccfbbc0edf637c15179063805e"
+    },
+    {
+      "path": "src/oar/optimizer_preview.py",
+      "revision": "a042839e315cd60db8d9ff699c5c6a6c2940c011",
       "sha256": "a0f965d69874e71d3b0e91663713293884e1270d08442fe07531f4b057a45888"
     },
     {
@@ -556,11 +561,16 @@
     },
     {
       "path": "src/oar/oracle.py",
+      "sha256": "a9d2ed4728053d184835ff1f9727c9fa22d08b8a86a56b1e48c658a80594acd1"
+    },
+    {
+      "path": "src/oar/oracle.py",
       "revision": "2e89e742131eb5eebaeb7a028d8e8f2e4fc50e07",
       "sha256": "f07f6f5c6f025601640b2db8e405e34e64223ad7db123bc12a21cd0c8445dbb9"
     },
     {
       "path": "src/oar/oracle.py",
+      "revision": "3d7b57c663ba104f89d92de62977efb8211e4028",
       "sha256": "febb3517407260eb05c4992b0541d28e0e47290e085f27c1ca4f0a7d9ffee889"
     },
     {
@@ -643,7 +653,16 @@
     },
     {
       "path": "tests/test_optimizer_preview.py",
+      "sha256": "178c6cd2f3275abaf5614c81fea49e6aef665db32d1f269d29c48fa603b75ada"
+    },
+    {
+      "path": "tests/test_optimizer_preview.py",
+      "revision": "a042839e315cd60db8d9ff699c5c6a6c2940c011",
       "sha256": "9e77fa8756b159ad7bcb2c300f64551460f97a827cfd8bf33c9d2229b58c1c79"
+    },
+    {
+      "path": "tests/test_oracle.py",
+      "sha256": "0687bb463152a59768e97f7bb81adc7704bbdfc06160e9e87adc4c59007ed58f"
     },
     {
       "path": "tests/test_oracle.py",
@@ -652,6 +671,7 @@
     },
     {
       "path": "tests/test_oracle.py",
+      "revision": "3d7b57c663ba104f89d92de62977efb8211e4028",
       "sha256": "581e0ab4b9ec3c62a270b39ffe113a06f53628f62217742ddc249efd3b12eb8d"
     },
     {
@@ -665,7 +685,7 @@
     },
     {
       "path": "tests/test_reproduction.py",
-      "sha256": "c600b96dd4954bad06641773615ae6c70419be038c70286ece0e42972f3dd207"
+      "sha256": "60d1e54b0e55359ade742b79033bbcc6e93a9afb70695fbd754fdae2dad03540"
     },
     {
       "path": "tests/test_synthesis_collection.py",
@@ -717,7 +737,7 @@
         "decisions/outcome.json"
       ],
       "kind": "decision",
-      "summary": "Blueprint\u00a714 outcome: stop the present online branch and narrow the finding to component headroom plus complete-cost failure and an inconclusive/negative actionable policy region in this bounded synthetic grid. Correct mathematics alone and positive component timing do not establish practical learning efficiency. Current-SVD diagnostic improvement is paid and cannot reopen online work. Wide intervals, absent guardrails, unavailable baselines and lack of independent confirmation are unresolved, not equivalence or universal failure. No performance redesign, alternate basis, architecture pivot, MLX retry or corpus branch is authorized; any pivot requires a new specification and evidence. Rulings retain superseded/unused decisions and their practical rework costs; final whole-branch review remains with the controller."
+      "summary": "Blueprint\u00a714 outcome: stop the present online branch and narrow the finding to component headroom plus complete-cost failure and an inconclusive/negative actionable policy region in this bounded synthetic grid. Correct mathematics alone and positive component timing do not establish practical learning efficiency. Current-SVD diagnostic improvement is paid and cannot reopen online work. Wide intervals, absent guardrails, unavailable baselines and lack of independent confirmation are unresolved, not equivalence or universal failure. No performance redesign, alternate basis, architecture pivot, MLX retry or corpus branch is authorized; any pivot requires a new specification and evidence. Rulings retain superseded/unused decisions and their practical rework costs; final whole-branch review remains with the controller. The hash-bound review_summary.md and outcome.json are pre-final review snapshots. README links to the durable final review/rulings addendum, deliberately outside this scientific index and WP09 artifact hashes; scoped re-review is pending there."
     },
     {
       "artifacts": [
@@ -729,6 +749,19 @@
       ],
       "kind": "reproduction",
       "summary": "Local commands, pinned arm64 environment, source/hash resolution and independent-path reproduction are documented in README and synthesis_schema. Original artifacts were not overwritten. Prepare writes the full path-only amendment/policy before execution; run validates hashes and appends/restores the previous exact permission. Initial comparison failure is retained; postprocessing-only step\u2192committed_updates recovery uses identical observations/tolerances and compares all792 rows/30 curves, not a favorable subset. No benchmark was repeated because no timed kernel changed. Large trusted local checkpoints are ignored and regenerable; no corpus/pretrained weights are required or redistributed. Original study, historical source revisions and later review fixes retain separate attribution."
+    },
+    {
+      "artifacts": [
+        "src/oar/optimizer_preview.py",
+        "src/oar/oracle.py",
+        "analysis/reproduce_structural_oracle.py",
+        "tests/test_optimizer_preview.py",
+        "tests/test_oracle.py",
+        "tests/test_reproduction.py",
+        "analysis/wp09_verification.json"
+      ],
+      "kind": "implementation",
+      "summary": "Final review fixes at7628be7: unsupported internally overlapping writable parameter layouts reject before pending publication or any commit write; supported transposes and gapped slices retain native-equivalent updates. One absolute oracle study deadline covers later native histories, persisted audit rows, summary completion and final synchronization, retaining actual partial progress as incomplete/inconclusive. Normal/recovery checkpoint reproduction shares identity/duplicate/cardinality/hash validation. Public preview API documents finite-endpoint/nonfinite-derived metadata and fail-closed consumer requirement. Focused115 tests passed; single full actual-MPS fallback0 suite364 passed in7.80s with no skips/warnings. No benchmark/research rerun: original2e89e74 study and timing source hashes remain authoritative for measured bytes, not changed validation overhead. Final scoped re-review is pending in the README-linked coordination addendum, which is outside scientific evidence hashes."
     }
   ],
   "evidence": [

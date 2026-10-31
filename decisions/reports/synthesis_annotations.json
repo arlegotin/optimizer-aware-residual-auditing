@@ -167,7 +167,7 @@
         "decisions/outcome.json"
       ],
       "kind": "decision",
-      "summary": "Blueprint\u00a714 outcome: stop the present online branch and narrow the finding to component headroom plus complete-cost failure and an inconclusive/negative actionable policy region in this bounded synthetic grid. Correct mathematics alone and positive component timing do not establish practical learning efficiency. Current-SVD diagnostic improvement is paid and cannot reopen online work. Wide intervals, absent guardrails, unavailable baselines and lack of independent confirmation are unresolved, not equivalence or universal failure. No performance redesign, alternate basis, architecture pivot, MLX retry or corpus branch is authorized; any pivot requires a new specification and evidence. Rulings retain superseded/unused decisions and their practical rework costs; final whole-branch review remains with the controller."
+      "summary": "Blueprint\u00a714 outcome: stop the present online branch and narrow the finding to component headroom plus complete-cost failure and an inconclusive/negative actionable policy region in this bounded synthetic grid. Correct mathematics alone and positive component timing do not establish practical learning efficiency. Current-SVD diagnostic improvement is paid and cannot reopen online work. Wide intervals, absent guardrails, unavailable baselines and lack of independent confirmation are unresolved, not equivalence or universal failure. No performance redesign, alternate basis, architecture pivot, MLX retry or corpus branch is authorized; any pivot requires a new specification and evidence. Rulings retain superseded/unused decisions and their practical rework costs; final whole-branch review remains with the controller. The hash-bound review_summary.md and outcome.json are pre-final review snapshots. README links to the durable final review/rulings addendum, deliberately outside this scientific index and WP09 artifact hashes; scoped re-review is pending there."
     },
     {
       "artifacts": [
@@ -179,6 +179,19 @@
       ],
       "kind": "reproduction",
       "summary": "Local commands, pinned arm64 environment, source/hash resolution and independent-path reproduction are documented in README and synthesis_schema. Original artifacts were not overwritten. Prepare writes the full path-only amendment/policy before execution; run validates hashes and appends/restores the previous exact permission. Initial comparison failure is retained; postprocessing-only step\u2192committed_updates recovery uses identical observations/tolerances and compares all792 rows/30 curves, not a favorable subset. No benchmark was repeated because no timed kernel changed. Large trusted local checkpoints are ignored and regenerable; no corpus/pretrained weights are required or redistributed. Original study, historical source revisions and later review fixes retain separate attribution."
+    },
+    {
+      "artifacts": [
+        "src/oar/optimizer_preview.py",
+        "src/oar/oracle.py",
+        "analysis/reproduce_structural_oracle.py",
+        "tests/test_optimizer_preview.py",
+        "tests/test_oracle.py",
+        "tests/test_reproduction.py",
+        "analysis/wp09_verification.json"
+      ],
+      "kind": "implementation",
+      "summary": "Final review fixes at7628be7: unsupported internally overlapping writable parameter layouts reject before pending publication or any commit write; supported transposes and gapped slices retain native-equivalent updates. One absolute oracle study deadline covers later native histories, persisted audit rows, summary completion and final synchronization, retaining actual partial progress as incomplete/inconclusive. Normal/recovery checkpoint reproduction shares identity/duplicate/cardinality/hash validation. Public preview API documents finite-endpoint/nonfinite-derived metadata and fail-closed consumer requirement. Focused115 tests passed; single full actual-MPS fallback0 suite364 passed in7.80s with no skips/warnings. No benchmark/research rerun: original2e89e74 study and timing source hashes remain authoritative for measured bytes, not changed validation overhead. Final scoped re-review is pending in the README-linked coordination addendum, which is outside scientific evidence hashes."
     }
   ],
   "evidence": [
