@@ -1,6 +1,8 @@
 # Final review and controller ruling addendum
 
-Status: **Scoped independent re-review pending.** The implementer has completed the single consolidated fix wave; this is not the controller's final acceptance or an integration authorization. The controller will append the actual scoped re-review verdict below.
+Current status: **Accepted after scoped independent re-review** on 2026-10-31. All four findings are addressed, with no new breakage. The exact reviewed revision and final verification appear below.
+
+Publication status at10069d2 was scoped re-review pending; the earlier review sections preserve that context.
 
 Original review BASE: `af715ac2bf6e6c490ac5178fe18725414bfcbe34`.
 Original reviewed HEAD / fix-wave BASE: `e388b43148899e242800d4df348876470565ead1`.
@@ -223,4 +225,43 @@ Address I1 and I2 in the single consolidated fix wave with focused regression ch
 
 ## Scoped re-review and final controller disposition
 
-Pending. The controller will append the exact reviewed implementation/publication HEAD, scoped verdict and any residual limitations here after the one scoped re-review. No push or merge is authorized by this addendum.
+Accepted reached-stage implementation/publication HEAD: `10069d22780e8cc67493aca5da46e494ed9cc7ff`. The subsequent commit changes this coordination record only. The independent scoped reviewer verified the complete fix range `e388b43148899e242800d4df348876470565ead1..10069d22780e8cc67493aca5da46e494ed9cc7ff`: **all findings addressed, no new Critical/Important/Minor breakage, no open findings**.
+
+I1 and I2 are fixed; M1 shares the stronger checkpoint validation; M2 is resolved by explicit API documentation and the existing fail-closed consumer contract. Nonfinite derived metadata remains a stated limitation, not a finite-precision certificate. D1–D14 retain their recorded scope dispositions.
+
+Final controller verification on the reviewed code:
+
+- `PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python -m pytest -q` → **364 passed in 8.58s**, no skips or warnings.
+- `PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python -m pytest -q -m mps` → **9 passed, 355 deselected in 2.92s**.
+- Independent checks: all 16 latest WP09 artifact hashes match; scientific first16-line prefix is unchanged; report and index regenerate byte-identically; all 36 controller rulings are durable and ordered; 202 publication links resolve; original blueprint and 21 locked/raw research/reproduction files retain their bytes.
+
+The reached study is complete: Tasks 1–6, bounded Task 11 amendment and Task 17. Tasks 7–10 and 12–16 remain gated/not run. WP02 stays stopped and ordinary WP04 inconclusive. **No training speedup was established.** The same-seed fresh-process repetition reproduced 792 diagnostic rows and 30 development-loss values exactly; it is reproducibility evidence, not independent scientific confirmation.
+
+Work remains on current `main` with local meaningful commits. No push, merge, new experiment, backend pivot or controller work was performed. The disposable plan workspace may be removed after its identity, durable review/rulings and empty tracked-scratch checks. Scientific evidence and locally regenerated checkpoints remain available.
+
+### Independent scoped re-review, verbatim
+
+- **I1 — Internally overlapping parameter can partially commit** — **ADDRESSED**. `src/oar/optimizer_preview.py:32` proves supported layouts nonoverlapping from sorted strides and occupied spans, rejecting expanded and overlapping destinations during whole-input validation at `src/oar/optimizer_preview.py:67`, before candidates or a pending update are published. Commit revalidates every destination before the first copy at `src/oar/optimizer_preview.py:184`. The proof admits transposes and ordinary gapped slices; conservative rejection of uncertain exotic layouts is documented. Regression coverage at `tests/test_optimizer_preview.py:320`, `tests/test_optimizer_preview.py:333` and `tests/test_optimizer_preview.py:347` checks unchanged values/versions/gradients/moments/counters, unconsumed pending state after supported-API mutation, and native-equivalent gapped-slice commit.
+- **I2 — Study-wide deadline misses later histories and completion boundaries** — **ADDRESSED**. One absolute worker deadline originates at `src/oar/oracle.py:489` and is passed into every native history at `src/oar/oracle.py:507`; `src/oar/oracle.py:295` checks it before another update, after saving any completed selected checkpoint. Native final checkpoint/synchronization precede the completion check at `src/oar/oracle.py:308`. Completed audit rows are flushed and retained before checking at `src/oar/oracle.py:549`. Summary completion and final synchronization are checked at `src/oar/oracle.py:573` and `src/oar/oracle.py:586`; reached ceilings produce incomplete/inconclusive status. The config saved in checkpoints is unchanged. Injected-clock regressions at `tests/test_oracle.py:358` and `tests/test_oracle.py:399` cover the later-history budget and final audit/summary/sync boundaries while retaining real progress and evidence.
+- **M1 — Normal reproduction lacks checkpoint identity validation** — **ADDRESSED**. The shared validator at `analysis/reproduce_structural_oracle.py:57` checks identity sets, duplicates on both sides, cardinality and retained byte hashes. Both normal and recovery paths use it at `analysis/reproduce_structural_oracle.py:134` and `analysis/reproduce_structural_oracle.py:183`. `tests/test_reproduction.py:91` exercises both entry paths with duplicate-valid replacement, missing entry, bad hash and valid coverage.
+- **M2 — Finite endpoints can yield nonfinite derived metadata** — **ADDRESSED under the binding documented-limitation disposition**. The public API explicitly discloses displacement/alignment overflow and requires fail-closed consumers at `src/oar/optimizer_preview.py:111`. The diff adds no timed arithmetic checks and leaves numerical rejection intact. This addresses the selected disclosure remedy; it does not claim finite-input arithmetic closure.
+
+## New Breakage in the Fix Diff
+
+- **Critical: None. Important: None. Minor: None.**
+
+## Out-of-Scope Observations
+
+- **None.**
+
+## Checks
+
+- **Scope checked:** the one packaged consolidated diff `review-e388b43..10069d2.diff`, reviewed in passes, covers BASE `e388b43148899e242800d4df348876470565ead1` through HEAD `10069d22780e8cc67493aca5da46e494ed9cc7ff`. No fresh whole-branch review, subagent dispatch, Git/index/HEAD mutation, research run or benchmark was performed. The only checkout write is this requested report.
+- **Test evidence checked against code:** the fix report names covering tests and includes actual RED/GREEN command output. I1 records two overlap regressions failing before the fix; I2 records four injected-clock failures; M1 separately preserves the initial fixture authoring failure and the corrected real duplicate-normal RED. Reported subsequent results are 44 optimizer tests, 25 oracle tests, 18 reproduction tests, 115 focused integration passes, 364 full actual-MPS fallback0 passes and 49 publication-helper passes. These are implementer executions, not reviewer reruns. No unanswered code doubt required a focused test or suite rerun.
+- **Durable record checked:** a read-only Python assertion check confirms the complete original review appears verbatim in `decisions/reports/final_review.md:120`, all 16 subsequent controller Ruling lines are copied, and scoped re-review remains pending for the controller's actual append. README links the addendum at `README.md:5`; `decisions/reports/final_review.md:10` and the synthesis distinguish immutable pre-final snapshots from this appendable coordination record.
+- **Preservation checked:** the complete 14-file fix package changes neither original rulings, pre-final review/outcome snapshots, blueprint, configs nor raw research/reproduction artifacts. Its gate change is one appended WP09 maintenance record. A read-only hash assertion verifies the unchanged scientific first-16-line prefix against its retained snapshot. No new research/backend/controller is introduced.
+- **Evidence graph checked:** read-only assertions verify all 125 current and 22 archived artifact hashes, all 16 latest WP09 artifact hashes, and exclusion of the final addendum from the scientific index and every WP09 hash map. The 14 historical revision bindings remain separately attributed in the diff; they were not rehashed by this reviewer. Changed optimizer/oracle sources have distinct current and historical entries, and the measured study remains attributed to `2e89e742131eb5eebaeb7a028d8e8f2e4fc50e07`. The fix is explicitly unremeasured. All 202 current publication local links resolve. Deterministic regeneration and historical-Git-byte validation are retained implementer checks, not reviewer reruns.
+
+## Verdict
+
+- **Fix round: All findings addressed, no new Critical/Important breakage.** No open findings. The stopped scientific scope and original measurement attribution remain intact; final controller acceptance and its durable append remain the controller's action.
