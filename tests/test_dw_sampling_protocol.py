@@ -2632,6 +2632,116 @@ def test_actual_model_native_variants_use_fresh_scalar_reference_without_snapsho
     assert len(list(Path(request['out']).glob('*.native-*.json'))) == 4
 
 
+def test_model_native_qualification_shares_identical_clipped_gradients_and_leaves_pilots_native(actual_cpu_model, monkeypatch):
+    import torch
+    import oar.timing
+    d, cfg, data, request, counter = actual_cpu_model
+    original_factory = d.model_fixture
+    original_assert = d.assert_native_equivalent
+    original_warmup, original_measure = oar.timing.warmup, oar.timing.measure_blocks
+    fixtures, checks, norms = [], [], []
+    absent = object()
+    def fixture(*args, **kwargs):
+        value = original_factory(*args, **kwargs)
+        index = len(fixtures)
+        entry = {'fixture': value, 'step_attribute': value.opt.__dict__.get('step', absent),
+                 'native_step_function': value.opt.step.__func__}
+        fixtures.append(entry)
+        if index > 0 and index % 2 == 0:
+            def no_reference_model(*args, **kwargs):
+                pytest.fail('scalar reference must consume cloned gradients without forward/backward')
+            value.model.forward = no_reference_model
+            value.step = no_reference_model
+        else:
+            step = value.step
+            def actual_step():
+                result = step()
+                norms.append(float(result['norm']))
+                return result
+            value.step = actual_step
+        return value
+    def assert_equivalent(parameters, optimizer, reference_parameters, reference_optimizer):
+        original_assert(parameters, optimizer, reference_parameters, reference_optimizer)
+        actual = next(entry['fixture'] for entry in fixtures if entry['fixture'].opt is optimizer)
+        reference = next(entry['fixture'] for entry in fixtures if entry['fixture'].opt is reference_optimizer)
+        squared_norm = 0.
+        for name, parameter in parameters.items():
+            gradient, copied = parameter.grad, reference_parameters[name].grad
+            assert gradient is not None and copied is not None
+            torch.testing.assert_close(gradient, copied, rtol=0, atol=0)
+            assert gradient.data_ptr() != copied.data_ptr() and not copied.requires_grad
+            squared_norm += gradient.double().square().sum().item()
+            assert optimizer.state[parameter]['step'].item() == actual.updates
+        assert 0 < squared_norm <= 1.00001
+        assert any(bool(state['exp_avg'].ne(0).any()) for state in reference_optimizer.state.values())
+        assert all(group['eps'] == 1e-8 and group['betas'] == (.9, .999)
+                   for opt in (optimizer, reference_optimizer) for group in opt.param_groups)
+        assert reference.updates == 0
+        checks.append(actual.updates)
+    def check_native_pilot():
+        for entry in fixtures:
+            optimizer = entry['fixture'].opt
+            assert optimizer.__dict__.get('step', absent) is entry['step_attribute']
+            assert optimizer.step.__func__ is entry['native_step_function']
+    def warmup(*args, **kwargs):
+        check_native_pilot()
+        return original_warmup(*args, **kwargs)
+    def measure(*args, **kwargs):
+        check_native_pilot()
+        return original_measure(*args, **kwargs)
+    monkeypatch.setattr(d, 'model_fixture', fixture)
+    monkeypatch.setattr(d, 'assert_native_equivalent', assert_equivalent)
+    monkeypatch.setattr(oar.timing, 'warmup', warmup)
+    monkeypatch.setattr(oar.timing, 'measure_blocks', measure)
+    result = d.model_native_session(cfg, request)
+    assert checks == [1, 2, 3, 4, 5]*4
+    assert any(norm > 1. for norm in norms), 'fixture must exercise native clipping'
+    assert counter['restores'] == 0
+    for variant, row in result['variants'].items():
+        assert row['status'] == 'pass'
+        assert row['qualification_mode'] == 'identical current full-model gradients after native clipping'
+        assert row['qualification_updates'] == 5
+        persisted = json.loads(Path(request['result']).with_suffix('.native-'+variant+'.json').read_text())
+        assert persisted['qualification_mode'] == row['qualification_mode']
+
+
+@pytest.mark.parametrize('preexisting_step', [False, True])
+@pytest.mark.parametrize('fail', [False, True])
+def test_model_shared_gradient_qualification_restores_exact_optimizer_step_on_success_and_failure(actual_cpu_model, monkeypatch, preexisting_step, fail):
+    d, cfg, data, request, counter = actual_cpu_model
+    actual = d.model_fixture(cfg, data, request, variant='foreach')
+    reference = d.model_fixture(cfg, data, request, variant='single')
+    native_step = actual.opt.step
+    calls = []
+    if preexisting_step:
+        def previous_step(*args, **kwargs):
+            calls.append('original native entry')
+            return native_step(*args, **kwargs)
+        actual.opt.step = previous_step
+    else:
+        assert 'step' not in actual.opt.__dict__
+    if fail:
+        def numerical_failure(*args):
+            raise AssertionError('fixed native equivalence failure')
+        monkeypatch.setattr(d, 'assert_native_equivalent', numerical_failure)
+        with pytest.raises(AssertionError, match='fixed native equivalence'):
+            d.qualify_model_native_gradients(actual, reference)
+    else:
+        d.qualify_model_native_gradients(actual, reference)
+    expected = 1 if fail else 5
+    assert actual.updates == expected and reference.updates == 0
+    assert all(state['step'].item() == expected for state in reference.opt.state.values())
+    if preexisting_step:
+        assert actual.opt.__dict__['step'] is previous_step
+        assert len(calls) == expected
+    else:
+        assert 'step' not in actual.opt.__dict__
+        assert actual.opt.step.__func__ is native_step.__func__
+    actual.step()
+    assert actual.updates == expected+1
+    assert all(state['step'].item() == expected for state in reference.opt.state.values())
+
+
 def test_actual_model_aa_candidates_keep_native_history_streams_pairs_and_setup(actual_cpu_model):
     d, cfg, data, request, counter = actual_cpu_model
     request.update(phase='AA', fixed_variant='single', result=str(Path(request['out'])/'native-AA.json'))

@@ -1,0 +1,22 @@
+Traceback (most recent call last):
+  File "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py", line 2138, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py", line 2073, in main
+    model_native_session(cfg, request)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py", line 1646, in model_native_session
+    result = model_native_variants(cfg, data, request)
+  File "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py", line 1580, in model_native_variants
+    assert_native_equivalent(actual.p, actual.opt, reference.p, reference.opt)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py", line 703, in assert_native_equivalent
+    torch.testing.assert_close(parameter, reference, rtol=1e-4, atol=1e-6)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/lib/python3.13/site-packages/torch/testing/_comparison.py", line 1689, in assert_close
+    raise error_metas[0].to_error(msg)
+AssertionError: Tensor-likes are not close!
+
+Mismatched elements: 1 / 1048576 (0.0%)
+Greatest absolute difference: 1.92178413271904e-06 at index (772, 216) (up to 1e-06 allowed)
+Greatest relative difference: 0.0004936479381285608 at index (772, 216) (up to 0.0001 allowed)

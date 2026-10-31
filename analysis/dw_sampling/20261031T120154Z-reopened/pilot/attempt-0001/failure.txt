@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py", line 2110, in main
+    result = pilot_qualification(cfg, args.config, args.out, attempt)
+  File "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py", line 2007, in pilot_qualification
+    variants = [run('model_native', 'variants', session, phase='variants') for session in range(2)]
+                ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py", line 2005, in run
+    raise MeasurementInvalid('model_worker_failed', json.dumps(value))
+MeasurementInvalid: {"status": "INCONCLUSIVE_MEASUREMENT", "reason": "full-model worker did not complete; raw prefix and command failure retained", "request_path": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/dw_sampling/20261031T120154Z-reopened/pilot/attempt-0001/model-block8-variants-0-request.json", "exit_code": 1}

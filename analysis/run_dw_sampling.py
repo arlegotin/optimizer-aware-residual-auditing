@@ -1552,6 +1552,38 @@ def model_unsupported_native(exc):
         ('not implemented for', 'not supported on', 'does not support', 'fused=true requires', 'does not have an mps implementation'))))
 
 
+def qualify_model_native_gradients(actual, reference):
+    """Isolate native AdamW arithmetic from independent-backward variation.
+
+    Actual training supplies real current fitting gradients and native clipping.
+    Both original optimizers consume identical detached copies for five checks;
+    the reference model never executes a separate forward/backward trajectory.
+    The temporary entry is removed before any warmup or timing operation.
+    """
+    absent = object()
+    previous_step = actual.opt.__dict__.get('step', absent)
+    native_actual_step, native_reference_step = actual.opt.step, reference.opt.step
+    def shared_gradient_step(*args, **kwargs):
+        reference.opt.zero_grad(set_to_none=True)
+        for name, parameter in actual.p.items():
+            if parameter.grad is None:
+                raise RuntimeError(f'invalid gradient: native model parameter {name} has no gradient')
+            reference.p[name].grad = parameter.grad.detach().clone()
+        result = native_actual_step(*args, **kwargs)
+        native_reference_step()
+        return result
+    try:
+        actual.opt.step = shared_gradient_step
+        for _ in range(5):
+            actual.step()
+            assert_native_equivalent(actual.p, actual.opt, reference.p, reference.opt)
+    finally:
+        if previous_step is absent:
+            del actual.opt.step
+        else:
+            actual.opt.step = previous_step
+
+
 def model_native_variants(cfg, data, request):
     import torch
     from oar.sampled_linear import named_seed
@@ -1573,11 +1605,9 @@ def model_native_variants(cfg, data, request):
             reference = model_fixture(cfg, data, request, variant='single')
             if actual.model.initial_parameters_sha256 != reference.model.initial_parameters_sha256:
                 raise ValueError('native model references do not share exact fresh initialization')
-            # Fresh identical init/data streams; never restore across variants.
-            for _ in range(5):
-                actual.step()
-                reference.step()
-                assert_native_equivalent(actual.p, actual.opt, reference.p, reference.opt)
+            # Fresh identical init/data streams; isolate optimizer arithmetic
+            # with the actual model's current, natively clipped gradients.
+            qualify_model_native_gradients(actual, reference)
             del reference
             def block():
                 for _ in range(updates):
@@ -1585,12 +1615,13 @@ def model_native_variants(cfg, data, request):
             warming = warmup(block, torch.mps.synchronize, **cfg['timing']['warmup'])
             raw = measure_blocks(block, torch.mps.synchronize, 3)
             results[variant] = {'status': 'pass', 'warmup': warming, 'pilot_s': raw,
-                                'median_s': median(raw), 'updates_per_block': updates}
+                                'median_s': median(raw), 'updates_per_block': updates, 'qualification_updates': 5}
             del actual
         except (RuntimeError, NotImplementedError) as exc:
             if not model_unsupported_native(exc):
                 raise
             results[variant] = {'status': 'unsupported', 'reason': str(exc), 'exception': type(exc).__name__}
+        results[variant]['qualification_mode'] = 'identical current full-model gradients after native clipping'
         write_json(Path(request['result']).with_suffix('.native-'+variant+'.json'), results[variant])
     selected = select_native_variant(results)
     return {'status': 'pass', 'selected_variant': selected, 'variants': results, 'initial_dense_pilot': initial_pilot,

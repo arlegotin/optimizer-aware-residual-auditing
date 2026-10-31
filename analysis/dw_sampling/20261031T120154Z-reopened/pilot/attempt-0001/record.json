@@ -1,0 +1,41 @@
+{
+  "artifacts": {
+    "asset-fetch-train.json": "01cbbb6fe67b8ae6533862ab640d288df26a438ee402a8919195de39c34062bc",
+    "asset-fetch-validation.json": "6e4afbc5209bdc1a0cb72d70b72644ace9249d365b6cd1b105013dfbb4898b49",
+    "command-001.json": "5f49949b760043c491fb6a17ed0e2bcbfbcf3aec0caffb32310b0e1a84575b02",
+    "command-001.stderr.txt": "b9fa259e81ac056210287b9ac6e34294021f2db350e30a982056f19bad593ea7",
+    "command-001.stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands.log": "bf06b3071c09ca935ba2a6d50d7bb81df1e2773c1bb47e511a3e57979e65048a",
+    "data_manifest.json": "4deed5113c13c7340f5053902c13f8cd6d6327c75a4c2a4ef17bb863e58f8bde",
+    "exclusive_session.json": "ac3b64d5059581362d60e3d61614374f44fd909ca15758f510b4642ccb7dd7e7",
+    "failure.txt": "10a812b5e5488193940133368491f1fdde322bf42aad91f767e0b4b25bf25466",
+    "model-block8-variants-0-request.json": "b4960c373b54208d6181248b836e97a5be74fa9bbe2d88b073a2a48cad719b33",
+    "model-block8-variants-0.initial-dense-pilot.json": "32a0e211fd41049c33eb14ab33b7787d5a14ce9d65284dcf80ed96ca9a487454",
+    "model-block8-variants-0.native-default.json": "db8f074026087fdb0660150e8290a0841d1e14d35e2222def38455fa075f3100",
+    "model-block8-variants-0.native-foreach.json": "253b25d40efe4f4616c07628db3cee61085dd60488e9a8e2d84d920ec6d87ab9",
+    "model-block8-variants-0.native-single.json": "5322f7b7eee64e1c17b51b882bec9b776cda50130bf42e4e4487f6da33555457",
+    "model_qualification_forecast.json": "44050cb7a0d3b566bb5d80cd52d8aa30575632f0ff0ad512854395a76415f782",
+    "source_manifest.json": "53619f691149cb4523b5ed2ee3429449dee47f140821d1b92d84af7034851652"
+  },
+  "exception": "MeasurementInvalid",
+  "invocation_wall_s": 70.98984620801639,
+  "measurement_hashes": {
+    "analysis/run_dw_sampling.py": "9944561dff1909e168549eea97f727a2fdbb5e9254d790a32a0403796235277f",
+    "configs/dw_sampling.yaml": "7411e08b4430d06152c4c93a0c588660eedb9f6a27577ab002721b28284fe368",
+    "decisions/dw_sampling_reopening.md": "f86a1ba2a28c5dd7e70c2ac685fe4a6ec62824d95f429bc935ef4adfedfec54f",
+    "decisions/dw_sampling_scope.md": "d91d9350dc117f83e39c648e48d435de75ab9ea5a3b6bc197b216c4b73c11181",
+    "src/oar/hardware.py": "4ba118d816eec9d255cfb3d7925416373119fe181f82529fb58a96347d8e5048",
+    "src/oar/sampled_linear.py": "11398f9340a48b0dcabdc733c74dfa52b53663ea2005989f2ad7b53079827ca3",
+    "src/oar/sampling_data.py": "cfcf4b782eb9a444ce70f29df72e063518f794108020e51a5d12238118f06583",
+    "src/oar/sampling_lm.py": "b6a0ec4e1b66ccdf542e8d19c6830b897aec9fa4d4d4a77b13265dedb67bb21c",
+    "src/oar/timing.py": "25351cd20abc14385dd1cb3e482c67f73619b1ead30900ca0150fe57072458e5",
+    "tests/test_dw_sampling_protocol.py": "4e419fc5a493be734792a0d2e333366f7a318b7c7ca5cf6c895d0f522ea84d6e",
+    "tests/test_sampled_linear.py": "3ed4adbf6f62599172b0322374e84c7552f7fc4b46761f80057053469822eaa9"
+  },
+  "reason": "{\"status\": \"INCONCLUSIVE_MEASUREMENT\", \"reason\": \"full-model worker did not complete; raw prefix and command failure retained\", \"request_path\": \"/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/dw_sampling/20261031T120154Z-reopened/pilot/attempt-0001/model-block8-variants-0-request.json\", \"exit_code\": 1}",
+  "recorded_utc": "2026-10-31T16:33:09.257132+00:00",
+  "schema_version": 1,
+  "source_manifest_sha256": "53619f691149cb4523b5ed2ee3429449dee47f140821d1b92d84af7034851652",
+  "stage": "pilot",
+  "status": "INCONCLUSIVE_MEASUREMENT"
+}

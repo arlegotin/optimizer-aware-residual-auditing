@@ -1,0 +1,17 @@
+{
+  "purpose": "distinguish independent-backward variation from native optimizer arithmetic before any sampler/model cost outcomes",
+  "hypothesis": "independent full-model gradient differences are amplified by subsequent Adam steps; identical injected gradients isolate native AdamW",
+  "cases": [
+    "single/single independent",
+    "fused/single independent",
+    "fused/single identical gradients"
+  ],
+  "steps_per_case": 5,
+  "device": "mps",
+  "dtype": "float32",
+  "source_sha256": "c5bedd0c09f9112ec22a7be30c020240394a18fbfd92b19ba6123b184ff6baff",
+  "head": "b7506e537e1bb5e118745caf135e3200d8623d3a",
+  "forecast_s": 120,
+  "deadline_s": null,
+  "tolerance_change": false
+}

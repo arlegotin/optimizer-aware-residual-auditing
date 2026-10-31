@@ -1,0 +1,21 @@
+{
+  "actual_MPS_version7_qualification": "pending required prepare and fresh native pilots",
+  "corpus_status": "Pinned train/validation bodies verified and losslessly parsed in previous attempt; only hash-verified private caches may be reused. Protected validation losses and official test body unopened.",
+  "independent_review": "PASS exact native-qualifier-only repair, CPU tests and failure cleanup; version7-native-qualification-review.md",
+  "original_B_D_attribution": "unchanged prior exact sealed sources; renewed full-diff continuity review",
+  "phase": "qualification-only; full pilot/confirmation not passed",
+  "prior_failure": "pilot/attempt-0001 INCONCLUSIVE_MEASUREMENT retained; native-only independent trajectory mismatch; no sampled full-model/quality result",
+  "recorded_utc": "2026-10-31T16:54:09.076955+00:00",
+  "source_freeze_parent_head": "b7506e537e1bb5e118745caf135e3200d8623d3a",
+  "source_sha256": {
+    "analysis/run_dw_sampling.py": "ccd8490f6048905ffa5f48864143ab1df6e12ed77af146a7877b47ab2230d5bd",
+    "configs/dw_sampling.yaml": "7411e08b4430d06152c4c93a0c588660eedb9f6a27577ab002721b28284fe368",
+    "decisions/dw_sampling_reopening.md": "e5f17839a1e3696793b9adee485c873484f2b91a8ab4880032d0a7d67122e018",
+    "decisions/dw_sampling_scope.md": "d91d9350dc117f83e39c648e48d435de75ab9ea5a3b6bc197b216c4b73c11181",
+    "src/oar/sampled_linear.py": "11398f9340a48b0dcabdc733c74dfa52b53663ea2005989f2ad7b53079827ca3",
+    "src/oar/sampling_data.py": "cfcf4b782eb9a444ce70f29df72e063518f794108020e51a5d12238118f06583",
+    "src/oar/sampling_lm.py": "b6a0ec4e1b66ccdf542e8d19c6830b897aec9fa4d4d4a77b13265dedb67bb21c",
+    "tests/test_dw_sampling_protocol.py": "b271586886f1798b06a30c91834c4ceb470a4b3e5133de4f05a953932391f035",
+    "tests/test_sampled_linear.py": "3ed4adbf6f62599172b0322374e84c7552f7fc4b46761f80057053469822eaa9"
+  }
+}

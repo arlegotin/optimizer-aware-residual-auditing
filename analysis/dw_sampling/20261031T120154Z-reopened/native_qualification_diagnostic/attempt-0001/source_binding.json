@@ -1,0 +1,12 @@
+{
+  "inherited_source_freeze": "analysis/dw_sampling/20261031T120154Z-reopened/prospective/version6-source-freeze.json",
+  "inherited_amendment_sha256": "63db3f118e6c1cab4de2e9baf40c5f8f59cd5b73c6a4f06ad5e1afc8959fc577",
+  "implemented_head": "b7506e5",
+  "source_sha256": {
+    "src/oar/sampling_lm.py": "b6a0ec4e1b66ccdf542e8d19c6830b897aec9fa4d4d4a77b13265dedb67bb21c",
+    "src/oar/sampling_data.py": "cfcf4b782eb9a444ce70f29df72e063518f794108020e51a5d12238118f06583",
+    "src/oar/sampled_linear.py": "11398f9340a48b0dcabdc733c74dfa52b53663ea2005989f2ad7b53079827ca3"
+  },
+  "diagnostic_result_sha256": "31bc631e338ce2d22b7030b49d28f48688882461ee6d45090ec0124be794ed0f",
+  "binding_note": "Direct model/helper bytes match the prior immutable v6 freeze; this cross-reference was added after the diagnostic, not backdated."
+}

@@ -230,3 +230,37 @@ continues to support frozen operands independently.
 Pooling native variant pilots uses seconds per update with each session's actual block count, retaining raw seconds/counts. Horizon calibration's U and Bmax use all qualified observations for the fixed native implementation, including selected-variant pilots, both native A/A arms, every candidate-comparison native block, and the three cold controller blocks. No slow valid observation is deleted. Parent and cold worker record and compare monotonic-clock implementations.
 
 While a run is active, retain at most two live resume files. After a durable final checkpoint receipt, retire that run's remaining ephemeral resume files and retain the final endpoint alone. Every receipt, hash and pruning event stays in the public ledger. Interrupted blocks retain their LR, host-completed update/token counts, failure record and last committed checkpoint; unconfirmed MPS completion is explicitly unknown. These are prospective storage/recovery rules before any real training run.
+
+## Native optimizer qualification repair, version 7
+
+Version 6 preparation and correctness passed on the actual M3 Max. Pilot
+attempt 1 then stopped during native optimizer qualification, before any
+sampled full-model timing or language-loss outcome. Independent fused/scalar
+training trajectories exceeded the unchanged parameter tolerance at one
+coordinate. A separately recorded native-only diagnostic reproduced this
+comparison and found small backward differences even between scalar/scalar
+trajectories. Giving the native fused and scalar optimizers identical gradients
+passed all five checks. The failed attempt and all diagnostic observations
+remain retained; no tolerance is relaxed and no native variant is excluded
+because of this result.
+
+For version 7, qualify native optimizer arithmetic with the actual current
+full-model gradients after native clipping. Clone those gradients into the
+fresh scalar reference and invoke both original native AdamW implementations.
+Compare parameters, moments and step counters after each of five steps with
+the existing fixed tolerances. The reference has no independent forward or
+backward trajectory. Remove the temporary qualification entry in a `finally`
+block, restoring exact native method lookup before any warmup or timing.
+Repeat all native variant pilots in fresh workers; do not reuse the partial
+variant timings from the failed attempt. This is an engineering repair after
+native-only outcome exposure, not a new sampled method or a learning result.
+
+Freeze the repaired source and renewed exact-diff review, then repeat current
+preparation and correctness before pilot attempt 2. Unchanged operator B/D
+results keep their original measured revisions and sealed records under the
+renewed exact source-continuity declaration. Train and validation bytes were
+verified and parsed during attempt 1 under the conditional local-use asset
+decision; reuse only hash-verified private caches and record new preprocessing
+costs. Official-validation loss outcomes and the official-test body remain
+sealed. All prospective quality, target, simpler-control and confirmation
+protections continue to apply.
