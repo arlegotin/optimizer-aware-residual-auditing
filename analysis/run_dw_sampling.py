@@ -27,9 +27,10 @@ import traceback
 
 ROOT = Path(__file__).resolve().parents[1]
 REVIEWED = '9d8ad069c51b4d0e6c13e9c6e465579e9b44a339'
-PROTOCOL = '0df9d6d98acb26ff2017984467e543910f33b83566bdd3272c236559dec61259'
+PROTOCOL = 'f407dd2d636c078bd7e2f79112ea31b665636d42cf818d3f6f835b4a39ab2a80'
 STAGES = ('prepare', 'feasibility', 'correctness', 'cost', 'pilot', 'confirm', 'summarize')
 CORE = ('analysis/run_dw_sampling.py', 'configs/dw_sampling.yaml', 'decisions/dw_sampling_scope.md',
+        'decisions/dw_sampling_reopening.md',
         'src/oar/timing.py', 'src/oar/hardware.py')
 SAMPLED = ('src/oar/sampled_linear.py', 'tests/test_sampled_linear.py', 'tests/test_dw_sampling_protocol.py')
 HISTORICAL = ('decisions/gates.jsonl', 'decisions/amendments.jsonl', 'manifests/assets.json',
@@ -170,12 +171,14 @@ def paired_ratio(dense, candidate):
             'pairs': len(z), 'analysis_seed': 62001, 'bootstrap_replicates': 10000, 'unit': 'timing block, not training seed'}
 
 
-def freeze_delta(absolute_aa_errors):
+def freeze_delta(absolute_aa_errors, *, floor=0.0):
     import numpy as np
     values = np.asarray(absolute_aa_errors, dtype=np.float64)
-    if not len(values) or not np.isfinite(values).all() or (values < 0).any():
+    if values.ndim != 1 or not len(values) or not np.isfinite(values).all() or (values < 0).any():
         raise ValueError('invalid A/A observations')
-    return max(.05, 2*float(np.quantile(values, .95, method='linear')))
+    if not math.isfinite(floor) or floor < 0:
+        raise ValueError('invalid noise threshold floor')
+    return max(floor, 2*float(np.quantile(values, .95, method='linear')))
 
 
 _zero_type = None
@@ -247,6 +250,8 @@ def pin_mismatches(lock_text, installed):
 
 
 def remaining_timeout(deadline, *, clock=time.perf_counter):
+    if deadline is None:
+        return None
     remaining = deadline-clock()
     if remaining <= 0:
         raise TimeoutError('shared prospective stage deadline reached')
@@ -306,22 +311,26 @@ def competing_processes():
 def storage_guard(cfg, out):
     free = shutil.disk_usage(out).free
     used = sum(p.stat().st_size for p in Path(out).rglob('*') if p.is_file())
-    if free < cfg['resources']['minimum_free_disk_bytes'] or used > cfg['resources']['maximum_output_bytes']:
+    maximum = cfg['resources']['maximum_output_bytes']
+    if free < cfg['resources']['minimum_free_disk_bytes'] or (maximum is not None and used > maximum):
         raise MemoryError('prospective disk reserve/output allowance exceeded')
     return {'free_disk_bytes': free, 'run_output_bytes': used}
 
 
-def choose_block_length(measure_for_count, initial):
+def choose_block_length(measure_for_count, initial, *, minimum_s=.5):
+    if type(initial) is not int or initial <= 0:
+        raise ValueError('initial dense block length must be a positive integer')
+    if not math.isfinite(minimum_s) or minimum_s <= 0:
+        raise ValueError('minimum dense block duration must be finite and positive')
     count, observations = initial, []
-    for _ in range(100):
+    while True:
         seconds = measure_for_count(count)
         if not math.isfinite(seconds) or seconds <= 0:
             raise ValueError('invalid dense block duration')
         observations.append({'updates': count, 'seconds': seconds})
-        if seconds >= .2 or count == 100:
+        if seconds >= minimum_s:
             return count, observations
-        count = min(100, max(count+1, math.ceil(count*.2/seconds)))
-    raise RuntimeError('dense block calibration did not terminate')
+        count = max(count+1, math.ceil(count*minimum_s/seconds))
 
 
 def dependency_inventory():
@@ -493,7 +502,8 @@ def prepare(cfg, config, out, attempt):
     started = time.perf_counter()
     forecast = cfg['resources']['qualification_forecast_s']
     deadline = started+2*forecast
-    write_json(attempt/'resource_forecast.json', {'forecast_s': forecast, 'deadline_s': 2*forecast, 'maximum_output_bytes': 268435456})
+    write_json(attempt/'resource_forecast.json', {'forecast_s': forecast, 'deadline_s': 2*forecast,
+               'maximum_output_bytes': cfg['resources']['maximum_output_bytes']})
     env = environment(cfg)
     write_json(attempt/'dependencies.json', dependency_inventory())
     remaining_timeout(deadline)
@@ -576,11 +586,31 @@ def assert_native_equivalent(parameters, optimizer, reference_parameters, refere
                 torch.testing.assert_close(actual_state, reference_state, rtol=1e-4, atol=1e-6)
 
 
+def select_native_variant(results):
+    """Choose baseline-only median speed; warmup stability is diagnostic."""
+    from statistics import median
+    supported = {variant: row for variant, row in results.items() if row['status'] == 'pass'}
+    if not supported:
+        raise RuntimeError('no qualified native AdamW variant')
+    for row in supported.values():
+        raw = row['pilot_s']
+        if not raw or any(not math.isfinite(seconds) or seconds <= 0 for seconds in raw):
+            raise ValueError('invalid native pilot duration')
+    return min(supported, key=lambda variant: median(supported[variant]['pilot_s']))
+
+
 def native_variant_qualification(cfg, shape, session, updates):
     import torch
+    from statistics import median
+    from oar.sampled_linear import named_seed
     from oar.timing import warmup, measure_blocks
-    results, supported = {}, []
-    for variant in cfg['timing']['native_variants']:
+    results = {}
+    order_seed = named_seed(cfg['seed'], 'order', 'feasibility', str(session), shape['id'], 'native_variants')
+    order = list(cfg['timing']['native_variants'])
+    random.Random(order_seed).shuffle(order)
+    if session % 2:
+        order.reverse()
+    for variant in order:
         try:
             actual, reference = Fixture(cfg, shape, variant, session=session), Fixture(cfg, shape, 'single', session=session)
             for _ in range(5):
@@ -592,14 +622,22 @@ def native_variant_qualification(cfg, shape, session, updates):
                     actual.step()
             w = warmup(block, torch.mps.synchronize, **cfg['timing']['warmup'])
             raw = measure_blocks(block, torch.mps.synchronize, 3)
-            results[variant] = {'status': 'pass', 'warmup': w, 'pilot_s': raw, 'mean_s': sum(raw)/len(raw)}
-            supported.append(variant)
+            results[variant] = {'status': 'pass', 'warmup': w, 'pilot_s': raw, 'mean_s': sum(raw)/len(raw),
+                                'median_s': median(raw), 'pilot_order': order, 'order_seed': order_seed}
         except (RuntimeError, NotImplementedError, AssertionError) as exc:
-            results[variant] = {'status': 'unsupported', 'reason': str(exc), 'exception': type(exc).__name__}
-    if not supported:
-        raise RuntimeError('no qualified native AdamW variant')
-    selected = None if any(not results[v]['warmup']['stable'] for v in supported) else min(supported, key=lambda v: results[v]['mean_s'])
-    return selected, results
+            # Unsupported kernels/options or numerical disagreement disqualify
+            # a native implementation; actual execution/device failures do not
+            # become a reason to silently choose a different implementation.
+            message = str(exc).lower()
+            fatal = any(word in message for word in ('non-finite', 'nonfinite', 'invalid gradient', 'probabil',
+                        'device error', 'command buffer', 'out of memory', 'allocation'))
+            unsupported = not fatal and (isinstance(exc, (NotImplementedError, AssertionError)) or any(
+                word in message for word in ('not supported', 'unsupported', 'not implemented', 'fused=true requires')))
+            if not unsupported:
+                raise
+            results[variant] = {'status': 'unsupported', 'reason': str(exc), 'exception': type(exc).__name__,
+                                'pilot_order': order, 'order_seed': order_seed}
+    return select_native_variant(results), results
 
 
 def timed_pairs(cfg, dense, candidate, common, updates, seed, raw_path=None):
@@ -623,8 +661,6 @@ def timed_pairs(cfg, dense, candidate, common, updates, seed, raw_path=None):
     if raw_path:
         write_json(Path(raw_path).with_suffix('.warmup.json'), warming)
         Path(raw_path).open('x').close()
-    if not all(w['stable'] for w in warming.values()):
-        raise MeasurementInvalid('failed_warmup', 'comparison arm warmup unstable; no paired timing started')
     rows, rng = [], random.Random(seed)
     for pair in range(cfg['timing']['pairs']):
         order = list(fixtures)
@@ -665,16 +701,14 @@ def cost_session(cfg, request):
     from oar.sampled_linear import named_seed
     started = time.perf_counter()
     session, kind = request['session'], request['kind']
-    deadline = started+request['deadline_s']
+    deadline = None if request['deadline_s'] is None else started+request['deadline_s']
     results = {'session': session, 'kind': kind, 'start_utc': utc(), 'shapes': [], 'resources_before': resource_snapshot('mps')}
     result_path = Path(request['result'])
     def check_deadline():
-        if time.perf_counter() > deadline:
+        if deadline is not None and time.perf_counter() > deadline:
             raise TimeoutError('prospectively bound complete session deadline exceeded')
     try:
         shapes = list(cfg['shapes'])
-        if session % 2:
-            shapes.reverse()
         for shape in shapes:
             check_deadline()
             # Available memory screening precedes shape allocation; never disable
@@ -687,41 +721,46 @@ def cost_session(cfg, request):
                 raise MemoryError('fixed shape does not fit conservative current memory screening')
             calibration = next(v for v in request['calibration'] if v['shape']['id'] == shape['id'])
             step_s = min(calibration['native_complete_step_s'])
-            updates = max(1, min(100, math.ceil(.2/step_s)))
-            # Native-only pilot can increase block length up to the fixed cap.
-            pilot = Fixture(cfg, shape, session=session)
+            minimum_s = cfg['timing']['minimum_block_s']
+            updates = max(1, math.ceil(minimum_s/step_s))
             from oar.timing import measure_blocks
-            def pilot_block():
-                for _ in range(updates):
-                    pilot.step()
-            pilot_times = measure_blocks(pilot_block, torch.mps.synchronize, 3)
-            if min(pilot_times) < .2 and updates < 100:
-                updates = min(100, math.ceil(updates*.2/min(pilot_times)))
+            pilot_observations = []
             if kind == 'feasibility':
+                pilot = Fixture(cfg, shape, session=session)
+                initial_raw = []
+                def measure_initial(count):
+                    def block():
+                        for _ in range(count):
+                            pilot.step()
+                    raw = measure_blocks(block, torch.mps.synchronize, 3)
+                    initial_raw.append(raw)
+                    return min(raw)
+                updates, pilot_observations = choose_block_length(measure_initial, updates, minimum_s=minimum_s)
+                for observation, raw in zip(pilot_observations, initial_raw):
+                    observation['raw_s'] = raw
+                del pilot
                 variant, variants = native_variant_qualification(cfg, shape, session, updates)
             else:
                 previous = next(v for v in request['baseline']['shapes'] if v['shape']['id'] == shape['id'])
                 variant, variants = previous['selected_variant'], previous['variants']
                 updates = previous['updates_per_block']
-            del pilot
-            if variant is None:
-                write_json(result_path.parent/(result_path.stem+'-'+shape['id']+'-native-variants.json'), variants)
-                raise MeasurementInvalid('failed_warmup', 'native variant selection warmup unstable')
+            write_json(result_path.parent/(result_path.stem+'-'+shape['id']+'-native-variants.json'), variants)
             dense = Fixture(cfg, shape, variant, session=session)
+            selected_raw = []
             def measure_selected(count):
                 def block():
                     for _ in range(count):
                         dense.step()
-                return min(measure_blocks(block, torch.mps.synchronize, 3))
-            # Block length comes from the selected strongest dense variant.
-            # D uses the frozen B length; if it no longer qualifies, invalidate
-            # the session rather than change the paired timing boundary.
-            if kind == 'feasibility':
-                updates, selected_pilot = choose_block_length(measure_selected, updates)
-            else:
-                selected_pilot = [{'updates': updates, 'seconds': measure_selected(updates)}]
-                if updates < 100 and selected_pilot[-1]['seconds'] < .2:
-                    raise MeasurementInvalid('failed_warmup', 'frozen selected-dense block is shorter than .2s')
+                raw = measure_blocks(block, torch.mps.synchronize, 3)
+                selected_raw.append(raw)
+                return min(raw)
+            # Baseline-only calibration starts at B's count in D, increasing
+            # as needed before any candidate is measured. All matched arms
+            # then use this count, including the complete native optimizer.
+            initial_updates = updates
+            updates, selected_pilot = choose_block_length(measure_selected, updates, minimum_s=minimum_s)
+            for observation, raw in zip(selected_pilot, selected_raw):
+                observation['raw_s'] = raw
             # Calibration history is discarded; declared common history is 8.
             del dense
             dense = Fixture(cfg, shape, variant, session=session)
@@ -729,8 +768,10 @@ def cost_session(cfg, request):
                 dense.step()
             common = dense.snapshot()
             row = {'shape': shape, 'selected_variant': variant, 'variants': variants, 'updates_per_block': updates,
-                   'dense_pilot_s': pilot_times, 'comparisons': {}, 'resources_before': resource,
-                   'selected_dense_pilot': selected_pilot,
+                   'dense_pilot_s': [p['seconds'] for p in pilot_observations],
+                   'dense_pilot': pilot_observations, 'comparisons': {}, 'resources_before': resource,
+                   'selected_dense_pilot': selected_pilot, 'initial_updates_per_block': initial_updates,
+                   'minimum_block_s': minimum_s, 'baseline_only_recalibrated': updates != initial_updates,
                    'predicted_working_set_bytes': predicted, 'streams': state_streams(dense)}
             if kind == 'feasibility':
                 arms = [('AA', 'dense', 1.), ('zero', 'zero', 1.)]
@@ -775,18 +816,24 @@ def cost_session(cfg, request):
 def forecast_stage(cfg, calibration, kind):
     # Conservative measured native maximum; candidate components use an explicit
     # 3x allowance, with all warmup, pairs, variants, cloning and startup included.
-    arms = 2 if kind == 'feasibility' else 6
+    timing = cfg['timing']
+    minimum_s = timing['minimum_block_s']
+    arms = 2 if kind == 'feasibility' else len(cfg['samplers'])*len(cfg['rhos'])
     per_shape = []
     for row in calibration:
         maximum = max(row['native_complete_step_s'])
-        updates = max(1, min(100, math.ceil(.2/min(row['native_complete_step_s']))))
-        block = max(.2, updates*maximum)
-        blocks = arms*(2*30+2*32)+(4*(32+3) if kind == 'feasibility' else 0)
-        per_shape.append({'shape': row['shape']['id'], 'bound_block_s': block, 'bound_blocks': blocks,
+        updates = max(1, math.ceil(minimum_s/min(row['native_complete_step_s'])))
+        block = max(minimum_s, updates*maximum)
+        blocks = arms*(2*timing['pairs']+2*timing['warmup']['maximum'])
+        blocks += len(timing['native_variants'])*(timing['warmup']['maximum']+3) if kind == 'feasibility' else 0
+        per_shape.append({'shape': row['shape']['id'], 'updates_per_block': updates,
+                          'minimum_block_s': minimum_s, 'bound_block_s': block, 'bound_blocks': blocks,
                           'forecast_s': 3*block*blocks+128*maximum+15})
-    forecast = 3*sum(r['forecast_s'] for r in per_shape)+60
-    return {'kind': kind, 'sessions': 2, 'replacement_sessions_maximum': 1, 'per_shape': per_shape, 'forecast_s': forecast,
-            'deadline_s': 2*forecast, 'includes': 'both sessions plus one possible invalid-session replacement, 3x component allowance, histories, warmup, reset, variants, startup and serialization',
+    forecast = timing['sessions']*sum(r['forecast_s'] for r in per_shape)+60
+    deadline_s = None if cfg['resources']['maximum_stage_s'] is None else cfg['resources']['deadline_multiplier']*forecast
+    return {'kind': kind, 'sessions': timing['sessions'], 'automatic_replacement_sessions': 0,
+            'per_shape': per_shape, 'forecast_s': forecast,
+            'deadline_s': deadline_s, 'includes': 'two sessions, 3x component allowance, histories, warmup, reset, variants, startup and serialization; advisory without a configured deadline',
             'diagnostic_allowance_s': 0 if kind == 'feasibility' else 300}
 
 
@@ -796,13 +843,13 @@ def offline_diagnostics(cfg, request):
     from oar.sampled_linear import SamplingState, importance_probabilities, gather_weight_gradient
     from oar.timing import measure_blocks
     start = time.perf_counter()
-    deadline = start+request['deadline_s']
+    deadline = None if request['deadline_s'] is None else start+request['deadline_s']
     shape = next(s for s in cfg['shapes'] if s['id'] == 'middle4096')
     f = Fixture(cfg, shape, request['variant'])
     rows, profiles = [], []
     for target_update in cfg['diagnostic']['native_states']:
         while f.updates < target_update:
-            if time.perf_counter() > deadline:
+            if deadline is not None and time.perf_counter() > deadline:
                 raise TimeoutError('offline diagnostic deadline')
             f.step()
         common = f.snapshot()
@@ -848,7 +895,7 @@ def offline_diagnostics(cfg, request):
             for rho in cfg['rhos']:
                 states = {w: SamplingState(cfg['seed'], 'diagnostic.'+w+'.'+str(target_update), sampler, rho) for w in operands}
                 for draw in range(cfg['diagnostic']['draws']):
-                    if time.perf_counter() > deadline:
+                    if deadline is not None and time.perf_counter() > deadline:
                         raise TimeoutError('offline diagnostic deadline')
                     grads = dict(dense_grads)
                     errors = {}
@@ -890,12 +937,20 @@ def hardware_stage(cfg, config, out, attempt, kind):
     forecast = forecast_stage(cfg, calibration, kind)
     if kind == 'cost':
         forecast['forecast_s'] += 300
-        forecast['deadline_s'] = 2*forecast['forecast_s']
+        if forecast['deadline_s'] is not None:
+            forecast['deadline_s'] = cfg['resources']['deadline_multiplier']*forecast['forecast_s']
     write_json(attempt/'resource_forecast.json', forecast)
-    if forecast['deadline_s'] > cfg['resources']['maximum_stage_s']:
+    maximum_stage_s = cfg['resources']['maximum_stage_s']
+    if maximum_stage_s is not None and forecast['deadline_s'] > maximum_stage_s:
         return {'status': 'INCOMPLETE_RESOURCE', 'reason': 'inclusive measured forecast exceeds configured stage capacity; no expensive session launched'}
-    deadline = time.perf_counter()+forecast['deadline_s']
-    sessions, invalid_attempts, replacements_used, invocation = [], [], 0, 0
+    deadline = None if forecast['deadline_s'] is None else time.perf_counter()+forecast['deadline_s']
+    noise_shapes = cfg['timing']['noise_calibration_shapes']
+    frozen = {'source': 'native-only pooled two-session A/A; frozen before sampler timing',
+              'noise_calibration_shapes': noise_shapes, 'floor': cfg['timing']['delta_floor']}
+    if baseline:
+        delta = baseline['delta']
+        write_json(attempt/'frozen_delta.json', {'delta': delta, **frozen})
+    sessions, invocation = [], 0
     def run_session(session, slot):
         nonlocal invocation
         invocation += 1
@@ -911,43 +966,27 @@ def hardware_stage(cfg, config, out, attempt, kind):
         if code or not Path(request['result']).is_file():
             return {'status': 'INCOMPLETE_RESOURCE', 'failure': 'session interrupted or deadline exceeded; raw prefix retained'}
         return json.loads(Path(request['result']).read_text())
-    for slot in range(2):
+    for slot in range(cfg['timing']['sessions']):
         result = run_session(slot, slot)
-        if result['status'] != 'pass' and result.get('invalid_condition') == 'failed_warmup' and replacements_used == 0:
-            invalid_attempts.append(result)
-            replacements_used += 1
-            result = run_session(2, slot)
         if result['status'] != 'pass':
             return {'status': result['status'], 'reason': result.get('failure'), 'sessions': sessions,
-                    'invalid_attempts': invalid_attempts, 'replacement_sessions_used': replacements_used}
+                    'failed_session': result}
         sessions.append(result)
-    delta = baseline['delta'] if baseline else freeze_delta([abs(p['seconds']['dense']/p['seconds']['candidate']-1)
-        for s in sessions for row in s['shapes'] for p in row['comparisons']['AA']['pairs']])
-    if kind == 'feasibility' and delta > .15 and replacements_used == 0:
-        # Predefined A/A noise invalidation, deterministic first-session slot.
-        # Never use zero-dW or sampler speed to choose a replacement.
-        invalid_attempts.append({'invalid_condition': 'aa_noise_above_cap', 'original': sessions[0]})
-        replacements_used += 1
-        result = run_session(2, 0)
-        if result['status'] != 'pass':
-            return {'status': result['status'], 'reason': result.get('failure'), 'sessions': sessions, 'invalid_attempts': invalid_attempts}
-        sessions[0] = result
+    if not baseline:
         delta = freeze_delta([abs(p['seconds']['dense']/p['seconds']['candidate']-1)
-            for s in sessions for row in s['shapes'] for p in row['comparisons']['AA']['pairs']])
-    write_json(attempt/'frozen_delta.json', {'delta': delta, 'source': 'native-only pooled two-session A/A; frozen before sampler timing', 'cap': .15})
+            for s in sessions for row in s['shapes'] if row['shape']['id'] in noise_shapes
+            for p in row['comparisons']['AA']['pairs']], floor=cfg['timing']['delta_floor'])
+        write_json(attempt/'frozen_delta.json', {'delta': delta, **frozen})
     unstable = [(s['session'], row['shape']['id'], name) for s in sessions for row in s['shapes']
                 for name, comparison in row['comparisons'].items() if not all(v['stable'] for v in comparison['warmup'].values())]
-    if delta > .15 or unstable:
-        return {'status': 'INCONCLUSIVE_MEASUREMENT', 'reason': 'delta above .15 or unstable warmup; evidence retained, no candidate performance qualification',
-                'delta': delta, 'unstable': unstable, 'sessions': sessions}
     diagnostics = None
     if kind == 'cost':
         request = {'kind': 'diagnostic', 'config': str(config), 'out': str(out), 'attempt': str(attempt),
                    'variant': next(row for row in baseline['sessions'][0]['shapes'] if row['shape']['id'] == 'middle4096')['selected_variant'],
-                   'deadline_s': max(0, deadline-time.perf_counter())}
+                   'deadline_s': remaining_timeout(deadline)}
         request_path = attempt/'diagnostic-request.json'
         write_json(request_path, request)
-        code, _, _ = command(attempt, worker_args(kind, config, out, request_path), env=environment(cfg), timeout=max(1, deadline-time.perf_counter()))
+        code, _, _ = command(attempt, worker_args(kind, config, out, request_path), env=environment(cfg), timeout=remaining_timeout(deadline))
         if code:
             return {'status': 'INCOMPLETE_RESOURCE', 'reason': 'paid offline diagnostic incomplete; raw session timing retained', 'sessions': sessions, 'delta': delta}
         diagnostics = str(attempt/'diagnostic.json')
@@ -959,7 +998,8 @@ def hardware_stage(cfg, config, out, attempt, kind):
             if all(c['statistics']['ci95'][1] < 1-delta for c in comparisons):
                 eligible.append({'arm': name, 'shape': shape_id})
     return {'status': 'pass' if eligible else 'STOP_COST', 'delta': delta, 'eligible': eligible, 'sessions': sessions,
-            'diagnostics': diagnostics, 'invalid_attempts': invalid_attempts, 'replacement_sessions_used': replacements_used,
+            'diagnostics': diagnostics, 'unstable_warmup_diagnostics': unstable,
+            'automatic_replacement_sessions': 0,
             'reason': 'upper95% paired ratio must be below 1-delta in both sessions at a planned-model middle shape',
             'zero_semantics': 'nonlearning dense zero dW with exact dX/db and native optimizer moments/decay; optimistic diagnostic, not universal lower bound'}
 

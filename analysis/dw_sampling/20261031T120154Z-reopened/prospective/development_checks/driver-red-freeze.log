@@ -1,0 +1,150 @@
+......FF.                                                                [100%]
+=================================== FAILURES ===================================
+_ test_stage_uses_only_declared_noise_shapes_without_warmup_veto_or_replacement[cost-0.01] _
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2455/test_stage_uses_only_declared_2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10f54df50>
+noise = 0.01, kind = 'cost'
+
+    @pytest.mark.parametrize('noise', [.01, .12])
+    @pytest.mark.parametrize('kind', ['feasibility', 'cost'])
+    def test_stage_uses_only_declared_noise_shapes_without_warmup_veto_or_replacement(tmp_path, monkeypatch, noise, kind):
+        d = driver()
+        cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
+        qualification = tmp_path/'qualification.json'
+        qualification.write_text(json.dumps({'native_resource_calibration': [
+            {'shape': s, 'native_complete_step_s': [.01, .01, .01]} for s in cfg['shapes']]}))
+        monkeypatch.setattr(d, 'source_hashes', lambda stage: {})
+        def prerequisite(out, stage, bindings):
+            if stage == 'feasibility':
+                return {'delta': 2*noise, 'sessions': [{'shapes': [
+                    {'shape': s, 'selected_variant': 'single'} for s in cfg['shapes']]}]*2}
+            return {'qualification': str(qualification)}
+        monkeypatch.setattr(d, 'require_stage', prerequisite)
+        def cpu_worker(attempt, args, *, timeout, env):
+            request = json.loads(Path(args[-1]).read_text())
+            assert timeout is None and request['deadline_s'] is None
+            if kind == 'cost':
+                assert (attempt/'frozen_delta.json').is_file(), 'delta must be frozen before candidate workers start'
+                frozen = json.loads((attempt/'frozen_delta.json').read_text())
+                assert frozen['delta'] == pytest.approx(2*noise)
+            if request['kind'] == 'diagnostic':
+                d.write_json(attempt/'diagnostic.json', {'cpu_boundary_fixture': True})
+                return 0, '', ''
+            shapes = []
+            for shape in cfg['shapes']:
+                error = noise if shape['id'] in ('middle2048', 'middle4096') else .9
+                comparison = {'warmup': {'dense': {'stable': False, 'raw_s': [.1, .3]},
+                                         'candidate': {'stable': False, 'raw_s': [.1, .3]}},
+                              'pairs': [{'seconds': {'dense': 1+error, 'candidate': 1.}}]*30,
+                              'statistics': {'ci95': [.4, .5]}}
+                names = ['AA', 'zero'] if kind == 'feasibility' else [f'{s}-{r}' for s in cfg['samplers'] for r in cfg['rhos']]
+                shapes.append({'shape': shape, 'comparisons': {name: comparison for name in names}})
+            d.write_json(request['result'], {'status': 'pass', 'session': request['session'], 'shapes': shapes})
+            return 0, '', ''
+        monkeypatch.setattr(d, 'command', cpu_worker)
+        attempt = d.allocate_attempt(tmp_path, kind)
+>       result = d.hardware_stage(cfg, ROOT/'configs/dw_sampling.yaml', tmp_path, attempt, kind)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_dw_sampling_protocol.py:399: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+analysis/run_dw_sampling.py:952: in hardware_stage
+    result = run_session(slot, slot)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+analysis/run_dw_sampling.py:946: in run_session
+    code, _, _ = command(attempt, worker_args(kind, config, out, request_path), env=environment(cfg),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+attempt = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2455/test_stage_uses_only_declared_2/cost/attempt-0001')
+args = ['/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python', '/Users/artemlegotin/Do... '--config', '/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/configs/dw_sampling.yaml', ...]
+timeout = None
+env = {'ALACRITTY_WINDOW_ID': '21474837067', 'BUN_INSTALL': '/Users/artemlegotin/.bun', 'CODEX_APPLY_PATCH_PRESERVE_LINE_ENDINGS': '1', 'CODEX_CI': '1', ...}
+
+    def cpu_worker(attempt, args, *, timeout, env):
+        request = json.loads(Path(args[-1]).read_text())
+        assert timeout is None and request['deadline_s'] is None
+        if kind == 'cost':
+>           assert (attempt/'frozen_delta.json').is_file(), 'delta must be frozen before candidate workers start'
+E           AssertionError: delta must be frozen before candidate workers start
+E           assert False
+E            +  where False = is_file()
+E            +    where is_file = (PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2455/test_stage_uses_only_declared_2/cost/attempt-0001') / 'frozen_delta.json').is_file
+
+tests/test_dw_sampling_protocol.py:380: AssertionError
+_ test_stage_uses_only_declared_noise_shapes_without_warmup_veto_or_replacement[cost-0.12] _
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2455/test_stage_uses_only_declared_3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x111830d70>
+noise = 0.12, kind = 'cost'
+
+    @pytest.mark.parametrize('noise', [.01, .12])
+    @pytest.mark.parametrize('kind', ['feasibility', 'cost'])
+    def test_stage_uses_only_declared_noise_shapes_without_warmup_veto_or_replacement(tmp_path, monkeypatch, noise, kind):
+        d = driver()
+        cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
+        qualification = tmp_path/'qualification.json'
+        qualification.write_text(json.dumps({'native_resource_calibration': [
+            {'shape': s, 'native_complete_step_s': [.01, .01, .01]} for s in cfg['shapes']]}))
+        monkeypatch.setattr(d, 'source_hashes', lambda stage: {})
+        def prerequisite(out, stage, bindings):
+            if stage == 'feasibility':
+                return {'delta': 2*noise, 'sessions': [{'shapes': [
+                    {'shape': s, 'selected_variant': 'single'} for s in cfg['shapes']]}]*2}
+            return {'qualification': str(qualification)}
+        monkeypatch.setattr(d, 'require_stage', prerequisite)
+        def cpu_worker(attempt, args, *, timeout, env):
+            request = json.loads(Path(args[-1]).read_text())
+            assert timeout is None and request['deadline_s'] is None
+            if kind == 'cost':
+                assert (attempt/'frozen_delta.json').is_file(), 'delta must be frozen before candidate workers start'
+                frozen = json.loads((attempt/'frozen_delta.json').read_text())
+                assert frozen['delta'] == pytest.approx(2*noise)
+            if request['kind'] == 'diagnostic':
+                d.write_json(attempt/'diagnostic.json', {'cpu_boundary_fixture': True})
+                return 0, '', ''
+            shapes = []
+            for shape in cfg['shapes']:
+                error = noise if shape['id'] in ('middle2048', 'middle4096') else .9
+                comparison = {'warmup': {'dense': {'stable': False, 'raw_s': [.1, .3]},
+                                         'candidate': {'stable': False, 'raw_s': [.1, .3]}},
+                              'pairs': [{'seconds': {'dense': 1+error, 'candidate': 1.}}]*30,
+                              'statistics': {'ci95': [.4, .5]}}
+                names = ['AA', 'zero'] if kind == 'feasibility' else [f'{s}-{r}' for s in cfg['samplers'] for r in cfg['rhos']]
+                shapes.append({'shape': shape, 'comparisons': {name: comparison for name in names}})
+            d.write_json(request['result'], {'status': 'pass', 'session': request['session'], 'shapes': shapes})
+            return 0, '', ''
+        monkeypatch.setattr(d, 'command', cpu_worker)
+        attempt = d.allocate_attempt(tmp_path, kind)
+>       result = d.hardware_stage(cfg, ROOT/'configs/dw_sampling.yaml', tmp_path, attempt, kind)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_dw_sampling_protocol.py:399: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+analysis/run_dw_sampling.py:952: in hardware_stage
+    result = run_session(slot, slot)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+analysis/run_dw_sampling.py:946: in run_session
+    code, _, _ = command(attempt, worker_args(kind, config, out, request_path), env=environment(cfg),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+attempt = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2455/test_stage_uses_only_declared_3/cost/attempt-0001')
+args = ['/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python', '/Users/artemlegotin/Do... '--config', '/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/configs/dw_sampling.yaml', ...]
+timeout = None
+env = {'ALACRITTY_WINDOW_ID': '21474837067', 'BUN_INSTALL': '/Users/artemlegotin/.bun', 'CODEX_APPLY_PATCH_PRESERVE_LINE_ENDINGS': '1', 'CODEX_CI': '1', ...}
+
+    def cpu_worker(attempt, args, *, timeout, env):
+        request = json.loads(Path(args[-1]).read_text())
+        assert timeout is None and request['deadline_s'] is None
+        if kind == 'cost':
+>           assert (attempt/'frozen_delta.json').is_file(), 'delta must be frozen before candidate workers start'
+E           AssertionError: delta must be frozen before candidate workers start
+E           assert False
+E            +  where False = is_file()
+E            +    where is_file = (PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2455/test_stage_uses_only_declared_3/cost/attempt-0001') / 'frozen_delta.json').is_file
+
+tests/test_dw_sampling_protocol.py:380: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_dw_sampling_protocol.py::test_stage_uses_only_declared_noise_shapes_without_warmup_veto_or_replacement[cost-0.01]
+FAILED tests/test_dw_sampling_protocol.py::test_stage_uses_only_declared_noise_shapes_without_warmup_veto_or_replacement[cost-0.12]
+2 failed, 7 passed, 36 deselected in 1.29s

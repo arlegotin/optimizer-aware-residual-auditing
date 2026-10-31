@@ -1,0 +1,272 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+_ test_cost_session_recalibrates_baseline_only_and_keeps_shape_order[feasibility-0] _
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2457/test_cost_session_recalibrates0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1088c4180>
+session = 0, kind = 'feasibility'
+
+    @pytest.mark.parametrize('session', [0, 1])
+    @pytest.mark.parametrize('kind', ['feasibility', 'cost'])
+    def test_cost_session_recalibrates_baseline_only_and_keeps_shape_order(tmp_path, monkeypatch, session, kind):
+        import torch
+        import oar.hardware
+        import oar.timing
+        d = driver()
+        cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
+        monkeypatch.setattr(torch.mps, 'synchronize', lambda: None)
+        monkeypatch.setattr(torch.mps, 'recommended_max_memory', lambda: 10**14)
+        monkeypatch.setattr(oar.hardware, 'resource_snapshot', lambda device: {
+            'physical_memory_bytes': 10**14, 'available_memory_bytes': 10**14})
+        # CPU fixture performs real reset/update counting; only device allocation
+        # and elapsed-time measurement are replaced at the hardware boundary.
+        class CPUFixture:
+            elapsed = 0.
+            def __init__(self, cfg, shape, variant='single', mode='dense', rho=.25, session=0):
+                self.mode, self.updates, self.states = mode, 0, {}
+                self.sampling_setup_s = 0.
+            def step(self):
+                self.updates += 1
+                CPUFixture.elapsed += .001 if self.mode == 'dense' else .0005
+            def snapshot(self):
+                return {'updates': self.updates, 'sampling': {}}
+            def restore(self, common):
+                self.updates = common['updates']
+            def backward(self, diagnostic=False):
+                return {}
+        def measure(operation, sync, blocks):
+            raw = []
+            for _ in range(blocks):
+                start = CPUFixture.elapsed
+                operation()
+                raw.append(CPUFixture.elapsed-start)
+            return raw
+        monkeypatch.setattr(d, 'Fixture', CPUFixture)
+        monkeypatch.setattr(d, 'state_streams', lambda f: {'test_cpu_updates': f.updates})
+        monkeypatch.setattr(d, 'native_variant_qualification', lambda *args: ('single', {
+            'single': {'status': 'pass', 'warmup': {'stable': False, 'raw_s': [.1, .4]}, 'pilot_s': [.5]*3}}))
+        monkeypatch.setattr(oar.timing, 'measure_blocks', measure)
+        monkeypatch.setattr(oar.timing, 'warmup', lambda *args, **kwargs: {'stable': False, 'raw_s': [.1, .4]})
+        request = {'session': session, 'kind': kind, 'deadline_s': None, 'result': str(tmp_path/'session.json'),
+                   'calibration': [{'shape': s, 'native_complete_step_s': [.001]*3} for s in cfg['shapes']],
+                   'baseline': {'shapes': [{'shape': s, 'selected_variant': 'single', 'variants': {},
+                                            'updates_per_block': 3} for s in cfg['shapes']]}}
+        result = d.cost_session(cfg, request)
+        assert result['status'] == 'pass'
+        assert [r['shape']['id'] for r in result['shapes']] == [s['id'] for s in cfg['shapes']]
+        for row in result['shapes']:
+            assert row['updates_per_block'] >= 500
+            if kind == 'cost':
+                assert row['selected_dense_pilot'][0]['updates'] == 3
+            else:
+                assert row['dense_pilot'][-1]['seconds'] >= .5
+            assert row['selected_dense_pilot'][-1]['seconds'] >= .5
+>           assert all(len(p.get('raw_s', [])) == 3 and p['seconds'] == min(p['raw_s']) for p in row['selected_dense_pilot'])
+E           assert False
+E            +  where False = all(<generator object test_cost_session_recalibrates_baseline_only_and_keeps_shape_order.<locals>.<genexpr> at 0x10e497790>)
+
+tests/test_dw_sampling_protocol.py:465: AssertionError
+_ test_cost_session_recalibrates_baseline_only_and_keeps_shape_order[feasibility-1] _
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2457/test_cost_session_recalibrates1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x109330b00>
+session = 1, kind = 'feasibility'
+
+    @pytest.mark.parametrize('session', [0, 1])
+    @pytest.mark.parametrize('kind', ['feasibility', 'cost'])
+    def test_cost_session_recalibrates_baseline_only_and_keeps_shape_order(tmp_path, monkeypatch, session, kind):
+        import torch
+        import oar.hardware
+        import oar.timing
+        d = driver()
+        cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
+        monkeypatch.setattr(torch.mps, 'synchronize', lambda: None)
+        monkeypatch.setattr(torch.mps, 'recommended_max_memory', lambda: 10**14)
+        monkeypatch.setattr(oar.hardware, 'resource_snapshot', lambda device: {
+            'physical_memory_bytes': 10**14, 'available_memory_bytes': 10**14})
+        # CPU fixture performs real reset/update counting; only device allocation
+        # and elapsed-time measurement are replaced at the hardware boundary.
+        class CPUFixture:
+            elapsed = 0.
+            def __init__(self, cfg, shape, variant='single', mode='dense', rho=.25, session=0):
+                self.mode, self.updates, self.states = mode, 0, {}
+                self.sampling_setup_s = 0.
+            def step(self):
+                self.updates += 1
+                CPUFixture.elapsed += .001 if self.mode == 'dense' else .0005
+            def snapshot(self):
+                return {'updates': self.updates, 'sampling': {}}
+            def restore(self, common):
+                self.updates = common['updates']
+            def backward(self, diagnostic=False):
+                return {}
+        def measure(operation, sync, blocks):
+            raw = []
+            for _ in range(blocks):
+                start = CPUFixture.elapsed
+                operation()
+                raw.append(CPUFixture.elapsed-start)
+            return raw
+        monkeypatch.setattr(d, 'Fixture', CPUFixture)
+        monkeypatch.setattr(d, 'state_streams', lambda f: {'test_cpu_updates': f.updates})
+        monkeypatch.setattr(d, 'native_variant_qualification', lambda *args: ('single', {
+            'single': {'status': 'pass', 'warmup': {'stable': False, 'raw_s': [.1, .4]}, 'pilot_s': [.5]*3}}))
+        monkeypatch.setattr(oar.timing, 'measure_blocks', measure)
+        monkeypatch.setattr(oar.timing, 'warmup', lambda *args, **kwargs: {'stable': False, 'raw_s': [.1, .4]})
+        request = {'session': session, 'kind': kind, 'deadline_s': None, 'result': str(tmp_path/'session.json'),
+                   'calibration': [{'shape': s, 'native_complete_step_s': [.001]*3} for s in cfg['shapes']],
+                   'baseline': {'shapes': [{'shape': s, 'selected_variant': 'single', 'variants': {},
+                                            'updates_per_block': 3} for s in cfg['shapes']]}}
+        result = d.cost_session(cfg, request)
+        assert result['status'] == 'pass'
+        assert [r['shape']['id'] for r in result['shapes']] == [s['id'] for s in cfg['shapes']]
+        for row in result['shapes']:
+            assert row['updates_per_block'] >= 500
+            if kind == 'cost':
+                assert row['selected_dense_pilot'][0]['updates'] == 3
+            else:
+                assert row['dense_pilot'][-1]['seconds'] >= .5
+            assert row['selected_dense_pilot'][-1]['seconds'] >= .5
+>           assert all(len(p.get('raw_s', [])) == 3 and p['seconds'] == min(p['raw_s']) for p in row['selected_dense_pilot'])
+E           assert False
+E            +  where False = all(<generator object test_cost_session_recalibrates_baseline_only_and_keeps_shape_order.<locals>.<genexpr> at 0x10e497a60>)
+
+tests/test_dw_sampling_protocol.py:465: AssertionError
+__ test_cost_session_recalibrates_baseline_only_and_keeps_shape_order[cost-0] __
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2457/test_cost_session_recalibrates2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10e55e210>
+session = 0, kind = 'cost'
+
+    @pytest.mark.parametrize('session', [0, 1])
+    @pytest.mark.parametrize('kind', ['feasibility', 'cost'])
+    def test_cost_session_recalibrates_baseline_only_and_keeps_shape_order(tmp_path, monkeypatch, session, kind):
+        import torch
+        import oar.hardware
+        import oar.timing
+        d = driver()
+        cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
+        monkeypatch.setattr(torch.mps, 'synchronize', lambda: None)
+        monkeypatch.setattr(torch.mps, 'recommended_max_memory', lambda: 10**14)
+        monkeypatch.setattr(oar.hardware, 'resource_snapshot', lambda device: {
+            'physical_memory_bytes': 10**14, 'available_memory_bytes': 10**14})
+        # CPU fixture performs real reset/update counting; only device allocation
+        # and elapsed-time measurement are replaced at the hardware boundary.
+        class CPUFixture:
+            elapsed = 0.
+            def __init__(self, cfg, shape, variant='single', mode='dense', rho=.25, session=0):
+                self.mode, self.updates, self.states = mode, 0, {}
+                self.sampling_setup_s = 0.
+            def step(self):
+                self.updates += 1
+                CPUFixture.elapsed += .001 if self.mode == 'dense' else .0005
+            def snapshot(self):
+                return {'updates': self.updates, 'sampling': {}}
+            def restore(self, common):
+                self.updates = common['updates']
+            def backward(self, diagnostic=False):
+                return {}
+        def measure(operation, sync, blocks):
+            raw = []
+            for _ in range(blocks):
+                start = CPUFixture.elapsed
+                operation()
+                raw.append(CPUFixture.elapsed-start)
+            return raw
+        monkeypatch.setattr(d, 'Fixture', CPUFixture)
+        monkeypatch.setattr(d, 'state_streams', lambda f: {'test_cpu_updates': f.updates})
+        monkeypatch.setattr(d, 'native_variant_qualification', lambda *args: ('single', {
+            'single': {'status': 'pass', 'warmup': {'stable': False, 'raw_s': [.1, .4]}, 'pilot_s': [.5]*3}}))
+        monkeypatch.setattr(oar.timing, 'measure_blocks', measure)
+        monkeypatch.setattr(oar.timing, 'warmup', lambda *args, **kwargs: {'stable': False, 'raw_s': [.1, .4]})
+        request = {'session': session, 'kind': kind, 'deadline_s': None, 'result': str(tmp_path/'session.json'),
+                   'calibration': [{'shape': s, 'native_complete_step_s': [.001]*3} for s in cfg['shapes']],
+                   'baseline': {'shapes': [{'shape': s, 'selected_variant': 'single', 'variants': {},
+                                            'updates_per_block': 3} for s in cfg['shapes']]}}
+        result = d.cost_session(cfg, request)
+        assert result['status'] == 'pass'
+        assert [r['shape']['id'] for r in result['shapes']] == [s['id'] for s in cfg['shapes']]
+        for row in result['shapes']:
+            assert row['updates_per_block'] >= 500
+            if kind == 'cost':
+                assert row['selected_dense_pilot'][0]['updates'] == 3
+            else:
+                assert row['dense_pilot'][-1]['seconds'] >= .5
+            assert row['selected_dense_pilot'][-1]['seconds'] >= .5
+>           assert all(len(p.get('raw_s', [])) == 3 and p['seconds'] == min(p['raw_s']) for p in row['selected_dense_pilot'])
+E           assert False
+E            +  where False = all(<generator object test_cost_session_recalibrates_baseline_only_and_keeps_shape_order.<locals>.<genexpr> at 0x10e54f970>)
+
+tests/test_dw_sampling_protocol.py:465: AssertionError
+__ test_cost_session_recalibrates_baseline_only_and_keeps_shape_order[cost-1] __
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2457/test_cost_session_recalibrates3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10e57e8b0>
+session = 1, kind = 'cost'
+
+    @pytest.mark.parametrize('session', [0, 1])
+    @pytest.mark.parametrize('kind', ['feasibility', 'cost'])
+    def test_cost_session_recalibrates_baseline_only_and_keeps_shape_order(tmp_path, monkeypatch, session, kind):
+        import torch
+        import oar.hardware
+        import oar.timing
+        d = driver()
+        cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
+        monkeypatch.setattr(torch.mps, 'synchronize', lambda: None)
+        monkeypatch.setattr(torch.mps, 'recommended_max_memory', lambda: 10**14)
+        monkeypatch.setattr(oar.hardware, 'resource_snapshot', lambda device: {
+            'physical_memory_bytes': 10**14, 'available_memory_bytes': 10**14})
+        # CPU fixture performs real reset/update counting; only device allocation
+        # and elapsed-time measurement are replaced at the hardware boundary.
+        class CPUFixture:
+            elapsed = 0.
+            def __init__(self, cfg, shape, variant='single', mode='dense', rho=.25, session=0):
+                self.mode, self.updates, self.states = mode, 0, {}
+                self.sampling_setup_s = 0.
+            def step(self):
+                self.updates += 1
+                CPUFixture.elapsed += .001 if self.mode == 'dense' else .0005
+            def snapshot(self):
+                return {'updates': self.updates, 'sampling': {}}
+            def restore(self, common):
+                self.updates = common['updates']
+            def backward(self, diagnostic=False):
+                return {}
+        def measure(operation, sync, blocks):
+            raw = []
+            for _ in range(blocks):
+                start = CPUFixture.elapsed
+                operation()
+                raw.append(CPUFixture.elapsed-start)
+            return raw
+        monkeypatch.setattr(d, 'Fixture', CPUFixture)
+        monkeypatch.setattr(d, 'state_streams', lambda f: {'test_cpu_updates': f.updates})
+        monkeypatch.setattr(d, 'native_variant_qualification', lambda *args: ('single', {
+            'single': {'status': 'pass', 'warmup': {'stable': False, 'raw_s': [.1, .4]}, 'pilot_s': [.5]*3}}))
+        monkeypatch.setattr(oar.timing, 'measure_blocks', measure)
+        monkeypatch.setattr(oar.timing, 'warmup', lambda *args, **kwargs: {'stable': False, 'raw_s': [.1, .4]})
+        request = {'session': session, 'kind': kind, 'deadline_s': None, 'result': str(tmp_path/'session.json'),
+                   'calibration': [{'shape': s, 'native_complete_step_s': [.001]*3} for s in cfg['shapes']],
+                   'baseline': {'shapes': [{'shape': s, 'selected_variant': 'single', 'variants': {},
+                                            'updates_per_block': 3} for s in cfg['shapes']]}}
+        result = d.cost_session(cfg, request)
+        assert result['status'] == 'pass'
+        assert [r['shape']['id'] for r in result['shapes']] == [s['id'] for s in cfg['shapes']]
+        for row in result['shapes']:
+            assert row['updates_per_block'] >= 500
+            if kind == 'cost':
+                assert row['selected_dense_pilot'][0]['updates'] == 3
+            else:
+                assert row['dense_pilot'][-1]['seconds'] >= .5
+            assert row['selected_dense_pilot'][-1]['seconds'] >= .5
+>           assert all(len(p.get('raw_s', [])) == 3 and p['seconds'] == min(p['raw_s']) for p in row['selected_dense_pilot'])
+E           assert False
+E            +  where False = all(<generator object test_cost_session_recalibrates_baseline_only_and_keeps_shape_order.<locals>.<genexpr> at 0x10e9f4d60>)
+
+tests/test_dw_sampling_protocol.py:465: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_dw_sampling_protocol.py::test_cost_session_recalibrates_baseline_only_and_keeps_shape_order[feasibility-0]
+FAILED tests/test_dw_sampling_protocol.py::test_cost_session_recalibrates_baseline_only_and_keeps_shape_order[feasibility-1]
+FAILED tests/test_dw_sampling_protocol.py::test_cost_session_recalibrates_baseline_only_and_keeps_shape_order[cost-0]
+FAILED tests/test_dw_sampling_protocol.py::test_cost_session_recalibrates_baseline_only_and_keeps_shape_order[cost-1]
+4 failed, 43 deselected in 1.48s

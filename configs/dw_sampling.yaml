@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: CC-BY-4.0
-schema_version: 1
+# Owner-authorized exploratory reopening; immutable prior configuration is archived.
+schema_version: 2
 experiment: fixed_budget_norm_importance_dw
 reviewed_head: 9d8ad069c51b4d0e6c13e9c6e465579e9b44a339
 device: mps
@@ -7,47 +8,97 @@ dtype: float32
 fallback: '0'
 fast_math: '0'
 prefer_metal: '0'
-samplers: [importance, uniform]
-rhos: [0.125, 0.25, 0.5]
+samplers:
+- importance
+- uniform
+rhos:
+- 0.125
+- 0.25
+- 0.5
 mixture_uniform: 0.1
 seed: 61001
 analysis_seed: 62001
 confirmation_analysis_seed: 62002
 shapes:
-  - {id: tiny, n: 128, di: 128, do: 512, microbatches: 1, stride: 1}
-  - {id: middle2048, n: 2048, di: 512, do: 2048, microbatches: 1, stride: 1}
-  - {id: middle4096, n: 4096, di: 512, do: 2048, microbatches: 1, stride: 1}
-  - {id: wide, n: 8192, di: 768, do: 3072, microbatches: 1, stride: 1}
-  - {id: middle2048_accum4_stride2, n: 2048, di: 512, do: 2048, microbatches: 4, stride: 2}
+- id: middle4096
+  n: 4096
+  di: 512
+  do: 2048
+  microbatches: 1
+  stride: 1
+- id: middle2048
+  n: 2048
+  di: 512
+  do: 2048
+  microbatches: 1
+  stride: 1
+- id: middle2048_accum4_stride2
+  n: 2048
+  di: 512
+  do: 2048
+  microbatches: 4
+  stride: 2
+- id: wide
+  n: 8192
+  di: 768
+  do: 3072
+  microbatches: 1
+  stride: 1
+- id: tiny
+  n: 128
+  di: 128
+  do: 512
+  microbatches: 1
+  stride: 1
 timing:
   sessions: 2
   pairs: 30
-  minimum_block_s: 0.2
-  maximum_updates_per_block: 100
+  minimum_block_s: 0.5
+  maximum_updates_per_block: null
   bootstrap_replicates: 10000
-  warmup: {minimum: 8, maximum: 32, window: 8, relative_range: 0.1}
-  delta_floor: 0.05
+  warmup:
+    minimum: 8
+    maximum: 32
+    window: 8
+    relative_range: 0.1
+  delta_floor: 0.0
   delta_noise_multiplier: 2
-  delta_cap: 0.15
+  delta_cap: null
   history_updates: 8
-  native_variants: [default, single, foreach, fused]
-  replacement_sessions_maximum: 1
-  invalid_conditions: [missing_synchronization, overlapping_process, failed_warmup, device_error]
+  native_variants:
+  - default
+  - single
+  - foreach
+  - fused
+  replacement_sessions_maximum: null
+  invalid_conditions:
+  - missing_synchronization
+  - overlapping_process
+  - device_error
+  warmup_policy: diagnostic_only
+  noise_calibration_shapes:
+  - middle2048
+  - middle4096
 optimizer:
   lr: 0.001
-  betas: [0.9, 0.999]
-  eps: 0.00000001
+  betas:
+  - 0.9
+  - 0.999
+  eps: 1.0e-08
   weight_decay: 0.01
   clip_norm: 1.0
 diagnostic:
-  native_states: [0, 32, 128]
+  native_states:
+  - 0
+  - 32
+  - 128
   draws: 32
 resources:
   qualification_forecast_s: 120
   deadline_multiplier: 2
-  maximum_stage_s: 21600
+  maximum_stage_s: null
   minimum_free_disk_bytes: 1073741824
-  maximum_output_bytes: 268435456
+  maximum_output_bytes: null
   memory_fraction: 0.7
 asset:
   name: wikitext-2-raw-v1
@@ -62,10 +113,20 @@ learning:
   ffn_width: 2048
   context: 256
   candidate_batch: 16
-  dense_batches: [4, 8, 16, 32]
-  peak_lrs: [0.0001, 0.0003, 0.001]
+  dense_batches:
+  - 4
+  - 8
+  - 16
+  - 32
+  peak_lrs:
+  - 0.0001
+  - 0.0003
+  - 0.001
   tuning_seed: 3101
-  development_seeds: [3102, 3103, 3104]
+  development_seeds:
+  - 3102
+  - 3103
+  - 3104
   confirmation_seed_start: 5001
   confirmation_minimum: 8
   confirmation_maximum: 16
@@ -75,10 +136,13 @@ learning:
   evaluation_stride: 128
   synchronized_updates: 8
   synchronized_updates_fallback: 1
-  monitor_count_candidates: [100, 50, 25]
+  monitor_count_candidates:
+  - 100
+  - 50
+  - 25
   scheduler_warmup_fraction: 0.05
   scheduler_final_fraction: 0.1
-  epsilon_eval_floor: 0.000001
+  epsilon_eval_floor: 1.0e-06
   epsilon_eval_ceiling: 0.001
   target_calibration_fraction: 0.6
   minimum_periodic_monitors: 8

@@ -1,0 +1,71 @@
+{
+  "allowed_after": [
+    "actual scoped cost gate passes",
+    "verify source file sizes and LFS SHA256 before parsing",
+    "retain creator/source/license notices and modification labels",
+    "all original split/parser/byte/target manifest checks pass"
+  ],
+  "authority": "Original owner instruction permits new documentary evidence resolving the repository use restriction. Latest owner authorizes continued exploratory work; this is a controller documentary determination, not an inferred new owner license-version ruling.",
+  "current_driver_config": "body_downloads remains false in the current A-D timing config; any reached data/trainer stage needs its own frozen source/config/asset bindings before body requests",
+  "dataset": "wikitext-2-raw-v1",
+  "decision": "permission_evidence_reviewed_for_conditional_local_only_research",
+  "determination": "For local nonredistributed copying, clearly labeled preprocessing and private research, the creator grant and both plausible CC version grants provide the necessary shared permissions. This resolves only that narrow repository-use question without deciding governing version, dismissing GFDL notices, relying on fair use, or asserting general legal clearance.",
+  "documentary_review_sha256": "a055e9c5e67b0d5d93ee6b9f110cfb281361c9b0d5334d792499c4d183e44421",
+  "historical_manifest": "manifests/assets.json remains unchanged and records the original blocked decision",
+  "not_claimed": [
+    "authoritative license-version selection",
+    "upstream conflict resolution",
+    "independent legal opinion",
+    "downloaded-byte validation",
+    "parser readiness",
+    "permission for public redistribution"
+  ],
+  "notice_conflict_retained": {
+    "authoritative_version_selected": false,
+    "metadata": [
+      "CC-BY-SA-3.0",
+      "GFDL"
+    ],
+    "prose": "CC-BY-SA-4.0"
+  },
+  "recorded_utc": "2026-10-31T12:12:08.208344+00:00",
+  "restrictions": [
+    "local research only",
+    "do not redistribute corpus, excerpts, processed text/tokens, text-bearing tensors, generated corpus samples or trained checkpoints",
+    "retain all supplied notices and attribution to WikiText creators and underlying Wikipedia contributors/source",
+    "official validation loss outcomes remain sealed until complete confirmation freeze; official test body/parsing remains sealed until final scientific reporting",
+    "a different use/publication scope requires a new decision"
+  ],
+  "revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+  "schema_version": 1,
+  "sources": [
+    {
+      "article_date": "2016-09-26",
+      "author": "Stephen Merity",
+      "observation": "Official creator CC BY-SA-family availability grant; tool returned cached article, not a new grant or exact server-byte snapshot.",
+      "publisher": "Salesforce",
+      "url": "https://www.salesforce.com/blog/the-wikitext-long-term-dependency-language-modeling-dataset/?bc=OTH"
+    },
+    {
+      "observation": "Reproduction and creation/reproduction of adaptations are granted, subject to the terms.",
+      "sections": [
+        "3(a)",
+        "3(b)"
+      ],
+      "url": "https://creativecommons.org/licenses/by-sa/3.0/legalcode"
+    },
+    {
+      "observation": "Reproduction and production/reproduction of adapted material are granted, subject to the terms.",
+      "sections": [
+        "2(a)(1)",
+        "3"
+      ],
+      "url": "https://creativecommons.org/licenses/by-sa/4.0/legalcode"
+    },
+    {
+      "observation": "Pinned official card preserves conflicting version notices; it is not rewritten.",
+      "url": "https://huggingface.co/datasets/Salesforce/wikitext/raw/b08601e04326c79dfdd32d625aee71d232d685c3/README.md"
+    }
+  ],
+  "status": "no_bodies_acquired_not_workload_ready"
+}

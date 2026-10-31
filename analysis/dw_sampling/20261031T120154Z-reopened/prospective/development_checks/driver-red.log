@@ -1,0 +1,582 @@
+F..F....F..FFFFFFF....FFFFFFFFFFFF...                                    [100%]
+=================================== FAILURES ===================================
+___ test_configuration_rejects_changed_protected_protocol_and_unknown_fields ___
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2452/test_configuration_rejects_cha0')
+
+    def test_configuration_rejects_changed_protected_protocol_and_unknown_fields(tmp_path):
+        d = driver()
+        original = ROOT / 'configs/dw_sampling.yaml'
+>       assert d.load_config(original)['device'] == 'mps'
+               ^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_dw_sampling_protocol.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/configs/dw_sampling.yaml')
+
+    def load_config(path):
+        import yaml
+        from oar.config import _UniqueLoader
+        try:
+            value = yaml.load(Path(path).read_text(), Loader=_UniqueLoader)
+            valid = hashlib.sha256(canonical(value)).hexdigest() == PROTOCOL
+        except (yaml.YAMLError, TypeError, ValueError) as exc:
+            raise ValueError('invalid strict sampling configuration') from exc
+        if not valid:
+>           raise ValueError('unknown or changed protected protocol; freeze a separately reviewed source/config version')
+E           ValueError: unknown or changed protected protocol; freeze a separately reviewed source/config version
+
+analysis/run_dw_sampling.py:76: ValueError
+_____________ test_geometric_paired_estimator_and_noise_threshold ______________
+
+    def test_geometric_paired_estimator_and_noise_threshold():
+        d = driver()
+        # Ratios .5,2 have geometric mean1, arithmetic mean1.25.
+        result = d.paired_ratio([1., 1.], [.5, 2.])
+        assert result['ratio'] == pytest.approx(1.)
+        assert result['ci95'] == pytest.approx([.5, 2.])
+        assert d.paired_ratio([1., 2., 4.], [.8, 1.6, 3.2])['ci95'] == pytest.approx([.8, .8])
+        aa = [0., .01, .02, .03]
+        assert d.freeze_delta(aa) == pytest.approx(.057)
+>       assert d.freeze_delta([.001, .002]) == pytest.approx(.0039)
+E       assert 0.05 == 0.0039 ± 3.9e-09
+E         
+E         comparison failed
+E         Obtained: 0.05
+E         Expected: 0.0039 ± 3.9e-09
+
+tests/test_dw_sampling_protocol.py:89: AssertionError
+____________ test_shared_deadline_never_restarts_for_later_commands ____________
+
+    def test_shared_deadline_never_restarts_for_later_commands():
+        d = driver()
+        assert d.remaining_timeout(100., clock=lambda: 75.) == 25.
+        with pytest.raises(TimeoutError):
+            d.remaining_timeout(100., clock=lambda: 101.)
+>       assert d.remaining_timeout(None, clock=lambda: 101.) is None
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_dw_sampling_protocol.py:154: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+deadline = None
+clock = <function test_shared_deadline_never_restarts_for_later_commands.<locals>.<lambda> at 0x11303b240>
+
+    def remaining_timeout(deadline, *, clock=time.perf_counter):
+>       remaining = deadline-clock()
+                    ^^^^^^^^^^^^^^^^
+E       TypeError: unsupported operand type(s) for -: 'NoneType' and 'float'
+
+analysis/run_dw_sampling.py:250: TypeError
+__ test_selected_dense_block_exceeds_100_updates_and_reaches_measured_minimum __
+
+    def test_selected_dense_block_exceeds_100_updates_and_reaches_measured_minimum():
+        d = driver()
+        count, observations = d.choose_block_length(lambda n: .001*n, 3)
+>       assert count >= 500
+E       assert 100 >= 500
+
+tests/test_dw_sampling_protocol.py:181: AssertionError
+____ test_dense_calibration_has_no_fixed_iteration_limit_and_honors_target _____
+
+    def test_dense_calibration_has_no_fixed_iteration_limit_and_honors_target():
+        d = driver()
+        durations = iter([.499]*120 + [.75])
+        count, observations = d.choose_block_length(lambda n: next(durations), 1)
+>       assert len(observations) == 121
+E       AssertionError: assert 1 == 121
+E        +  where 1 = len([{'updates': 1, 'seconds': 0.499}])
+
+tests/test_dw_sampling_protocol.py:191: AssertionError
+_____ test_dense_calibration_rejects_nonpositive_or_noninteger_initial[0] ______
+
+initial = 0
+
+    @pytest.mark.parametrize('initial', [0, -1, 1.2, True, float('inf')])
+    def test_dense_calibration_rejects_nonpositive_or_noninteger_initial(initial):
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_dw_sampling_protocol.py:200: Failed
+_____ test_dense_calibration_rejects_nonpositive_or_noninteger_initial[-1] _____
+
+initial = -1
+
+    @pytest.mark.parametrize('initial', [0, -1, 1.2, True, float('inf')])
+    def test_dense_calibration_rejects_nonpositive_or_noninteger_initial(initial):
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_dw_sampling_protocol.py:200: Failed
+____ test_dense_calibration_rejects_nonpositive_or_noninteger_initial[1.2] _____
+
+initial = 1.2
+
+    @pytest.mark.parametrize('initial', [0, -1, 1.2, True, float('inf')])
+    def test_dense_calibration_rejects_nonpositive_or_noninteger_initial(initial):
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_dw_sampling_protocol.py:200: Failed
+____ test_dense_calibration_rejects_nonpositive_or_noninteger_initial[True] ____
+
+initial = True
+
+    @pytest.mark.parametrize('initial', [0, -1, 1.2, True, float('inf')])
+    def test_dense_calibration_rejects_nonpositive_or_noninteger_initial(initial):
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_dw_sampling_protocol.py:200: Failed
+____ test_dense_calibration_rejects_nonpositive_or_noninteger_initial[inf] _____
+
+initial = inf
+
+    @pytest.mark.parametrize('initial', [0, -1, 1.2, True, float('inf')])
+    def test_dense_calibration_rejects_nonpositive_or_noninteger_initial(initial):
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_dw_sampling_protocol.py:200: Failed
+_________ test_dense_calibration_rejects_invalid_duration_target[0.0] __________
+
+minimum = 0.0
+
+    @pytest.mark.parametrize('minimum', [0., -.1, float('nan'), float('inf')])
+    def test_dense_calibration_rejects_invalid_duration_target(minimum):
+        with pytest.raises(ValueError):
+>           driver().choose_block_length(lambda n: .5, 1, minimum_s=minimum)
+E           TypeError: choose_block_length() got an unexpected keyword argument 'minimum_s'
+
+tests/test_dw_sampling_protocol.py:213: TypeError
+_________ test_dense_calibration_rejects_invalid_duration_target[-0.1] _________
+
+minimum = -0.1
+
+    @pytest.mark.parametrize('minimum', [0., -.1, float('nan'), float('inf')])
+    def test_dense_calibration_rejects_invalid_duration_target(minimum):
+        with pytest.raises(ValueError):
+>           driver().choose_block_length(lambda n: .5, 1, minimum_s=minimum)
+E           TypeError: choose_block_length() got an unexpected keyword argument 'minimum_s'
+
+tests/test_dw_sampling_protocol.py:213: TypeError
+_________ test_dense_calibration_rejects_invalid_duration_target[nan] __________
+
+minimum = nan
+
+    @pytest.mark.parametrize('minimum', [0., -.1, float('nan'), float('inf')])
+    def test_dense_calibration_rejects_invalid_duration_target(minimum):
+        with pytest.raises(ValueError):
+>           driver().choose_block_length(lambda n: .5, 1, minimum_s=minimum)
+E           TypeError: choose_block_length() got an unexpected keyword argument 'minimum_s'
+
+tests/test_dw_sampling_protocol.py:213: TypeError
+_________ test_dense_calibration_rejects_invalid_duration_target[inf] __________
+
+minimum = inf
+
+    @pytest.mark.parametrize('minimum', [0., -.1, float('nan'), float('inf')])
+    def test_dense_calibration_rejects_invalid_duration_target(minimum):
+        with pytest.raises(ValueError):
+>           driver().choose_block_length(lambda n: .5, 1, minimum_s=minimum)
+E           TypeError: choose_block_length() got an unexpected keyword argument 'minimum_s'
+
+tests/test_dw_sampling_protocol.py:213: TypeError
+______ test_fastest_supported_native_uses_median_despite_unstable_warmup _______
+
+    def test_fastest_supported_native_uses_median_despite_unstable_warmup():
+        d = driver()
+        variants = {
+            'single': {'status': 'pass', 'warmup': {'stable': True}, 'pilot_s': [.3, .3, .3]},
+            'fused': {'status': 'pass', 'warmup': {'stable': False}, 'pilot_s': [.1, .1, 10.]},
+            'foreach': {'status': 'unsupported', 'reason': 'unsupported native implementation'},
+        }
+>       assert d.select_native_variant(variants) == 'fused'
+               ^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'dw_sampling_driver' has no attribute 'select_native_variant'
+
+tests/test_dw_sampling_protocol.py:223: AttributeError
+___ test_storage_guard_allows_nullable_output_ceiling_but_keeps_disk_reserve ___
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2452/test_storage_guard_allows_null0')
+
+    def test_storage_guard_allows_nullable_output_ceiling_but_keeps_disk_reserve(tmp_path):
+        d = driver()
+        (tmp_path/'raw').write_bytes(b'abc')
+        cfg = {'resources': {'minimum_free_disk_bytes': 0, 'maximum_output_bytes': None}}
+>       assert d.storage_guard(cfg, tmp_path)['run_output_bytes'] == 3
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_dw_sampling_protocol.py:232: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cfg = {'resources': {'minimum_free_disk_bytes': 0, 'maximum_output_bytes': None}}
+out = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2452/test_storage_guard_allows_null0')
+
+    def storage_guard(cfg, out):
+        free = shutil.disk_usage(out).free
+        used = sum(p.stat().st_size for p in Path(out).rglob('*') if p.is_file())
+>       if free < cfg['resources']['minimum_free_disk_bytes'] or used > cfg['resources']['maximum_output_bytes']:
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: '>' not supported between instances of 'int' and 'NoneType'
+
+analysis/run_dw_sampling.py:309: TypeError
+______ test_forecast_uses_uncapped_count_current_target_and_two_sessions _______
+
+    def test_forecast_uses_uncapped_count_current_target_and_two_sessions():
+        d = driver()
+        cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
+        calibration = [{'shape': cfg['shapes'][0], 'native_complete_step_s': [.001, .002, .001]}]
+        result = d.forecast_stage(cfg, calibration, 'feasibility')
+        assert result['sessions'] == 2
+>       assert result['deadline_s'] is None
+E       assert 1608.3360000000002 is None
+
+tests/test_dw_sampling_protocol.py:247: AssertionError
+_____________ test_unstable_warmup_retains_pairs_and_charged_setup _____________
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2452/test_unstable_warmup_retains_p0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11305eb10>
+
+    def test_unstable_warmup_retains_pairs_and_charged_setup(tmp_path, monkeypatch):
+        import torch
+        import oar.timing
+        d = driver()
+        cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
+        monkeypatch.setattr(torch.mps, 'synchronize', lambda: None)
+        monkeypatch.setattr(oar.timing, 'warmup', lambda operation, sync, **kwargs: {'stable': False, 'raw_s': [.1, .4]})
+        def measure(operation, sync, blocks):
+            operation()
+            return [1.]*blocks
+        monkeypatch.setattr(oar.timing, 'measure_blocks', measure)
+        class CPUFixture:
+            sampling_setup_s = 3.
+            def restore(self, common):
+                self.updates = common['updates']
+            def step(self):
+                self.updates += 1
+        path = tmp_path/'pairs.jsonl'
+>       result = d.timed_pairs(cfg, CPUFixture(), CPUFixture(), {'updates': 8}, 2, 42, path)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_dw_sampling_protocol.py:275: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cfg = {'schema_version': 2, 'experiment': 'fixed_budget_norm_importance_dw', 'reviewed_head': '9d8ad069c51b4d0e6c13e9c6e465579e9b44a339', 'device': 'mps', ...}
+dense = <test_dw_sampling_protocol.test_unstable_warmup_retains_pairs_and_charged_setup.<locals>.CPUFixture object at 0x112f4dd30>
+candidate = <test_dw_sampling_protocol.test_unstable_warmup_retains_pairs_and_charged_setup.<locals>.CPUFixture object at 0x1131202d0>
+common = {'updates': 8}, updates = 2, seed = 42
+raw_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2452/test_unstable_warmup_retains_p0/pairs.jsonl')
+
+    def timed_pairs(cfg, dense, candidate, common, updates, seed, raw_path=None):
+        import torch
+        from oar.timing import warmup, measure_blocks
+        fixtures = {'dense': dense, 'candidate': candidate}
+        sync, resets = torch.mps.synchronize, []
+        def restore(f):
+            start = time.perf_counter()
+            f.restore(common)
+            sync()
+            resets.append(time.perf_counter()-start)
+        def block(f):
+            for _ in range(updates):
+                f.step()
+        warming = {}
+        # Common initialization/moment history; no arm inherits another warmup.
+        for name, f in fixtures.items():
+            restore(f)
+            warming[name] = warmup(lambda: block(f), sync, **cfg['timing']['warmup'])
+        if raw_path:
+            write_json(Path(raw_path).with_suffix('.warmup.json'), warming)
+            Path(raw_path).open('x').close()
+        if not all(w['stable'] for w in warming.values()):
+>           raise MeasurementInvalid('failed_warmup', 'comparison arm warmup unstable; no paired timing started')
+E           dw_sampling_driver.MeasurementInvalid: comparison arm warmup unstable; no paired timing started
+
+analysis/run_dw_sampling.py:627: MeasurementInvalid
+_ test_stage_uses_only_declared_noise_shapes_without_warmup_veto_or_replacement[0.01] _
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2452/test_stage_uses_only_declared_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11305dcd0>
+noise = 0.01
+
+    @pytest.mark.parametrize('noise', [.01, .12])
+    def test_stage_uses_only_declared_noise_shapes_without_warmup_veto_or_replacement(tmp_path, monkeypatch, noise):
+        d = driver()
+        cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
+        qualification = tmp_path/'qualification.json'
+        qualification.write_text(json.dumps({'native_resource_calibration': [
+            {'shape': s, 'native_complete_step_s': [.01, .01, .01]} for s in cfg['shapes']]}))
+        monkeypatch.setattr(d, 'source_hashes', lambda stage: {})
+        monkeypatch.setattr(d, 'require_stage', lambda *args: {'qualification': str(qualification)})
+        def cpu_worker(attempt, args, *, timeout, env):
+            request = json.loads(Path(args[-1]).read_text())
+            assert timeout is None and request['deadline_s'] is None
+            shapes = []
+            for shape in cfg['shapes']:
+                error = noise if shape['id'] in ('middle2048', 'middle4096') else .9
+                comparison = {'warmup': {'dense': {'stable': False, 'raw_s': [.1, .3]},
+                                         'candidate': {'stable': False, 'raw_s': [.1, .3]}},
+                              'pairs': [{'seconds': {'dense': 1+error, 'candidate': 1.}}]*30,
+                              'statistics': {'ci95': [.4, .5]}}
+                shapes.append({'shape': shape, 'comparisons': {'AA': comparison, 'zero': comparison}})
+            d.write_json(request['result'], {'status': 'pass', 'session': request['session'], 'shapes': shapes})
+            return 0, '', ''
+        monkeypatch.setattr(d, 'command', cpu_worker)
+        attempt = d.allocate_attempt(tmp_path, 'feasibility')
+>       result = d.hardware_stage(cfg, ROOT/'configs/dw_sampling.yaml', tmp_path, attempt, 'feasibility')
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_dw_sampling_protocol.py:308: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cfg = {'schema_version': 2, 'experiment': 'fixed_budget_norm_importance_dw', 'reviewed_head': '9d8ad069c51b4d0e6c13e9c6e465579e9b44a339', 'device': 'mps', ...}
+config = PosixPath('/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/configs/dw_sampling.yaml')
+out = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2452/test_stage_uses_only_declared_0')
+attempt = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2452/test_stage_uses_only_declared_0/feasibility/attempt-0001')
+kind = 'feasibility'
+
+    def hardware_stage(cfg, config, out, attempt, kind):
+        bindings = source_hashes(kind)
+        prepared = require_stage(out, 'prepare', bindings)
+        qualification = json.loads(Path(prepared['qualification']).read_text())
+        calibration = qualification['native_resource_calibration']
+        baseline = None
+        if kind == 'cost':
+            feasibility = require_stage(out, 'feasibility', bindings)
+            require_stage(out, 'correctness', bindings)
+            baseline = feasibility
+        forecast = forecast_stage(cfg, calibration, kind)
+        if kind == 'cost':
+            forecast['forecast_s'] += 300
+            forecast['deadline_s'] = 2*forecast['forecast_s']
+        write_json(attempt/'resource_forecast.json', forecast)
+>       if forecast['deadline_s'] > cfg['resources']['maximum_stage_s']:
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: '>' not supported between instances of 'float' and 'NoneType'
+
+analysis/run_dw_sampling.py:895: TypeError
+_ test_stage_uses_only_declared_noise_shapes_without_warmup_veto_or_replacement[0.12] _
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2452/test_stage_uses_only_declared_1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1130317f0>
+noise = 0.12
+
+    @pytest.mark.parametrize('noise', [.01, .12])
+    def test_stage_uses_only_declared_noise_shapes_without_warmup_veto_or_replacement(tmp_path, monkeypatch, noise):
+        d = driver()
+        cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
+        qualification = tmp_path/'qualification.json'
+        qualification.write_text(json.dumps({'native_resource_calibration': [
+            {'shape': s, 'native_complete_step_s': [.01, .01, .01]} for s in cfg['shapes']]}))
+        monkeypatch.setattr(d, 'source_hashes', lambda stage: {})
+        monkeypatch.setattr(d, 'require_stage', lambda *args: {'qualification': str(qualification)})
+        def cpu_worker(attempt, args, *, timeout, env):
+            request = json.loads(Path(args[-1]).read_text())
+            assert timeout is None and request['deadline_s'] is None
+            shapes = []
+            for shape in cfg['shapes']:
+                error = noise if shape['id'] in ('middle2048', 'middle4096') else .9
+                comparison = {'warmup': {'dense': {'stable': False, 'raw_s': [.1, .3]},
+                                         'candidate': {'stable': False, 'raw_s': [.1, .3]}},
+                              'pairs': [{'seconds': {'dense': 1+error, 'candidate': 1.}}]*30,
+                              'statistics': {'ci95': [.4, .5]}}
+                shapes.append({'shape': shape, 'comparisons': {'AA': comparison, 'zero': comparison}})
+            d.write_json(request['result'], {'status': 'pass', 'session': request['session'], 'shapes': shapes})
+            return 0, '', ''
+        monkeypatch.setattr(d, 'command', cpu_worker)
+        attempt = d.allocate_attempt(tmp_path, 'feasibility')
+>       result = d.hardware_stage(cfg, ROOT/'configs/dw_sampling.yaml', tmp_path, attempt, 'feasibility')
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_dw_sampling_protocol.py:308: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cfg = {'schema_version': 2, 'experiment': 'fixed_budget_norm_importance_dw', 'reviewed_head': '9d8ad069c51b4d0e6c13e9c6e465579e9b44a339', 'device': 'mps', ...}
+config = PosixPath('/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/configs/dw_sampling.yaml')
+out = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2452/test_stage_uses_only_declared_1')
+attempt = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2452/test_stage_uses_only_declared_1/feasibility/attempt-0001')
+kind = 'feasibility'
+
+    def hardware_stage(cfg, config, out, attempt, kind):
+        bindings = source_hashes(kind)
+        prepared = require_stage(out, 'prepare', bindings)
+        qualification = json.loads(Path(prepared['qualification']).read_text())
+        calibration = qualification['native_resource_calibration']
+        baseline = None
+        if kind == 'cost':
+            feasibility = require_stage(out, 'feasibility', bindings)
+            require_stage(out, 'correctness', bindings)
+            baseline = feasibility
+        forecast = forecast_stage(cfg, calibration, kind)
+        if kind == 'cost':
+            forecast['forecast_s'] += 300
+            forecast['deadline_s'] = 2*forecast['forecast_s']
+        write_json(attempt/'resource_forecast.json', forecast)
+>       if forecast['deadline_s'] > cfg['resources']['maximum_stage_s']:
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: '>' not supported between instances of 'float' and 'NoneType'
+
+analysis/run_dw_sampling.py:895: TypeError
+____ test_cost_session_recalibrates_baseline_only_and_keeps_shape_order[0] _____
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2452/test_cost_session_recalibrates0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x112f43680>
+session = 0
+
+    @pytest.mark.parametrize('session', [0, 1])
+    def test_cost_session_recalibrates_baseline_only_and_keeps_shape_order(tmp_path, monkeypatch, session):
+        import torch
+        import oar.hardware
+        import oar.timing
+        d = driver()
+        cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
+        monkeypatch.setattr(torch.mps, 'synchronize', lambda: None)
+        monkeypatch.setattr(torch.mps, 'recommended_max_memory', lambda: 10**14)
+        monkeypatch.setattr(oar.hardware, 'resource_snapshot', lambda device: {
+            'physical_memory_bytes': 10**14, 'available_memory_bytes': 10**14})
+        # CPU fixture performs real reset/update counting; only device allocation
+        # and elapsed-time measurement are replaced at the hardware boundary.
+        class CPUFixture:
+            elapsed = 0.
+            def __init__(self, cfg, shape, variant='single', mode='dense', rho=.25, session=0):
+                self.mode, self.updates, self.states = mode, 0, {}
+                self.sampling_setup_s = 0.
+            def step(self):
+                self.updates += 1
+                CPUFixture.elapsed += .001 if self.mode == 'dense' else .0005
+            def snapshot(self):
+                return {'updates': self.updates, 'sampling': {}}
+            def restore(self, common):
+                self.updates = common['updates']
+        def measure(operation, sync, blocks):
+            raw = []
+            for _ in range(blocks):
+                start = CPUFixture.elapsed
+                operation()
+                raw.append(CPUFixture.elapsed-start)
+            return raw
+        monkeypatch.setattr(d, 'Fixture', CPUFixture)
+        monkeypatch.setattr(d, 'state_streams', lambda f: {'test_cpu_updates': f.updates})
+        monkeypatch.setattr(oar.timing, 'measure_blocks', measure)
+        monkeypatch.setattr(oar.timing, 'warmup', lambda *args, **kwargs: {'stable': False, 'raw_s': [.1, .4]})
+        request = {'session': session, 'kind': 'cost', 'deadline_s': None, 'result': str(tmp_path/'session.json'),
+                   'calibration': [{'shape': s, 'native_complete_step_s': [.001]*3} for s in cfg['shapes']],
+                   'baseline': {'shapes': [{'shape': s, 'selected_variant': 'single', 'variants': {},
+                                            'updates_per_block': 3} for s in cfg['shapes']]}}
+>       result = d.cost_session(cfg, request)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_dw_sampling_protocol.py:359: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cfg = {'schema_version': 2, 'experiment': 'fixed_budget_norm_importance_dw', 'reviewed_head': '9d8ad069c51b4d0e6c13e9c6e465579e9b44a339', 'device': 'mps', ...}
+request = {'session': 0, 'kind': 'cost', 'deadline_s': None, 'result': '/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2452/test_cost_session_recalibrates0/session.json', ...}
+
+    def cost_session(cfg, request):
+        import torch
+        from oar.hardware import resource_snapshot
+        from oar.sampled_linear import named_seed
+        started = time.perf_counter()
+        session, kind = request['session'], request['kind']
+>       deadline = started+request['deadline_s']
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: unsupported operand type(s) for +: 'float' and 'NoneType'
+
+analysis/run_dw_sampling.py:668: TypeError
+____ test_cost_session_recalibrates_baseline_only_and_keeps_shape_order[1] _____
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2452/test_cost_session_recalibrates1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1156c97b0>
+session = 1
+
+    @pytest.mark.parametrize('session', [0, 1])
+    def test_cost_session_recalibrates_baseline_only_and_keeps_shape_order(tmp_path, monkeypatch, session):
+        import torch
+        import oar.hardware
+        import oar.timing
+        d = driver()
+        cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
+        monkeypatch.setattr(torch.mps, 'synchronize', lambda: None)
+        monkeypatch.setattr(torch.mps, 'recommended_max_memory', lambda: 10**14)
+        monkeypatch.setattr(oar.hardware, 'resource_snapshot', lambda device: {
+            'physical_memory_bytes': 10**14, 'available_memory_bytes': 10**14})
+        # CPU fixture performs real reset/update counting; only device allocation
+        # and elapsed-time measurement are replaced at the hardware boundary.
+        class CPUFixture:
+            elapsed = 0.
+            def __init__(self, cfg, shape, variant='single', mode='dense', rho=.25, session=0):
+                self.mode, self.updates, self.states = mode, 0, {}
+                self.sampling_setup_s = 0.
+            def step(self):
+                self.updates += 1
+                CPUFixture.elapsed += .001 if self.mode == 'dense' else .0005
+            def snapshot(self):
+                return {'updates': self.updates, 'sampling': {}}
+            def restore(self, common):
+                self.updates = common['updates']
+        def measure(operation, sync, blocks):
+            raw = []
+            for _ in range(blocks):
+                start = CPUFixture.elapsed
+                operation()
+                raw.append(CPUFixture.elapsed-start)
+            return raw
+        monkeypatch.setattr(d, 'Fixture', CPUFixture)
+        monkeypatch.setattr(d, 'state_streams', lambda f: {'test_cpu_updates': f.updates})
+        monkeypatch.setattr(oar.timing, 'measure_blocks', measure)
+        monkeypatch.setattr(oar.timing, 'warmup', lambda *args, **kwargs: {'stable': False, 'raw_s': [.1, .4]})
+        request = {'session': session, 'kind': 'cost', 'deadline_s': None, 'result': str(tmp_path/'session.json'),
+                   'calibration': [{'shape': s, 'native_complete_step_s': [.001]*3} for s in cfg['shapes']],
+                   'baseline': {'shapes': [{'shape': s, 'selected_variant': 'single', 'variants': {},
+                                            'updates_per_block': 3} for s in cfg['shapes']]}}
+>       result = d.cost_session(cfg, request)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_dw_sampling_protocol.py:359: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cfg = {'schema_version': 2, 'experiment': 'fixed_budget_norm_importance_dw', 'reviewed_head': '9d8ad069c51b4d0e6c13e9c6e465579e9b44a339', 'device': 'mps', ...}
+request = {'session': 1, 'kind': 'cost', 'deadline_s': None, 'result': '/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2452/test_cost_session_recalibrates1/session.json', ...}
+
+    def cost_session(cfg, request):
+        import torch
+        from oar.hardware import resource_snapshot
+        from oar.sampled_linear import named_seed
+        started = time.perf_counter()
+        session, kind = request['session'], request['kind']
+>       deadline = started+request['deadline_s']
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: unsupported operand type(s) for +: 'float' and 'NoneType'
+
+analysis/run_dw_sampling.py:668: TypeError
+=========================== short test summary info ============================
+FAILED tests/test_dw_sampling_protocol.py::test_configuration_rejects_changed_protected_protocol_and_unknown_fields
+FAILED tests/test_dw_sampling_protocol.py::test_geometric_paired_estimator_and_noise_threshold
+FAILED tests/test_dw_sampling_protocol.py::test_shared_deadline_never_restarts_for_later_commands
+FAILED tests/test_dw_sampling_protocol.py::test_selected_dense_block_exceeds_100_updates_and_reaches_measured_minimum
+FAILED tests/test_dw_sampling_protocol.py::test_dense_calibration_has_no_fixed_iteration_limit_and_honors_target
+FAILED tests/test_dw_sampling_protocol.py::test_dense_calibration_rejects_nonpositive_or_noninteger_initial[0]
+FAILED tests/test_dw_sampling_protocol.py::test_dense_calibration_rejects_nonpositive_or_noninteger_initial[-1]
+FAILED tests/test_dw_sampling_protocol.py::test_dense_calibration_rejects_nonpositive_or_noninteger_initial[1.2]
+FAILED tests/test_dw_sampling_protocol.py::test_dense_calibration_rejects_nonpositive_or_noninteger_initial[True]
+FAILED tests/test_dw_sampling_protocol.py::test_dense_calibration_rejects_nonpositive_or_noninteger_initial[inf]
+FAILED tests/test_dw_sampling_protocol.py::test_dense_calibration_rejects_invalid_duration_target[0.0]
+FAILED tests/test_dw_sampling_protocol.py::test_dense_calibration_rejects_invalid_duration_target[-0.1]
+FAILED tests/test_dw_sampling_protocol.py::test_dense_calibration_rejects_invalid_duration_target[nan]
+FAILED tests/test_dw_sampling_protocol.py::test_dense_calibration_rejects_invalid_duration_target[inf]
+FAILED tests/test_dw_sampling_protocol.py::test_fastest_supported_native_uses_median_despite_unstable_warmup
+FAILED tests/test_dw_sampling_protocol.py::test_storage_guard_allows_nullable_output_ceiling_but_keeps_disk_reserve
+FAILED tests/test_dw_sampling_protocol.py::test_forecast_uses_uncapped_count_current_target_and_two_sessions
+FAILED tests/test_dw_sampling_protocol.py::test_unstable_warmup_retains_pairs_and_charged_setup
+FAILED tests/test_dw_sampling_protocol.py::test_stage_uses_only_declared_noise_shapes_without_warmup_veto_or_replacement[0.01]
+FAILED tests/test_dw_sampling_protocol.py::test_stage_uses_only_declared_noise_shapes_without_warmup_veto_or_replacement[0.12]
+FAILED tests/test_dw_sampling_protocol.py::test_cost_session_recalibrates_baseline_only_and_keeps_shape_order[0]
+FAILED tests/test_dw_sampling_protocol.py::test_cost_session_recalibrates_baseline_only_and_keeps_shape_order[1]
+22 failed, 15 passed, 1 deselected in 2.25s

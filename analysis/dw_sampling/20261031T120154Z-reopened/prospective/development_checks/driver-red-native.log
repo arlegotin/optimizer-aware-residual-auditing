@@ -1,0 +1,95 @@
+FFF.                                                                     [100%]
+=================================== FAILURES ===================================
+___ test_native_qualification_retains_seeded_pilot_order_and_raw_diagnostics ___
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x108514180>
+
+    def test_native_qualification_retains_seeded_pilot_order_and_raw_diagnostics(monkeypatch):
+        import torch
+        import oar.timing
+        d = driver()
+        cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
+        class CPUFixture:
+            last_variant = None
+            def __init__(self, cfg, shape, variant, session):
+                self.variant = variant
+                self.p = {'p': torch.nn.Parameter(torch.tensor([1., -2.]))}
+                options = {} if variant == 'default' else {'foreach': variant == 'foreach', 'fused': variant == 'fused'}
+                self.opt = torch.optim.AdamW(list(self.p.values()), lr=.001, **options)
+            def step(self):
+                CPUFixture.last_variant = self.variant
+                self.p['p'].grad = torch.tensor([.1, -.2])
+                self.opt.step()
+        def warmup(operation, sync, **kwargs):
+            operation()
+            return {'stable': False, 'raw_s': [.1, .4]}
+        def measure(operation, sync, blocks):
+            operation()
+            return [.1, .1, 10.] if CPUFixture.last_variant == 'fused' else [.3, .3, .3]
+        monkeypatch.setattr(d, 'Fixture', CPUFixture)
+        monkeypatch.setattr(torch.mps, 'synchronize', lambda: None)
+        monkeypatch.setattr(oar.timing, 'warmup', warmup)
+        monkeypatch.setattr(oar.timing, 'measure_blocks', measure)
+        orders, seeds = [], []
+        for session in (0, 1):
+            selected, results = d.native_variant_qualification(cfg, cfg['shapes'][0], session, 1)
+            assert selected == 'fused'
+            assert all(v['status'] == 'pass' and not v['warmup']['stable'] for v in results.values())
+            assert results['fused']['pilot_s'] == [.1, .1, 10.]
+            assert all(v['pilot_order'] == list(results) for v in results.values())
+            orders.append(list(results))
+            seeds.append(results['fused']['order_seed'])
+        assert seeds[0] != seeds[1]
+>       assert orders[0] != orders[1]
+E       AssertionError: assert ['foreach', 'single', 'fused', 'default'] != ['foreach', 'single', 'fused', 'default']
+
+tests/test_dw_sampling_protocol.py:266: AssertionError
+_ test_native_qualification_does_not_hide_invalid_gradient_or_device_failure[non-finite gradient requires repair] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1111d0640>
+failure = 'non-finite gradient requires repair'
+
+    @pytest.mark.parametrize('failure', ['non-finite gradient requires repair', 'MPS device error: unsupported command buffer'])
+    def test_native_qualification_does_not_hide_invalid_gradient_or_device_failure(monkeypatch, failure):
+        d = driver()
+        cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
+        class BrokenFixture:
+            def __init__(self, *args, **kwargs):
+                pass
+            def step(self):
+                raise RuntimeError(failure)
+        monkeypatch.setattr(d, 'Fixture', BrokenFixture)
+>       with pytest.raises(RuntimeError, match=failure):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'non-finite gradient requires repair'
+E         Actual message: 'no qualified native AdamW variant'
+
+tests/test_dw_sampling_protocol.py:279: AssertionError
+_ test_native_qualification_does_not_hide_invalid_gradient_or_device_failure[MPS device error: unsupported command buffer] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x111280950>
+failure = 'MPS device error: unsupported command buffer'
+
+    @pytest.mark.parametrize('failure', ['non-finite gradient requires repair', 'MPS device error: unsupported command buffer'])
+    def test_native_qualification_does_not_hide_invalid_gradient_or_device_failure(monkeypatch, failure):
+        d = driver()
+        cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
+        class BrokenFixture:
+            def __init__(self, *args, **kwargs):
+                pass
+            def step(self):
+                raise RuntimeError(failure)
+        monkeypatch.setattr(d, 'Fixture', BrokenFixture)
+>       with pytest.raises(RuntimeError, match=failure):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'MPS device error: unsupported command buffer'
+E         Actual message: 'no qualified native AdamW variant'
+
+tests/test_dw_sampling_protocol.py:279: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_dw_sampling_protocol.py::test_native_qualification_retains_seeded_pilot_order_and_raw_diagnostics
+FAILED tests/test_dw_sampling_protocol.py::test_native_qualification_does_not_hide_invalid_gradient_or_device_failure[non-finite gradient requires repair]
+FAILED tests/test_dw_sampling_protocol.py::test_native_qualification_does_not_hide_invalid_gradient_or_device_failure[MPS device error: unsupported command buffer]
+3 failed, 1 passed, 38 deselected in 1.19s

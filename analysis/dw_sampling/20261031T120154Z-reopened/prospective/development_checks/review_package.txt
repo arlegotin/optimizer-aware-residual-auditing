@@ -1,0 +1,1204 @@
+diff --git a/analysis/run_dw_sampling.py b/analysis/run_dw_sampling.py
+index 4b9ec39..db22c36 100644
+--- a/analysis/run_dw_sampling.py
++++ b/analysis/run_dw_sampling.py
+@@ -27,9 +27,10 @@ import traceback
+ 
+ ROOT = Path(__file__).resolve().parents[1]
+ REVIEWED = '9d8ad069c51b4d0e6c13e9c6e465579e9b44a339'
+-PROTOCOL = '0df9d6d98acb26ff2017984467e543910f33b83566bdd3272c236559dec61259'
++PROTOCOL = 'f407dd2d636c078bd7e2f79112ea31b665636d42cf818d3f6f835b4a39ab2a80'
+ STAGES = ('prepare', 'feasibility', 'correctness', 'cost', 'pilot', 'confirm', 'summarize')
+ CORE = ('analysis/run_dw_sampling.py', 'configs/dw_sampling.yaml', 'decisions/dw_sampling_scope.md',
++        'decisions/dw_sampling_reopening.md',
+         'src/oar/timing.py', 'src/oar/hardware.py')
+ SAMPLED = ('src/oar/sampled_linear.py', 'tests/test_sampled_linear.py', 'tests/test_dw_sampling_protocol.py')
+ HISTORICAL = ('decisions/gates.jsonl', 'decisions/amendments.jsonl', 'manifests/assets.json',
+@@ -170,12 +171,14 @@ def paired_ratio(dense, candidate):
+             'pairs': len(z), 'analysis_seed': 62001, 'bootstrap_replicates': 10000, 'unit': 'timing block, not training seed'}
+ 
+ 
+-def freeze_delta(absolute_aa_errors):
++def freeze_delta(absolute_aa_errors, *, floor=0.0):
+     import numpy as np
+     values = np.asarray(absolute_aa_errors, dtype=np.float64)
+-    if not len(values) or not np.isfinite(values).all() or (values < 0).any():
++    if values.ndim != 1 or not len(values) or not np.isfinite(values).all() or (values < 0).any():
+         raise ValueError('invalid A/A observations')
+-    return max(.05, 2*float(np.quantile(values, .95, method='linear')))
++    if not math.isfinite(floor) or floor < 0:
++        raise ValueError('invalid noise threshold floor')
++    return max(floor, 2*float(np.quantile(values, .95, method='linear')))
+ 
+ 
+ _zero_type = None
+@@ -247,6 +250,8 @@ def pin_mismatches(lock_text, installed):
+ 
+ 
+ def remaining_timeout(deadline, *, clock=time.perf_counter):
++    if deadline is None:
++        return None
+     remaining = deadline-clock()
+     if remaining <= 0:
+         raise TimeoutError('shared prospective stage deadline reached')
+@@ -306,22 +311,26 @@ def competing_processes():
+ def storage_guard(cfg, out):
+     free = shutil.disk_usage(out).free
+     used = sum(p.stat().st_size for p in Path(out).rglob('*') if p.is_file())
+-    if free < cfg['resources']['minimum_free_disk_bytes'] or used > cfg['resources']['maximum_output_bytes']:
++    maximum = cfg['resources']['maximum_output_bytes']
++    if free < cfg['resources']['minimum_free_disk_bytes'] or (maximum is not None and used > maximum):
+         raise MemoryError('prospective disk reserve/output allowance exceeded')
+     return {'free_disk_bytes': free, 'run_output_bytes': used}
+ 
+ 
+-def choose_block_length(measure_for_count, initial):
++def choose_block_length(measure_for_count, initial, *, minimum_s=.5):
++    if type(initial) is not int or initial <= 0:
++        raise ValueError('initial dense block length must be a positive integer')
++    if not math.isfinite(minimum_s) or minimum_s <= 0:
++        raise ValueError('minimum dense block duration must be finite and positive')
+     count, observations = initial, []
+-    for _ in range(100):
++    while True:
+         seconds = measure_for_count(count)
+         if not math.isfinite(seconds) or seconds <= 0:
+             raise ValueError('invalid dense block duration')
+         observations.append({'updates': count, 'seconds': seconds})
+-        if seconds >= .2 or count == 100:
++        if seconds >= minimum_s:
+             return count, observations
+-        count = min(100, max(count+1, math.ceil(count*.2/seconds)))
+-    raise RuntimeError('dense block calibration did not terminate')
++        count = max(count+1, math.ceil(count*minimum_s/seconds))
+ 
+ 
+ def dependency_inventory():
+@@ -493,7 +502,8 @@ def prepare(cfg, config, out, attempt):
+     started = time.perf_counter()
+     forecast = cfg['resources']['qualification_forecast_s']
+     deadline = started+2*forecast
+-    write_json(attempt/'resource_forecast.json', {'forecast_s': forecast, 'deadline_s': 2*forecast, 'maximum_output_bytes': 268435456})
++    write_json(attempt/'resource_forecast.json', {'forecast_s': forecast, 'deadline_s': 2*forecast,
++               'maximum_output_bytes': cfg['resources']['maximum_output_bytes']})
+     env = environment(cfg)
+     write_json(attempt/'dependencies.json', dependency_inventory())
+     remaining_timeout(deadline)
+@@ -576,11 +586,31 @@ def assert_native_equivalent(parameters, optimizer, reference_parameters, refere
+                 torch.testing.assert_close(actual_state, reference_state, rtol=1e-4, atol=1e-6)
+ 
+ 
++def select_native_variant(results):
++    """Choose baseline-only median speed; warmup stability is diagnostic."""
++    from statistics import median
++    supported = {variant: row for variant, row in results.items() if row['status'] == 'pass'}
++    if not supported:
++        raise RuntimeError('no qualified native AdamW variant')
++    for row in supported.values():
++        raw = row['pilot_s']
++        if not raw or any(not math.isfinite(seconds) or seconds <= 0 for seconds in raw):
++            raise ValueError('invalid native pilot duration')
++    return min(supported, key=lambda variant: median(supported[variant]['pilot_s']))
++
++
+ def native_variant_qualification(cfg, shape, session, updates):
+     import torch
++    from statistics import median
++    from oar.sampled_linear import named_seed
+     from oar.timing import warmup, measure_blocks
+-    results, supported = {}, []
+-    for variant in cfg['timing']['native_variants']:
++    results = {}
++    order_seed = named_seed(cfg['seed'], 'order', 'feasibility', str(session), shape['id'], 'native_variants')
++    order = list(cfg['timing']['native_variants'])
++    random.Random(order_seed).shuffle(order)
++    if session % 2:
++        order.reverse()
++    for variant in order:
+         try:
+             actual, reference = Fixture(cfg, shape, variant, session=session), Fixture(cfg, shape, 'single', session=session)
+             for _ in range(5):
+@@ -592,14 +622,22 @@ def native_variant_qualification(cfg, shape, session, updates):
+                     actual.step()
+             w = warmup(block, torch.mps.synchronize, **cfg['timing']['warmup'])
+             raw = measure_blocks(block, torch.mps.synchronize, 3)
+-            results[variant] = {'status': 'pass', 'warmup': w, 'pilot_s': raw, 'mean_s': sum(raw)/len(raw)}
+-            supported.append(variant)
++            results[variant] = {'status': 'pass', 'warmup': w, 'pilot_s': raw, 'mean_s': sum(raw)/len(raw),
++                                'median_s': median(raw), 'pilot_order': order, 'order_seed': order_seed}
+         except (RuntimeError, NotImplementedError, AssertionError) as exc:
+-            results[variant] = {'status': 'unsupported', 'reason': str(exc), 'exception': type(exc).__name__}
+-    if not supported:
+-        raise RuntimeError('no qualified native AdamW variant')
+-    selected = None if any(not results[v]['warmup']['stable'] for v in supported) else min(supported, key=lambda v: results[v]['mean_s'])
+-    return selected, results
++            # Unsupported kernels/options or numerical disagreement disqualify
++            # a native implementation; actual execution/device failures do not
++            # become a reason to silently choose a different implementation.
++            message = str(exc).lower()
++            fatal = any(word in message for word in ('non-finite', 'nonfinite', 'invalid gradient', 'probabil',
++                        'device error', 'command buffer', 'out of memory', 'allocation'))
++            unsupported = not fatal and (isinstance(exc, (NotImplementedError, AssertionError)) or any(
++                word in message for word in ('not supported', 'unsupported', 'not implemented', 'fused=true requires')))
++            if not unsupported:
++                raise
++            results[variant] = {'status': 'unsupported', 'reason': str(exc), 'exception': type(exc).__name__,
++                                'pilot_order': order, 'order_seed': order_seed}
++    return select_native_variant(results), results
+ 
+ 
+ def timed_pairs(cfg, dense, candidate, common, updates, seed, raw_path=None):
+@@ -623,8 +661,6 @@ def timed_pairs(cfg, dense, candidate, common, updates, seed, raw_path=None):
+     if raw_path:
+         write_json(Path(raw_path).with_suffix('.warmup.json'), warming)
+         Path(raw_path).open('x').close()
+-    if not all(w['stable'] for w in warming.values()):
+-        raise MeasurementInvalid('failed_warmup', 'comparison arm warmup unstable; no paired timing started')
+     rows, rng = [], random.Random(seed)
+     for pair in range(cfg['timing']['pairs']):
+         order = list(fixtures)
+@@ -665,16 +701,14 @@ def cost_session(cfg, request):
+     from oar.sampled_linear import named_seed
+     started = time.perf_counter()
+     session, kind = request['session'], request['kind']
+-    deadline = started+request['deadline_s']
++    deadline = None if request['deadline_s'] is None else started+request['deadline_s']
+     results = {'session': session, 'kind': kind, 'start_utc': utc(), 'shapes': [], 'resources_before': resource_snapshot('mps')}
+     result_path = Path(request['result'])
+     def check_deadline():
+-        if time.perf_counter() > deadline:
++        if deadline is not None and time.perf_counter() > deadline:
+             raise TimeoutError('prospectively bound complete session deadline exceeded')
+     try:
+         shapes = list(cfg['shapes'])
+-        if session % 2:
+-            shapes.reverse()
+         for shape in shapes:
+             check_deadline()
+             # Available memory screening precedes shape allocation; never disable
+@@ -687,41 +721,46 @@ def cost_session(cfg, request):
+                 raise MemoryError('fixed shape does not fit conservative current memory screening')
+             calibration = next(v for v in request['calibration'] if v['shape']['id'] == shape['id'])
+             step_s = min(calibration['native_complete_step_s'])
+-            updates = max(1, min(100, math.ceil(.2/step_s)))
+-            # Native-only pilot can increase block length up to the fixed cap.
+-            pilot = Fixture(cfg, shape, session=session)
++            minimum_s = cfg['timing']['minimum_block_s']
++            updates = max(1, math.ceil(minimum_s/step_s))
+             from oar.timing import measure_blocks
+-            def pilot_block():
+-                for _ in range(updates):
+-                    pilot.step()
+-            pilot_times = measure_blocks(pilot_block, torch.mps.synchronize, 3)
+-            if min(pilot_times) < .2 and updates < 100:
+-                updates = min(100, math.ceil(updates*.2/min(pilot_times)))
++            pilot_observations = []
+             if kind == 'feasibility':
++                pilot = Fixture(cfg, shape, session=session)
++                initial_raw = []
++                def measure_initial(count):
++                    def block():
++                        for _ in range(count):
++                            pilot.step()
++                    raw = measure_blocks(block, torch.mps.synchronize, 3)
++                    initial_raw.append(raw)
++                    return min(raw)
++                updates, pilot_observations = choose_block_length(measure_initial, updates, minimum_s=minimum_s)
++                for observation, raw in zip(pilot_observations, initial_raw):
++                    observation['raw_s'] = raw
++                del pilot
+                 variant, variants = native_variant_qualification(cfg, shape, session, updates)
+             else:
+                 previous = next(v for v in request['baseline']['shapes'] if v['shape']['id'] == shape['id'])
+                 variant, variants = previous['selected_variant'], previous['variants']
+                 updates = previous['updates_per_block']
+-            del pilot
+-            if variant is None:
+-                write_json(result_path.parent/(result_path.stem+'-'+shape['id']+'-native-variants.json'), variants)
+-                raise MeasurementInvalid('failed_warmup', 'native variant selection warmup unstable')
++            write_json(result_path.parent/(result_path.stem+'-'+shape['id']+'-native-variants.json'), variants)
+             dense = Fixture(cfg, shape, variant, session=session)
++            selected_raw = []
+             def measure_selected(count):
+                 def block():
+                     for _ in range(count):
+                         dense.step()
+-                return min(measure_blocks(block, torch.mps.synchronize, 3))
+-            # Block length comes from the selected strongest dense variant.
+-            # D uses the frozen B length; if it no longer qualifies, invalidate
+-            # the session rather than change the paired timing boundary.
+-            if kind == 'feasibility':
+-                updates, selected_pilot = choose_block_length(measure_selected, updates)
+-            else:
+-                selected_pilot = [{'updates': updates, 'seconds': measure_selected(updates)}]
+-                if updates < 100 and selected_pilot[-1]['seconds'] < .2:
+-                    raise MeasurementInvalid('failed_warmup', 'frozen selected-dense block is shorter than .2s')
++                raw = measure_blocks(block, torch.mps.synchronize, 3)
++                selected_raw.append(raw)
++                return min(raw)
++            # Baseline-only calibration starts at B's count in D, increasing
++            # as needed before any candidate is measured. All matched arms
++            # then use this count, including the complete native optimizer.
++            initial_updates = updates
++            updates, selected_pilot = choose_block_length(measure_selected, updates, minimum_s=minimum_s)
++            for observation, raw in zip(selected_pilot, selected_raw):
++                observation['raw_s'] = raw
+             # Calibration history is discarded; declared common history is 8.
+             del dense
+             dense = Fixture(cfg, shape, variant, session=session)
+@@ -729,8 +768,10 @@ def cost_session(cfg, request):
+                 dense.step()
+             common = dense.snapshot()
+             row = {'shape': shape, 'selected_variant': variant, 'variants': variants, 'updates_per_block': updates,
+-                   'dense_pilot_s': pilot_times, 'comparisons': {}, 'resources_before': resource,
+-                   'selected_dense_pilot': selected_pilot,
++                   'dense_pilot_s': [p['seconds'] for p in pilot_observations],
++                   'dense_pilot': pilot_observations, 'comparisons': {}, 'resources_before': resource,
++                   'selected_dense_pilot': selected_pilot, 'initial_updates_per_block': initial_updates,
++                   'minimum_block_s': minimum_s, 'baseline_only_recalibrated': updates != initial_updates,
+                    'predicted_working_set_bytes': predicted, 'streams': state_streams(dense)}
+             if kind == 'feasibility':
+                 arms = [('AA', 'dense', 1.), ('zero', 'zero', 1.)]
+@@ -775,18 +816,24 @@ def cost_session(cfg, request):
+ def forecast_stage(cfg, calibration, kind):
+     # Conservative measured native maximum; candidate components use an explicit
+     # 3x allowance, with all warmup, pairs, variants, cloning and startup included.
+-    arms = 2 if kind == 'feasibility' else 6
++    timing = cfg['timing']
++    minimum_s = timing['minimum_block_s']
++    arms = 2 if kind == 'feasibility' else len(cfg['samplers'])*len(cfg['rhos'])
+     per_shape = []
+     for row in calibration:
+         maximum = max(row['native_complete_step_s'])
+-        updates = max(1, min(100, math.ceil(.2/min(row['native_complete_step_s']))))
+-        block = max(.2, updates*maximum)
+-        blocks = arms*(2*30+2*32)+(4*(32+3) if kind == 'feasibility' else 0)
+-        per_shape.append({'shape': row['shape']['id'], 'bound_block_s': block, 'bound_blocks': blocks,
++        updates = max(1, math.ceil(minimum_s/min(row['native_complete_step_s'])))
++        block = max(minimum_s, updates*maximum)
++        blocks = arms*(2*timing['pairs']+2*timing['warmup']['maximum'])
++        blocks += len(timing['native_variants'])*(timing['warmup']['maximum']+3) if kind == 'feasibility' else 0
++        per_shape.append({'shape': row['shape']['id'], 'updates_per_block': updates,
++                          'minimum_block_s': minimum_s, 'bound_block_s': block, 'bound_blocks': blocks,
+                           'forecast_s': 3*block*blocks+128*maximum+15})
+-    forecast = 3*sum(r['forecast_s'] for r in per_shape)+60
+-    return {'kind': kind, 'sessions': 2, 'replacement_sessions_maximum': 1, 'per_shape': per_shape, 'forecast_s': forecast,
+-            'deadline_s': 2*forecast, 'includes': 'both sessions plus one possible invalid-session replacement, 3x component allowance, histories, warmup, reset, variants, startup and serialization',
++    forecast = timing['sessions']*sum(r['forecast_s'] for r in per_shape)+60
++    deadline_s = None if cfg['resources']['maximum_stage_s'] is None else cfg['resources']['deadline_multiplier']*forecast
++    return {'kind': kind, 'sessions': timing['sessions'], 'automatic_replacement_sessions': 0,
++            'per_shape': per_shape, 'forecast_s': forecast,
++            'deadline_s': deadline_s, 'includes': 'two sessions, 3x component allowance, histories, warmup, reset, variants, startup and serialization; advisory without a configured deadline',
+             'diagnostic_allowance_s': 0 if kind == 'feasibility' else 300}
+ 
+ 
+@@ -796,13 +843,13 @@ def offline_diagnostics(cfg, request):
+     from oar.sampled_linear import SamplingState, importance_probabilities, gather_weight_gradient
+     from oar.timing import measure_blocks
+     start = time.perf_counter()
+-    deadline = start+request['deadline_s']
++    deadline = None if request['deadline_s'] is None else start+request['deadline_s']
+     shape = next(s for s in cfg['shapes'] if s['id'] == 'middle4096')
+     f = Fixture(cfg, shape, request['variant'])
+     rows, profiles = [], []
+     for target_update in cfg['diagnostic']['native_states']:
+         while f.updates < target_update:
+-            if time.perf_counter() > deadline:
++            if deadline is not None and time.perf_counter() > deadline:
+                 raise TimeoutError('offline diagnostic deadline')
+             f.step()
+         common = f.snapshot()
+@@ -848,7 +895,7 @@ def offline_diagnostics(cfg, request):
+             for rho in cfg['rhos']:
+                 states = {w: SamplingState(cfg['seed'], 'diagnostic.'+w+'.'+str(target_update), sampler, rho) for w in operands}
+                 for draw in range(cfg['diagnostic']['draws']):
+-                    if time.perf_counter() > deadline:
++                    if deadline is not None and time.perf_counter() > deadline:
+                         raise TimeoutError('offline diagnostic deadline')
+                     grads = dict(dense_grads)
+                     errors = {}
+@@ -890,12 +937,20 @@ def hardware_stage(cfg, config, out, attempt, kind):
+     forecast = forecast_stage(cfg, calibration, kind)
+     if kind == 'cost':
+         forecast['forecast_s'] += 300
+-        forecast['deadline_s'] = 2*forecast['forecast_s']
++        if forecast['deadline_s'] is not None:
++            forecast['deadline_s'] = cfg['resources']['deadline_multiplier']*forecast['forecast_s']
+     write_json(attempt/'resource_forecast.json', forecast)
+-    if forecast['deadline_s'] > cfg['resources']['maximum_stage_s']:
++    maximum_stage_s = cfg['resources']['maximum_stage_s']
++    if maximum_stage_s is not None and forecast['deadline_s'] > maximum_stage_s:
+         return {'status': 'INCOMPLETE_RESOURCE', 'reason': 'inclusive measured forecast exceeds configured stage capacity; no expensive session launched'}
+-    deadline = time.perf_counter()+forecast['deadline_s']
+-    sessions, invalid_attempts, replacements_used, invocation = [], [], 0, 0
++    deadline = None if forecast['deadline_s'] is None else time.perf_counter()+forecast['deadline_s']
++    noise_shapes = cfg['timing']['noise_calibration_shapes']
++    frozen = {'source': 'native-only pooled two-session A/A; frozen before sampler timing',
++              'noise_calibration_shapes': noise_shapes, 'floor': cfg['timing']['delta_floor']}
++    if baseline:
++        delta = baseline['delta']
++        write_json(attempt/'frozen_delta.json', {'delta': delta, **frozen})
++    sessions, invocation = [], 0
+     def run_session(session, slot):
+         nonlocal invocation
+         invocation += 1
+@@ -911,43 +966,27 @@ def hardware_stage(cfg, config, out, attempt, kind):
+         if code or not Path(request['result']).is_file():
+             return {'status': 'INCOMPLETE_RESOURCE', 'failure': 'session interrupted or deadline exceeded; raw prefix retained'}
+         return json.loads(Path(request['result']).read_text())
+-    for slot in range(2):
++    for slot in range(cfg['timing']['sessions']):
+         result = run_session(slot, slot)
+-        if result['status'] != 'pass' and result.get('invalid_condition') == 'failed_warmup' and replacements_used == 0:
+-            invalid_attempts.append(result)
+-            replacements_used += 1
+-            result = run_session(2, slot)
+         if result['status'] != 'pass':
+             return {'status': result['status'], 'reason': result.get('failure'), 'sessions': sessions,
+-                    'invalid_attempts': invalid_attempts, 'replacement_sessions_used': replacements_used}
++                    'failed_session': result}
+         sessions.append(result)
+-    delta = baseline['delta'] if baseline else freeze_delta([abs(p['seconds']['dense']/p['seconds']['candidate']-1)
+-        for s in sessions for row in s['shapes'] for p in row['comparisons']['AA']['pairs']])
+-    if kind == 'feasibility' and delta > .15 and replacements_used == 0:
+-        # Predefined A/A noise invalidation, deterministic first-session slot.
+-        # Never use zero-dW or sampler speed to choose a replacement.
+-        invalid_attempts.append({'invalid_condition': 'aa_noise_above_cap', 'original': sessions[0]})
+-        replacements_used += 1
+-        result = run_session(2, 0)
+-        if result['status'] != 'pass':
+-            return {'status': result['status'], 'reason': result.get('failure'), 'sessions': sessions, 'invalid_attempts': invalid_attempts}
+-        sessions[0] = result
++    if not baseline:
+         delta = freeze_delta([abs(p['seconds']['dense']/p['seconds']['candidate']-1)
+-            for s in sessions for row in s['shapes'] for p in row['comparisons']['AA']['pairs']])
+-    write_json(attempt/'frozen_delta.json', {'delta': delta, 'source': 'native-only pooled two-session A/A; frozen before sampler timing', 'cap': .15})
++            for s in sessions for row in s['shapes'] if row['shape']['id'] in noise_shapes
++            for p in row['comparisons']['AA']['pairs']], floor=cfg['timing']['delta_floor'])
++        write_json(attempt/'frozen_delta.json', {'delta': delta, **frozen})
+     unstable = [(s['session'], row['shape']['id'], name) for s in sessions for row in s['shapes']
+                 for name, comparison in row['comparisons'].items() if not all(v['stable'] for v in comparison['warmup'].values())]
+-    if delta > .15 or unstable:
+-        return {'status': 'INCONCLUSIVE_MEASUREMENT', 'reason': 'delta above .15 or unstable warmup; evidence retained, no candidate performance qualification',
+-                'delta': delta, 'unstable': unstable, 'sessions': sessions}
+     diagnostics = None
+     if kind == 'cost':
+         request = {'kind': 'diagnostic', 'config': str(config), 'out': str(out), 'attempt': str(attempt),
+                    'variant': next(row for row in baseline['sessions'][0]['shapes'] if row['shape']['id'] == 'middle4096')['selected_variant'],
+-                   'deadline_s': max(0, deadline-time.perf_counter())}
++                   'deadline_s': remaining_timeout(deadline)}
+         request_path = attempt/'diagnostic-request.json'
+         write_json(request_path, request)
+-        code, _, _ = command(attempt, worker_args(kind, config, out, request_path), env=environment(cfg), timeout=max(1, deadline-time.perf_counter()))
++        code, _, _ = command(attempt, worker_args(kind, config, out, request_path), env=environment(cfg), timeout=remaining_timeout(deadline))
+         if code:
+             return {'status': 'INCOMPLETE_RESOURCE', 'reason': 'paid offline diagnostic incomplete; raw session timing retained', 'sessions': sessions, 'delta': delta}
+         diagnostics = str(attempt/'diagnostic.json')
+@@ -959,7 +998,8 @@ def hardware_stage(cfg, config, out, attempt, kind):
+             if all(c['statistics']['ci95'][1] < 1-delta for c in comparisons):
+                 eligible.append({'arm': name, 'shape': shape_id})
+     return {'status': 'pass' if eligible else 'STOP_COST', 'delta': delta, 'eligible': eligible, 'sessions': sessions,
+-            'diagnostics': diagnostics, 'invalid_attempts': invalid_attempts, 'replacement_sessions_used': replacements_used,
++            'diagnostics': diagnostics, 'unstable_warmup_diagnostics': unstable,
++            'automatic_replacement_sessions': 0,
+             'reason': 'upper95% paired ratio must be below 1-delta in both sessions at a planned-model middle shape',
+             'zero_semantics': 'nonlearning dense zero dW with exact dX/db and native optimizer moments/decay; optimistic diagnostic, not universal lower bound'}
+ 
+diff --git a/configs/dw_sampling.yaml b/configs/dw_sampling.yaml
+index d57872d..c8081be 100644
+--- a/configs/dw_sampling.yaml
++++ b/configs/dw_sampling.yaml
+@@ -1,5 +1,6 @@
+ # SPDX-License-Identifier: CC-BY-4.0
+-schema_version: 1
++# Owner-authorized exploratory reopening; immutable prior configuration is archived.
++schema_version: 2
+ experiment: fixed_budget_norm_importance_dw
+ reviewed_head: 9d8ad069c51b4d0e6c13e9c6e465579e9b44a339
+ device: mps
+@@ -7,47 +8,97 @@ dtype: float32
+ fallback: '0'
+ fast_math: '0'
+ prefer_metal: '0'
+-samplers: [importance, uniform]
+-rhos: [0.125, 0.25, 0.5]
++samplers:
++- importance
++- uniform
++rhos:
++- 0.125
++- 0.25
++- 0.5
+ mixture_uniform: 0.1
+ seed: 61001
+ analysis_seed: 62001
+ confirmation_analysis_seed: 62002
+ shapes:
+-  - {id: tiny, n: 128, di: 128, do: 512, microbatches: 1, stride: 1}
+-  - {id: middle2048, n: 2048, di: 512, do: 2048, microbatches: 1, stride: 1}
+-  - {id: middle4096, n: 4096, di: 512, do: 2048, microbatches: 1, stride: 1}
+-  - {id: wide, n: 8192, di: 768, do: 3072, microbatches: 1, stride: 1}
+-  - {id: middle2048_accum4_stride2, n: 2048, di: 512, do: 2048, microbatches: 4, stride: 2}
++- id: middle4096
++  n: 4096
++  di: 512
++  do: 2048
++  microbatches: 1
++  stride: 1
++- id: middle2048
++  n: 2048
++  di: 512
++  do: 2048
++  microbatches: 1
++  stride: 1
++- id: middle2048_accum4_stride2
++  n: 2048
++  di: 512
++  do: 2048
++  microbatches: 4
++  stride: 2
++- id: wide
++  n: 8192
++  di: 768
++  do: 3072
++  microbatches: 1
++  stride: 1
++- id: tiny
++  n: 128
++  di: 128
++  do: 512
++  microbatches: 1
++  stride: 1
+ timing:
+   sessions: 2
+   pairs: 30
+-  minimum_block_s: 0.2
+-  maximum_updates_per_block: 100
++  minimum_block_s: 0.5
++  maximum_updates_per_block: null
+   bootstrap_replicates: 10000
+-  warmup: {minimum: 8, maximum: 32, window: 8, relative_range: 0.1}
+-  delta_floor: 0.05
++  warmup:
++    minimum: 8
++    maximum: 32
++    window: 8
++    relative_range: 0.1
++  delta_floor: 0.0
+   delta_noise_multiplier: 2
+-  delta_cap: 0.15
++  delta_cap: null
+   history_updates: 8
+-  native_variants: [default, single, foreach, fused]
+-  replacement_sessions_maximum: 1
+-  invalid_conditions: [missing_synchronization, overlapping_process, failed_warmup, device_error]
++  native_variants:
++  - default
++  - single
++  - foreach
++  - fused
++  replacement_sessions_maximum: null
++  invalid_conditions:
++  - missing_synchronization
++  - overlapping_process
++  - device_error
++  warmup_policy: diagnostic_only
++  noise_calibration_shapes:
++  - middle2048
++  - middle4096
+ optimizer:
+   lr: 0.001
+-  betas: [0.9, 0.999]
+-  eps: 0.00000001
++  betas:
++  - 0.9
++  - 0.999
++  eps: 1.0e-08
+   weight_decay: 0.01
+   clip_norm: 1.0
+ diagnostic:
+-  native_states: [0, 32, 128]
++  native_states:
++  - 0
++  - 32
++  - 128
+   draws: 32
+ resources:
+   qualification_forecast_s: 120
+   deadline_multiplier: 2
+-  maximum_stage_s: 21600
++  maximum_stage_s: null
+   minimum_free_disk_bytes: 1073741824
+-  maximum_output_bytes: 268435456
++  maximum_output_bytes: null
+   memory_fraction: 0.7
+ asset:
+   name: wikitext-2-raw-v1
+@@ -62,10 +113,20 @@ learning:
+   ffn_width: 2048
+   context: 256
+   candidate_batch: 16
+-  dense_batches: [4, 8, 16, 32]
+-  peak_lrs: [0.0001, 0.0003, 0.001]
++  dense_batches:
++  - 4
++  - 8
++  - 16
++  - 32
++  peak_lrs:
++  - 0.0001
++  - 0.0003
++  - 0.001
+   tuning_seed: 3101
+-  development_seeds: [3102, 3103, 3104]
++  development_seeds:
++  - 3102
++  - 3103
++  - 3104
+   confirmation_seed_start: 5001
+   confirmation_minimum: 8
+   confirmation_maximum: 16
+@@ -75,10 +136,13 @@ learning:
+   evaluation_stride: 128
+   synchronized_updates: 8
+   synchronized_updates_fallback: 1
+-  monitor_count_candidates: [100, 50, 25]
++  monitor_count_candidates:
++  - 100
++  - 50
++  - 25
+   scheduler_warmup_fraction: 0.05
+   scheduler_final_fraction: 0.1
+-  epsilon_eval_floor: 0.000001
++  epsilon_eval_floor: 1.0e-06
+   epsilon_eval_ceiling: 0.001
+   target_calibration_fraction: 0.6
+   minimum_periodic_monitors: 8
+diff --git a/tests/test_dw_sampling_protocol.py b/tests/test_dw_sampling_protocol.py
+index 1b2f4c8..a8ae590 100644
+--- a/tests/test_dw_sampling_protocol.py
++++ b/tests/test_dw_sampling_protocol.py
+@@ -6,7 +6,6 @@ from pathlib import Path
+ import subprocess
+ import sys
+ 
+-import numpy as np
+ import pytest
+ import yaml
+ 
+@@ -24,7 +23,7 @@ def test_configuration_rejects_changed_protected_protocol_and_unknown_fields(tmp
+     d = driver()
+     original = ROOT / 'configs/dw_sampling.yaml'
+     assert d.load_config(original)['device'] == 'mps'
+-    for mutation in ('extra', 'rho', 'shape', 'timing', 'asset'):
++    for mutation in ('extra', 'rho', 'shape', 'timing', 'asset', 'schema'):
+         cfg = yaml.safe_load(original.read_text())
+         if mutation == 'extra':
+             cfg['unapproved_sampler'] = True
+@@ -34,8 +33,10 @@ def test_configuration_rejects_changed_protected_protocol_and_unknown_fields(tmp
+             cfg['shapes'][1]['di'] = 1024
+         elif mutation == 'timing':
+             cfg['timing']['pairs'] = 3
+-        else:
++        elif mutation == 'asset':
+             cfg['asset']['body_downloads'] = True
++        else:
++            cfg['schema_version'] = 1
+         path = tmp_path / (mutation + '.yaml')
+         path.write_text(yaml.safe_dump(cfg))
+         with pytest.raises(ValueError):
+@@ -85,7 +86,13 @@ def test_geometric_paired_estimator_and_noise_threshold():
+     assert result['ci95'] == pytest.approx([.5, 2.])
+     assert d.paired_ratio([1., 2., 4.], [.8, 1.6, 3.2])['ci95'] == pytest.approx([.8, .8])
+     aa = [0., .01, .02, .03]
+-    assert d.freeze_delta(aa) == pytest.approx(max(.05, 2 * np.quantile(aa, .95, method='linear')))
++    assert d.freeze_delta(aa) == pytest.approx(.057)
++    assert d.freeze_delta([.001, .002]) == pytest.approx(.0039)
++    assert d.freeze_delta([.1, .2]) == pytest.approx(.39)
++    assert d.freeze_delta([.001], floor=.01) == .01
++    for observations, floor in (([], 0.), ([float('nan')], 0.), ([-.1], 0.), ([.1], -1.), ([.1], float('inf'))):
++        with pytest.raises(ValueError):
++            d.freeze_delta(observations, floor=floor)
+     for x, y in (([], []), ([0.], [1.]), ([1.], [float('nan')])):
+         with pytest.raises(ValueError):
+             d.paired_ratio(x, y)
+@@ -145,6 +152,8 @@ def test_shared_deadline_never_restarts_for_later_commands():
+     assert d.remaining_timeout(100., clock=lambda: 75.) == 25.
+     with pytest.raises(TimeoutError):
+         d.remaining_timeout(100., clock=lambda: 101.)
++    assert d.remaining_timeout(None, clock=lambda: 101.) is None
++    d.check_command_deadline(0, None)
+ 
+ 
+ def test_worker_stage_boundary_rejects_injected_cost_request(tmp_path):
+@@ -167,14 +176,342 @@ def test_exclusive_session_rejects_second_owner(tmp_path):
+         pass
+ 
+ 
+-def test_selected_dense_block_is_remeasured_until_duration_or_cap():
++def test_selected_dense_block_exceeds_100_updates_and_reaches_measured_minimum():
+     d = driver()
+     count, observations = d.choose_block_length(lambda n: .001*n, 3)
+-    assert count == 100 and observations[-1]['seconds'] == pytest.approx(.1)
+-    durations = iter([.05, .15, .21])
+-    count, observations = d.choose_block_length(lambda n: next(durations), 5)
+-    assert count == 27
+-    assert observations[-1]['seconds'] >= .2
++    assert count >= 500
++    assert observations[0] == {'updates': 3, 'seconds': .003}
++    assert observations[-1]['updates'] == count
++    assert observations[-1]['seconds'] >= .5
++
++
++def test_dense_calibration_has_no_fixed_iteration_limit_and_honors_target():
++    d = driver()
++    durations = iter([.499]*120 + [.75])
++    count, observations = d.choose_block_length(lambda n: next(durations), 1)
++    assert len(observations) == 121
++    assert count > 100
++    assert observations[-1]['seconds'] == .75
++    count, observations = d.choose_block_length(lambda n: .01*n, 1, minimum_s=.8)
++    assert count >= 80 and observations[-1]['seconds'] >= .8
++
++
++@pytest.mark.parametrize('initial', [0, -1, 1.2, True, float('inf')])
++def test_dense_calibration_rejects_nonpositive_or_noninteger_initial(initial):
++    with pytest.raises(ValueError):
++        driver().choose_block_length(lambda n: .5, initial)
++
++
++@pytest.mark.parametrize('seconds', [0., -.1, float('nan'), float('inf')])
++def test_dense_calibration_rejects_invalid_observations(seconds):
++    with pytest.raises(ValueError):
++        driver().choose_block_length(lambda n: seconds, 1)
++
++
++@pytest.mark.parametrize('minimum', [0., -.1, float('nan'), float('inf')])
++def test_dense_calibration_rejects_invalid_duration_target(minimum):
++    with pytest.raises(ValueError):
++        driver().choose_block_length(lambda n: .5, 1, minimum_s=minimum)
++
++
++def test_fastest_supported_native_uses_median_despite_unstable_warmup():
++    d = driver()
++    variants = {
++        'single': {'status': 'pass', 'warmup': {'stable': True}, 'pilot_s': [.3, .3, .3]},
++        'fused': {'status': 'pass', 'warmup': {'stable': False}, 'pilot_s': [.1, .1, 10.]},
++        'foreach': {'status': 'unsupported', 'reason': 'unsupported native implementation'},
++    }
++    assert d.select_native_variant(variants) == 'fused'
++    with pytest.raises(RuntimeError, match='qualified'):
++        d.select_native_variant({'foreach': variants['foreach']})
++    with pytest.raises(ValueError):
++        d.select_native_variant({'single': {'status': 'pass', 'pilot_s': [float('nan')]}})
++
++
++def test_native_qualification_retains_seeded_pilot_order_and_raw_diagnostics(monkeypatch):
++    import torch
++    import oar.timing
++    d = driver()
++    cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
++    class CPUFixture:
++        last_variant = None
++        def __init__(self, cfg, shape, variant, session):
++            self.variant = variant
++            self.p = {'p': torch.nn.Parameter(torch.tensor([1., -2.]))}
++            options = {} if variant == 'default' else {'foreach': variant == 'foreach', 'fused': variant == 'fused'}
++            self.opt = torch.optim.AdamW(list(self.p.values()), lr=.001, **options)
++        def step(self):
++            CPUFixture.last_variant = self.variant
++            self.p['p'].grad = torch.tensor([.1, -.2])
++            self.opt.step()
++    def warmup(operation, sync, **kwargs):
++        operation()
++        return {'stable': False, 'raw_s': [.1, .4]}
++    def measure(operation, sync, blocks):
++        operation()
++        return [.1, .1, 10.] if CPUFixture.last_variant == 'fused' else [.3, .3, .3]
++    monkeypatch.setattr(d, 'Fixture', CPUFixture)
++    monkeypatch.setattr(torch.mps, 'synchronize', lambda: None)
++    monkeypatch.setattr(oar.timing, 'warmup', warmup)
++    monkeypatch.setattr(oar.timing, 'measure_blocks', measure)
++    orders, seeds = [], []
++    for session in (0, 1):
++        selected, results = d.native_variant_qualification(cfg, cfg['shapes'][0], session, 1)
++        assert selected == 'fused'
++        assert all(v['status'] == 'pass' and not v['warmup']['stable'] for v in results.values())
++        assert results['fused']['pilot_s'] == [.1, .1, 10.]
++        assert all(v['pilot_order'] == list(results) for v in results.values())
++        orders.append(list(results))
++        seeds.append(results['fused']['order_seed'])
++    assert seeds[0] != seeds[1]
++    assert orders[0] != orders[1]
++
++
++@pytest.mark.parametrize('failure', ['non-finite gradient requires repair', 'MPS device error: unsupported command buffer'])
++def test_native_qualification_does_not_hide_invalid_gradient_or_device_failure(monkeypatch, failure):
++    d = driver()
++    cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
++    class BrokenFixture:
++        def __init__(self, *args, **kwargs):
++            pass
++        def step(self):
++            raise RuntimeError(failure)
++    monkeypatch.setattr(d, 'Fixture', BrokenFixture)
++    with pytest.raises(RuntimeError, match=failure):
++        d.native_variant_qualification(cfg, cfg['shapes'][0], 0, 1)
++
++
++def test_native_qualification_excludes_numerically_unsupported_variant(monkeypatch):
++    import torch
++    import oar.timing
++    d = driver()
++    cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
++    class CPUFixture:
++        def __init__(self, cfg, shape, variant, session):
++            self.variant = variant
++            self.p = {'p': torch.nn.Parameter(torch.tensor([1.]))}
++            self.opt = torch.optim.AdamW(list(self.p.values()), lr=.001, foreach=False)
++        def step(self):
++            self.p['p'].grad = torch.tensor([100. if self.variant == 'fused' else .1])
++            self.opt.step()
++    monkeypatch.setattr(d, 'Fixture', CPUFixture)
++    monkeypatch.setattr(torch.mps, 'synchronize', lambda: None)
++    monkeypatch.setattr(oar.timing, 'warmup', lambda *args, **kwargs: {'stable': False, 'raw_s': [.1, .4]})
++    monkeypatch.setattr(oar.timing, 'measure_blocks', lambda *args: [.3, .3, .3])
++    selected, results = d.native_variant_qualification(cfg, cfg['shapes'][0], 0, 1)
++    assert results['fused']['status'] == 'unsupported'
++    assert selected != 'fused'
++
++
++def test_storage_guard_allows_nullable_output_ceiling_but_keeps_disk_reserve(tmp_path):
++    d = driver()
++    (tmp_path/'raw').write_bytes(b'abc')
++    cfg = {'resources': {'minimum_free_disk_bytes': 0, 'maximum_output_bytes': None}}
++    assert d.storage_guard(cfg, tmp_path)['run_output_bytes'] == 3
++    cfg['resources']['maximum_output_bytes'] = 2
++    with pytest.raises(MemoryError):
++        d.storage_guard(cfg, tmp_path)
++    cfg['resources'].update(maximum_output_bytes=None, minimum_free_disk_bytes=10**30)
++    with pytest.raises(MemoryError):
++        d.storage_guard(cfg, tmp_path)
++
++
++def test_forecast_uses_uncapped_count_current_target_and_two_sessions():
++    d = driver()
++    cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
++    calibration = [{'shape': cfg['shapes'][0], 'native_complete_step_s': [.001, .002, .001]}]
++    result = d.forecast_stage(cfg, calibration, 'feasibility')
++    assert result['sessions'] == 2
++    assert result['deadline_s'] is None
++    assert result['per_shape'][0]['updates_per_block'] == 500
++    assert result['per_shape'][0]['bound_block_s'] == pytest.approx(1.)
++    json.dumps(result, allow_nan=False)
++    cfg['timing']['minimum_block_s'] = 1.
++    longer = d.forecast_stage(cfg, calibration, 'feasibility')
++    assert longer['per_shape'][0]['updates_per_block'] == 1000
++    assert longer['forecast_s'] > result['forecast_s']
++
++
++def test_unstable_warmup_retains_pairs_and_charged_setup(tmp_path, monkeypatch):
++    import torch
++    import oar.timing
++    d = driver()
++    cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
++    monkeypatch.setattr(torch.mps, 'synchronize', lambda: None)
++    monkeypatch.setattr(oar.timing, 'warmup', lambda operation, sync, **kwargs: {'stable': False, 'raw_s': [.1, .4]})
++    def measure(operation, sync, blocks):
++        operation()
++        return [1.]*blocks
++    monkeypatch.setattr(oar.timing, 'measure_blocks', measure)
++    class CPUFixture:
++        sampling_setup_s = 3.
++        def restore(self, common):
++            self.updates = common['updates']
++        def step(self):
++            self.updates += 1
++    path = tmp_path/'pairs.jsonl'
++    result = d.timed_pairs(cfg, CPUFixture(), CPUFixture(), {'updates': 8}, 2, 42, path)
++    assert len(result['pairs']) == 30
++    assert all(not w['stable'] for w in result['warmup'].values())
++    assert len(path.read_text().splitlines()) == 30
++    assert json.loads(path.with_suffix('.warmup.json').read_text()) == result['warmup']
++    assert result['statistics']['ratio'] == pytest.approx(1.1)
++    assert result['steady_state_statistics']['ratio'] == pytest.approx(1.)
++
++
++@pytest.mark.parametrize('noise', [.01, .12])
++@pytest.mark.parametrize('kind', ['feasibility', 'cost'])
++def test_stage_uses_only_declared_noise_shapes_without_warmup_veto_or_replacement(tmp_path, monkeypatch, noise, kind):
++    d = driver()
++    cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
++    qualification = tmp_path/'qualification.json'
++    qualification.write_text(json.dumps({'native_resource_calibration': [
++        {'shape': s, 'native_complete_step_s': [.01, .01, .01]} for s in cfg['shapes']]}))
++    monkeypatch.setattr(d, 'source_hashes', lambda stage: {})
++    def prerequisite(out, stage, bindings):
++        if stage == 'feasibility':
++            return {'delta': 2*noise, 'sessions': [{'shapes': [
++                {'shape': s, 'selected_variant': 'single'} for s in cfg['shapes']]}]*2}
++        return {'qualification': str(qualification)}
++    monkeypatch.setattr(d, 'require_stage', prerequisite)
++    def cpu_worker(attempt, args, *, timeout, env):
++        request = json.loads(Path(args[-1]).read_text())
++        assert timeout is None and request['deadline_s'] is None
++        if kind == 'cost':
++            assert (attempt/'frozen_delta.json').is_file(), 'delta must be frozen before candidate workers start'
++            frozen = json.loads((attempt/'frozen_delta.json').read_text())
++            assert frozen['delta'] == pytest.approx(2*noise)
++        if request['kind'] == 'diagnostic':
++            d.write_json(attempt/'diagnostic.json', {'cpu_boundary_fixture': True})
++            return 0, '', ''
++        shapes = []
++        for shape in cfg['shapes']:
++            error = noise if shape['id'] in ('middle2048', 'middle4096') else .9
++            comparison = {'warmup': {'dense': {'stable': False, 'raw_s': [.1, .3]},
++                                     'candidate': {'stable': False, 'raw_s': [.1, .3]}},
++                          'pairs': [{'seconds': {'dense': 1+error, 'candidate': 1.}}]*30,
++                          'statistics': {'ci95': [.4, .5]}}
++            names = ['AA', 'zero'] if kind == 'feasibility' else [f'{s}-{r}' for s in cfg['samplers'] for r in cfg['rhos']]
++            shapes.append({'shape': shape, 'comparisons': {name: comparison for name in names}})
++        d.write_json(request['result'], {'status': 'pass', 'session': request['session'], 'shapes': shapes})
++        return 0, '', ''
++    monkeypatch.setattr(d, 'command', cpu_worker)
++    attempt = d.allocate_attempt(tmp_path, kind)
++    result = d.hardware_stage(cfg, ROOT/'configs/dw_sampling.yaml', tmp_path, attempt, kind)
++    assert result['status'] == 'pass'
++    assert result['delta'] == pytest.approx(2*noise)
++    assert len(result['sessions']) == 2
++    assert all(len(s['shapes']) == 5 for s in result['sessions'])
++    assert len(list(attempt.glob('session-invocation-*-request.json'))) == 2
++    assert len(result['eligible']) == (2 if kind == 'feasibility' else 12)
++    frozen = json.loads((attempt/'frozen_delta.json').read_text())
++    assert frozen['noise_calibration_shapes'] == ['middle2048', 'middle4096']
++
++
++@pytest.mark.parametrize('session', [0, 1])
++@pytest.mark.parametrize('kind', ['feasibility', 'cost'])
++def test_cost_session_recalibrates_baseline_only_and_keeps_shape_order(tmp_path, monkeypatch, session, kind):
++    import torch
++    import oar.hardware
++    import oar.timing
++    d = driver()
++    cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
++    monkeypatch.setattr(torch.mps, 'synchronize', lambda: None)
++    monkeypatch.setattr(torch.mps, 'recommended_max_memory', lambda: 10**14)
++    monkeypatch.setattr(oar.hardware, 'resource_snapshot', lambda device: {
++        'physical_memory_bytes': 10**14, 'available_memory_bytes': 10**14})
++    # CPU fixture performs real reset/update counting; only device allocation
++    # and elapsed-time measurement are replaced at the hardware boundary.
++    class CPUFixture:
++        elapsed = 0.
++        def __init__(self, cfg, shape, variant='single', mode='dense', rho=.25, session=0):
++            self.mode, self.updates, self.states = mode, 0, {}
++            self.sampling_setup_s = 0.
++        def step(self):
++            self.updates += 1
++            CPUFixture.elapsed += .001 if self.mode == 'dense' else .0005
++        def snapshot(self):
++            return {'updates': self.updates, 'sampling': {}}
++        def restore(self, common):
++            self.updates = common['updates']
++        def backward(self, diagnostic=False):
++            return {}
++    def measure(operation, sync, blocks):
++        raw = []
++        for _ in range(blocks):
++            start = CPUFixture.elapsed
++            operation()
++            raw.append(CPUFixture.elapsed-start)
++        return raw
++    monkeypatch.setattr(d, 'Fixture', CPUFixture)
++    monkeypatch.setattr(d, 'state_streams', lambda f: {'test_cpu_updates': f.updates})
++    monkeypatch.setattr(d, 'native_variant_qualification', lambda *args: ('single', {
++        'single': {'status': 'pass', 'warmup': {'stable': False, 'raw_s': [.1, .4]}, 'pilot_s': [.5]*3}}))
++    monkeypatch.setattr(oar.timing, 'measure_blocks', measure)
++    monkeypatch.setattr(oar.timing, 'warmup', lambda *args, **kwargs: {'stable': False, 'raw_s': [.1, .4]})
++    request = {'session': session, 'kind': kind, 'deadline_s': None, 'result': str(tmp_path/'session.json'),
++               'calibration': [{'shape': s, 'native_complete_step_s': [.001]*3} for s in cfg['shapes']],
++               'baseline': {'shapes': [{'shape': s, 'selected_variant': 'single', 'variants': {},
++                                        'updates_per_block': 3} for s in cfg['shapes']]}}
++    result = d.cost_session(cfg, request)
++    assert result['status'] == 'pass'
++    assert [r['shape']['id'] for r in result['shapes']] == [s['id'] for s in cfg['shapes']]
++    for row in result['shapes']:
++        assert row['updates_per_block'] >= 500
++        if kind == 'cost':
++            assert row['selected_dense_pilot'][0]['updates'] == 3
++        else:
++            assert row['dense_pilot'][-1]['seconds'] >= .5
++        assert row['selected_dense_pilot'][-1]['seconds'] >= .5
++        assert all(len(p.get('raw_s', [])) == 3 and p['seconds'] == min(p['raw_s']) for p in row['selected_dense_pilot'])
++        assert len(row['comparisons']) == (6 if kind == 'cost' else 2)
++        assert all(c['updates_per_block'] == row['updates_per_block'] and len(c['pairs']) == 30
++                   for c in row['comparisons'].values())
++    assert len(list(tmp_path.glob('*-pairs.jsonl'))) == (30 if kind == 'cost' else 10)
++
++
++def test_offline_diagnostics_accepts_no_deadline_and_keeps_native_state_rows(tmp_path, monkeypatch):
++    import copy
++    import torch
++    d = driver()
++    cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
++    cfg['diagnostic'] = {'native_states': [0, 1], 'draws': 1}
++    cfg['rhos'] = [.5]
++    class CPUFixture:
++        def __init__(self, *args):
++            self.p = {'w1': torch.nn.Parameter(torch.tensor([[.2, .3]]))}
++            self.x = torch.tensor([[1., 2.], [3., 4.]])
++            self.opt = torch.optim.AdamW(list(self.p.values()), lr=.001, foreach=False)
++            self.updates = 0
++        def loss(self):
++            y = self.x@self.p['w1'].T
++            if y.requires_grad:
++                y.retain_grad()
++            return [y.square().mean()], {(0, 'w1'): (self.x, y)}
++        def backward(self, diagnostic=False):
++            self.opt.zero_grad(set_to_none=True)
++            losses, captured = self.loss()
++            losses[0].backward()
++            return captured
++        def step(self):
++            self.backward()
++            self.opt.step()
++            self.updates += 1
++        def snapshot(self):
++            return {'p': self.p['w1'].detach().clone(), 'opt': copy.deepcopy(self.opt.state_dict()), 'updates': self.updates}
++        def restore(self, state):
++            with torch.no_grad():
++                self.p['w1'].copy_(state['p'])
++            self.opt.load_state_dict(copy.deepcopy(state['opt']))
++            self.updates = state['updates']
++    monkeypatch.setattr(d, 'Fixture', CPUFixture)
++    monkeypatch.setattr(torch.mps, 'synchronize', lambda: None)
++    result = d.offline_diagnostics(cfg, {'deadline_s': None, 'variant': 'single', 'attempt': str(tmp_path)})
++    assert result['states'] == [0, 1]
++    assert len(result['rows']) == 4
++    assert {r['sampler'] for r in result['rows']} == {'importance', 'uniform'}
++    assert len(list(tmp_path.glob('diagnostic-state-*.json'))) == 2
++    assert all(r['normalized_gradient_squared_errors']['w1'] >= 0 for r in result['rows'])
+ 
+ 
+ def test_latest_passing_attempt_supersedes_historical_hardware_failure(tmp_path):
+
+FILE decisions/dw_sampling_reopening.md SHA256 e494ab971dfdba55b8673242cc149e7b8180d86bb1b8452037c71652999c1618
+<!-- SPDX-License-Identifier: CC-BY-4.0 -->
+# Owner-authorized reopening: pursue a useful positive result
+
+2026-10-31. The owner explicitly instructed: “rewrite the rules: the primary
+ goal is to achieve positive results, do not put stupid artificial caps; fix
+ it and continue working.” This supersedes the prior timing stop and brittle
+measurement limits. Implementation starts from local commit
+40fd56fa71ec80bb0d28aa2e49ab8e5b2a13fef4 on research/dw-sampling.
+The original review release remains 9d8ad069c51b4d0e6c13e9c6e465579e9b44a339.
+
+The primary engineering objective is to obtain a useful, repeatable measured
+benefit from the specified sampler, then pursue the contextual learning claim
+if its prerequisites can be established. We will fix ordinary engineering
+problems and use profiles to improve the implementation. Positive results
+must be real: no discarded slow valid observations, hidden costs, weaker
+baselines, changed correctness tolerances, selective reporting or invented
+learning outcomes. These are accuracy requirements, not arbitrary runtime caps.
+
+## What changes prospectively
+
+- Remove the 100-update ceiling. Baseline-only calibration increases integer
+  updates per measurement until the complete synchronized dense block lasts
+  at least 0.5 seconds. No fixed iteration/update ceiling prevents that target.
+  Record calibration observations and freeze that block length before matched
+  candidate measurements. Longer measured work is charged.
+- Last-eight warmup ranges remain diagnostics. Shader/allocator warmup uses
+  the existing 8-to-32-block observation harness, but an unstable flag does not
+  reject a native variant, shape, session, or the entire experiment. Actual
+  paired observations and their uncertainty determine the cost conclusion.
+  This is not retrying a bad sample or deleting slow blocks.
+- Start with the relevant n4096/n2048 shapes, retain the accumulation/wide/tiny
+  controls, and complete the declared shapes in both fresh sessions. Tiny is
+  an adverse diagnostic, with no authority to veto a relevant shape's result.
+- Qualify all native AdamW variants numerically, comparing step-counter values
+  despite legitimate CPU/device storage differences. Select the fastest
+  supported native implementation from baseline-only pilots, retaining all
+  observations and warmup flags; no native optimization is disabled.
+- Replace the fixed 5% minimum gain with measured uncertainty. Freeze
+  delta=2*linear_quantile95(abs(TA/TB-1)) using A/A pairs at n2048/n4096 across
+  the two sessions before inspecting sampler timing. There is no 15% delta
+  rejection cap. The paired candidate upper interval must beat 1-delta at a
+  relevant shape in both sessions. This remains an exploratory screening rule,
+  not a familywise guarantee or a learning result. All shape results remain
+  visible, including noisy or negative controls.
+- Remove the one-replacement-session rule and arbitrary whole-stage duration
+  and output-size ceilings. The initial plan still collects two fresh sessions
+  and 30 matched pairs per arm; it does not keep drawing until a positive
+  interval appears. Identified implementation or environmental failures can
+  be repaired and followed by a new versioned attempt, with every prior
+  attempt retained and affected evidence invalidated. Any additional timing
+  session gets a prospective reason and its complete data are reported.
+- Resource forecasts remain advisory and complete. Real available-memory,
+  allocator, disk-reserve, numerical-validity and exclusive-session safeguards
+  stay active. Do not kill applications, disable allocator safeguards, buy
+  external compute or consume unavailable disk to force a result.
+
+The owner has authorized continuing this exploratory engineering work; no
+repeat confirmation is needed for these local fixes, tests, measurements or
+local commits. Corpus licensing/use restrictions, untouched official test,
+algorithm identity, exact forward/dX/db, native AdamW and fair baselines remain
+in force. Generic removal of artificial caps is not a documentary resolution
+of the WikiText notice conflict; investigate that independently before body
+acquisition if cost permits language work. No old online OAR work is reopened.
+
+The new run root is analysis/dw_sampling/20261031T120154Z-reopened. Its initial
+inventory and prospective directory preserve the previous config/amendment.
+Earlier stopped results and all historical scientific evidence remain intact.
+This new scope is exploratory after prior timing exposure, not a retroactive
+repair of the old gate or a frozen confirmation. Source/config hashes and a
+new amendment must be committed before new comparative measurements.
+
+## Implementation plan
+
+1. Test uncapped block calibration, diagnostic warmup handling, measured-noise
+   delta without an arbitrary floor, and nullable resource limits. Keep actual
+   bad gradients/probabilities fatal; never resample after a numerical failure.
+2. Update only the new sampling driver/config/protocol tests and prospective
+   bindings; keep the already-correct sampler unchanged until profiling gives
+   a concrete reason to improve it. Preserve old snapshots and direct hashes.
+3. Re-run qualified environment/correctness checks; execute reopened B and D
+   sequentially with complete native optimizer work, common cloned states,
+   exact adjoints, all declared shapes/rhos/controls, inclusive setup charges,
+   raw observations and separate component diagnostics. No overlapping tests
+   or collectors during timings.
+4. If costs identify a concrete removable implementation overhead, improve it
+   without changing the algorithm, primitive reliability or baseline, freeze
+   the new source and repeat affected comparisons. Do not substitute a new
+   algorithm or claim a component win establishes learning.
+5. Pursue the specified language workload only after cost and asset gates;
+   otherwise report the actual unresolved boundary and useful measured result.
+   Run mathematical/statistical, backend/optimizer/cost, and autonomous
+   reproducibility reviews of the reached implementation and evidence.
+
+Software AGPL-3.0-only; original writing/results CC-BY-4.0. Prior-art attribution
+and all original method/data/quality safeguards not explicitly revised above
+remain as recorded in dw_sampling_scope.md and the owner's original task.
+
+FILE .superpowers/dw_sampling_reopening/driver-report.md SHA256 0ebef75cea9c5daddbc5a41cb13b3aa18902276c7843e90b29878ce811378250
+# Timing repair implementation report
+
+Implemented only `analysis/run_dw_sampling.py` and
+`tests/test_dw_sampling_protocol.py`, plus this report and CPU verification
+logs in the assigned directory. Read the owner reopening and driver brief.
+No sampler/historical source edits, Git mutation, subagents, corpus acquisition,
+or hardware execution occurred.
+
+## Driver changes and interfaces
+
+- `choose_block_length(measure_for_count, initial, *, minimum_s=.5)` validates
+  a positive integer initial count, finite positive target and durations. It
+  increases counts without an update or iteration ceiling until an observed
+  complete dense block reaches the target, returning every calibration
+  observation. Tests require more than 100 updates and 121 observations.
+- B initializes counts from `timing.minimum_block_s`, calibrates the initial
+  dense fixture and selected native implementation against the same target,
+  and retains all three raw timings at each count in `dense_pilot` and
+  `selected_dense_pilot`. D starts at the corresponding B count and may
+  increase it using only current dense timings. Rows record the original
+  count, target, calibration observations and recalibration flag. Each arm
+  then uses the same frozen count; candidate times never calibrate counts.
+- `select_native_variant(results)` chooses the supported implementation with
+  the smallest median of baseline-only raw pilot times. Unsupported numerical
+  variants remain excluded. Invalid pilot times and actual numerical/device
+  execution failures remain fatal. Native qualification retains raw pilot and
+  warmup measurements, medians/means, declared order seed and executed order.
+  Pilot order uses the declared named order stream and reverses odd sessions.
+  Native variants are also persisted separately before pair work. The
+  existing exact CPU/device step-counter comparison is unchanged.
+- Warmup uses the existing 8–32-block harness. Its raw measurements and stable
+  flags remain in pair files and records, while instability cannot prevent
+  pairs, select a slower native implementation, replace a session or veto a
+  shape. Both sessions follow the relevant-first configured shape order.
+  There are exactly two fresh session worker invocations, no automatic
+  replacement and no retry-until-positive collection.
+- `freeze_delta(absolute_aa_errors, *, floor=0.0)` uses twice the linear 95th
+  percentile, subject only to the declared nonnegative finite floor. There is
+  no 5% floor or 15% rejection cap. B pools only the declared two middle
+  shapes across both sessions while preserving A/A results for every shape.
+  D persists the inherited frozen delta artifact before launching its first
+  candidate worker. Qualification still requires the paired upper interval
+  below `1-delta` for the same relevant shape in both sessions.
+- `remaining_timeout(None)` returns `None`. Hardware stage workers and the
+  separate offline diagnostic accept nullable deadlines; subprocess calls
+  receive `timeout=None` under the revised configuration. Explicit finite
+  deadline utility behavior and A's existing functional watchdog remain.
+  `storage_guard` accepts an absent output ceiling while retaining the real
+  free-disk reserve and explicit finite output-ceiling behavior.
+- Forecasts use uncapped update counts, the configured block target and two
+  sessions, retain candidate/component allowances and return JSON-safe
+  `deadline_s=None` for an absent stage ceiling. They do not reject the
+  reopened hardware stages. A's forecast now records the configured nullable
+  output ceiling accurately.
+- Added `decisions/dw_sampling_reopening.md` to `CORE`. Updated strict
+  `PROTOCOL` to the canonical revised-config hash
+  `f407dd2d636c078bd7e2f79112ea31b665636d42cf818d3f6f835b4a39ab2a80`.
+  Protected configuration changes, unknown fields, duplicate keys and schema
+  downgrade remain rejected. The algorithm, dtypes, numerical tolerances,
+  raw pair/warmup persistence, setup charges, reset/stream evidence, native
+  optimizer work, actual-shape primitive checks, sealing and asset gates are
+  preserved.
+
+## CPU tests and retained RED/GREEN
+
+All commands used `.venv/bin/python` with `PYTHONPATH=src`. Device operations
+were excluded using `-m 'not mps'`; CPU fixtures replace hardware allocation,
+device synchronization and elapsed measurement only where necessary.
+
+1. `PYTHONPATH=src .venv/bin/python -m pytest -q tests/test_dw_sampling_protocol.py -m 'not mps'`
+   — `driver-red.log`: **22 failed, 15 passed, 1 deselected** against the old
+   implementation/config binding. Expected failures cover caps, invalid
+   initial/target validation, diagnostic warmup, native selection, measured
+   delta, nullable resources/deadlines and protected revised configuration.
+2. Same command after the initial repair — `driver-green-initial.log`:
+   **37 passed, 1 deselected**.
+3. `PYTHONPATH=src .venv/bin/python -m pytest -q tests/test_dw_sampling_protocol.py -m 'not mps' -k 'native_qualification'`
+   — `driver-red-native.log`: **3 failed, 1 passed, 38 deselected**. This
+   exposed broad unsupported-error matching hiding fatal gradient/device
+   errors and coincident pilot orders in the two declared streams. Narrowed
+   capability rejection and explicit odd-session reversal repaired these.
+4. `PYTHONPATH=src .venv/bin/python -m pytest -q tests/test_dw_sampling_protocol.py -m 'not mps' -k 'stage_uses or offline_diagnostics or native_qualification'`
+   — `driver-red-freeze.log`: **2 failed, 7 passed, 36 deselected**. The
+   assertion required the D frozen-delta artifact before worker execution;
+   artifact creation now occurs before either candidate session.
+5. `PYTHONPATH=src .venv/bin/python -m pytest -q tests/test_dw_sampling_protocol.py -m 'not mps' -k 'cost_session_recalibrates'`
+   — `driver-red-raw-calibration.log`: **4 failed, 43 deselected**, requiring
+   all raw selected-dense calibration timings rather than only their minima.
+6. Final verification:
+   `PYTHONPATH=src .venv/bin/python -m pytest -q tests/test_dw_sampling_protocol.py tests/test_sampled_linear.py -m 'not mps'`
+   — `driver-green.log`: **146 passed, 2 deselected in 3.17s**, exit 0.
+7. `git diff --check -- analysis/run_dw_sampling.py tests/test_dw_sampling_protocol.py`
+   — exit 0, no whitespace errors (read-only Git inspection).
+
+The integration regressions exercise B and D, both session indices, all five
+shapes, all arms and 30 pairs per arm. They check raw files, matched counts,
+setup charging, diagnostic flags, retained noisy controls, deltas below .05
+and above .15, exactly two worker requests, frozen thresholds before D and
+the nullable-deadline offline diagnostic with real CPU native optimizer and
+sampler operations. The exact native MPS counter regression remains marked
+`mps` and unchanged.
+
+## Handoff limits
+
+No hardware qualification or performance claim follows from these CPU tests.
+The full original suite was deliberately not run, per the assigned brief's
+serial measurement schedule; parent owns that later check. Parent still owns
+amendment/source freeze, review and all later actual-device execution. The
+existing amendment has not been rewritten by this task and must be rebound
+before a driver stage can use the edited sources. Language work remains
+asset-gated.
+
+## SHA-256 at handoff
+
+```
+95fcdc418b000afd5a405bfb42076b76ef86b31ffe34c94abced68cbee69e22d  analysis/run_dw_sampling.py
+202d7ee25cc06f44e8d3c48895d17719b99bc4802ab34e50a40d6cd9f6081ab6  tests/test_dw_sampling_protocol.py
+f3ca918c8feb299ccc595169c15b1e7dc8800be105c1dbda154f8ac8752f0c9f  configs/dw_sampling.yaml
+e494ab971dfdba55b8673242cc149e7b8180d86bb1b8452037c71652999c1618  decisions/dw_sampling_reopening.md
+11398f9340a48b0dcabdc733c74dfa52b53663ea2005989f2ad7b53079827ca3  src/oar/sampled_linear.py
+25351cd20abc14385dd1cb3e482c67f73619b1ead30900ca0150fe57072458e5  src/oar/timing.py
+```
