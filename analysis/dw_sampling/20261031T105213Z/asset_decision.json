@@ -1,0 +1,19 @@
+{
+  "dataset": "wikitext-2-raw-v1",
+  "documentary_source": "https://huggingface.co/datasets/Salesforce/wikitext/raw/b08601e04326c79dfdd32d625aee71d232d685c3/README.md",
+  "historical_card_sha256": "d5aabf145d341366745ac703b5844c442c143943b6c77929481395c822b1c28c",
+  "metadata_licenses": [
+    "cc-by-sa-3.0",
+    "gfdl"
+  ],
+  "observed_utc": "2026-10-31T11:05:54.152413+00:00",
+  "owner_determination": null,
+  "prose_license": "CC BY-SA 4.0",
+  "reopening_condition": "New documentary evidence or explicit owner determination resolving the repository use restriction, with source revision/notices and precise local-use scope; preserve attribution and original blocked manifest",
+  "resolution": null,
+  "retrieval": "web open/find primary pinned README; metadata lines7-9 and prose line306",
+  "revision": "b08601e04326c79dfdd32d625aee71d232d685c3",
+  "schema_version": 1,
+  "scope": "documentary inspection only; no corpus bodies, preprocessing, protected outcomes, or substitutes",
+  "status": "BLOCKED_ASSET"
+}
