@@ -1,0 +1,51 @@
+{
+  "arms": [
+    {
+      "arm": "importance-0.125",
+      "rho": 0.125,
+      "sampler": "importance"
+    },
+    {
+      "arm": "importance-0.25",
+      "rho": 0.25,
+      "sampler": "importance"
+    },
+    {
+      "arm": "uniform-0.125",
+      "rho": 0.125,
+      "sampler": "uniform"
+    },
+    {
+      "arm": "uniform-0.25",
+      "rho": 0.25,
+      "sampler": "uniform"
+    },
+    {
+      "arm": "uniform-0.5",
+      "rho": 0.5,
+      "sampler": "uniform"
+    }
+  ],
+  "attempt": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/dw_sampling/20261031T120154Z-reopened/pilot/attempt-0002",
+  "base_seed": 61002,
+  "block_updates": 8,
+  "clock_implementation": "mach_absolute_time()",
+  "config": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/configs/dw_sampling.yaml",
+  "data_manifest_path": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/dw_sampling/20261031T120154Z-reopened/pilot/attempt-0002/data_manifest.json",
+  "data_manifest_sha256": "fc5667468cc681bb6a9096055c6dbfb8ea7db25c5952caba79f5d920536cb494",
+  "data_path": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.cache/dw_sampling/wikitext/b08601e04326c79dfdd32d625aee71d232d685c3/processed/b68b3e6f868c5e89e920bc1a42034ac50a108df9e50654cc11966e12b4677d15/fitting-development.pt",
+  "data_sha256": "59e435e07ee10ba7159750fcd0a58f5fe8adf54394b829a6eb77c3ed24b09ab5",
+  "fixed_variant": "fused",
+  "frozen_delta_path": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/dw_sampling/20261031T120154Z-reopened/pilot/attempt-0002/model-block8-frozen_delta.json",
+  "frozen_delta_sha256": "ccfc390f26749a838679585a412b4865834fa5f7209fd04faadfceba8777f5e3",
+  "kind": "model_cost",
+  "launch_perf_s": 588190.187671958,
+  "native_pool_path": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/dw_sampling/20261031T120154Z-reopened/pilot/attempt-0002/model-block8-pooled-native.json",
+  "native_pool_sha256": "757b66bc9d28721328e087816e9ee43cd775fa7a6bfe2aa95139030fd578b7e4",
+  "order_seed": 1885070399112379010,
+  "out": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/dw_sampling/20261031T120154Z-reopened",
+  "result": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/dw_sampling/20261031T120154Z-reopened/pilot/attempt-0002/model-block8-cost-1.json",
+  "session": 1,
+  "synchronize_each_update": false,
+  "updates_per_block": 2
+}

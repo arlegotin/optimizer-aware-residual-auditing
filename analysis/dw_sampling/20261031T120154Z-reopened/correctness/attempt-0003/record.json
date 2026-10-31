@@ -1,0 +1,32 @@
+{
+  "artifacts": {
+    "command-001.json": "645dd291b1bbcdc8121dd71aecd7afee39ebb407722a664bbf0ec0933e9e0528",
+    "command-001.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "command-001.stdout.txt": "de3e992ebf1fba26249d8b4b3f51b59ae51bfc8a04c8105f6f2ccff6ea79edd8",
+    "commands.log": "302a7955ea40df5e7319f20385582506f21c417404f7e019325905c4c775fb7e",
+    "exclusive_session.json": "6dbe9e16f027291211da325abe8d0fccd2d2e5a3f99031bca0267f658077ce6d",
+    "source_manifest.json": "81ee94054d86782b5867623a689cbdbbd06744c299af53bb1c5a30f931acb02f"
+  },
+  "cpu_correctness_only": false,
+  "invocation_wall_s": 13.951703166938387,
+  "measurement_hashes": {
+    "analysis/run_dw_sampling.py": "ccd8490f6048905ffa5f48864143ab1df6e12ed77af146a7877b47ab2230d5bd",
+    "configs/dw_sampling.yaml": "7411e08b4430d06152c4c93a0c588660eedb9f6a27577ab002721b28284fe368",
+    "decisions/dw_sampling_reopening.md": "e5f17839a1e3696793b9adee485c873484f2b91a8ab4880032d0a7d67122e018",
+    "decisions/dw_sampling_scope.md": "d91d9350dc117f83e39c648e48d435de75ab9ea5a3b6bc197b216c4b73c11181",
+    "src/oar/hardware.py": "4ba118d816eec9d255cfb3d7925416373119fe181f82529fb58a96347d8e5048",
+    "src/oar/sampled_linear.py": "11398f9340a48b0dcabdc733c74dfa52b53663ea2005989f2ad7b53079827ca3",
+    "src/oar/sampling_data.py": "cfcf4b782eb9a444ce70f29df72e063518f794108020e51a5d12238118f06583",
+    "src/oar/sampling_lm.py": "b6a0ec4e1b66ccdf542e8d19c6830b897aec9fa4d4d4a77b13265dedb67bb21c",
+    "src/oar/timing.py": "25351cd20abc14385dd1cb3e482c67f73619b1ead30900ca0150fe57072458e5",
+    "tests/test_dw_sampling_protocol.py": "b271586886f1798b06a30c91834c4ceb470a4b3e5133de4f05a953932391f035",
+    "tests/test_sampled_linear.py": "3ed4adbf6f62599172b0322374e84c7552f7fc4b46761f80057053469822eaa9"
+  },
+  "reason": "CPU operator/protocol reference tests; actual-device qualification separately in prepare",
+  "recorded_utc": "2026-10-31T16:56:20.781898+00:00",
+  "schema_version": 1,
+  "source_manifest_sha256": "81ee94054d86782b5867623a689cbdbbd06744c299af53bb1c5a30f931acb02f",
+  "stage": "correctness",
+  "status": "pass",
+  "test_output": "........................................................................ [ 19%]\n........................................................................ [ 38%]\n........................................................................ [ 57%]\n........................................................................ [ 76%]\n........................................................................ [ 95%]\n..................                                                       [100%]\n378 passed in 13.14s"
+}

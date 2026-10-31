@@ -1,0 +1,22 @@
+{
+  "H": 1461.4585008954164,
+  "T_budget": 1490.8579807295464,
+  "additional_forecast_s_per_confirmation_seed": 2981.715961459093,
+  "budget_equivalents_formula": "52+2*N",
+  "confirmation_N_selected": false,
+  "confirmation_configured_maximum": null,
+  "confirmation_planning_N": 8,
+  "deadline_s": null,
+  "forecast_s": 101378.34268960916,
+  "forecast_s_without_confirmation": 77524.61499793641,
+  "full_budget_equivalents": 68,
+  "note": "complete work formula; planning N is the declared minimum, not a cap; regenerate with precision-selected N before confirmation; duplicate development seeds/runs deduplicate",
+  "stages": {
+    "confirmation_runs_at_planning_N": 16,
+    "eligible_grid": 27,
+    "independent_development_maximum": 15,
+    "independent_repeat_runs": 6,
+    "precision_screens_maximum": 1,
+    "secondary_batch16_maximum": 3
+  }
+}

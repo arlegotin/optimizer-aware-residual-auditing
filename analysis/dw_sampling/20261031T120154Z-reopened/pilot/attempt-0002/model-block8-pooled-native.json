@@ -1,0 +1,471 @@
+{
+  "fixed_variant": "fused",
+  "pooled": {
+    "default": {
+      "pilot_s": [
+        0.2560756665188819,
+        0.24773954198462889,
+        0.2534327915054746,
+        0.2583889026815693,
+        0.2624976390119021,
+        0.2754412916644166
+      ],
+      "raw_sessions": [
+        {
+          "pilot_s": [
+            0.5121513330377638,
+            0.49547908396925777,
+            0.5068655830109492
+          ],
+          "session": 0,
+          "updates_per_block": 2
+        },
+        {
+          "pilot_s": [
+            0.7751667080447078,
+            0.7874929170357063,
+            0.8263238749932498
+          ],
+          "session": 1,
+          "updates_per_block": 3
+        }
+      ],
+      "status": "pass",
+      "unit": "seconds per native update"
+    },
+    "foreach": {
+      "pilot_s": [
+        0.2600464374991134,
+        0.2505702085327357,
+        0.2521837914828211,
+        0.28122366666017723,
+        0.2741540416609496,
+        0.2830480276606977
+      ],
+      "raw_sessions": [
+        {
+          "pilot_s": [
+            0.5200928749982268,
+            0.5011404170654714,
+            0.5043675829656422
+          ],
+          "session": 0,
+          "updates_per_block": 2
+        },
+        {
+          "pilot_s": [
+            0.8436709999805316,
+            0.8224621249828488,
+            0.8491440829820931
+          ],
+          "session": 1,
+          "updates_per_block": 3
+        }
+      ],
+      "status": "pass",
+      "unit": "seconds per native update"
+    },
+    "fused": {
+      "pilot_s": [
+        0.25455108302412555,
+        0.25037960399640724,
+        0.24882233300013468,
+        0.2521179026613633,
+        0.25357881968375295,
+        0.2506932640292992
+      ],
+      "raw_sessions": [
+        {
+          "pilot_s": [
+            0.5091021660482511,
+            0.5007592079928145,
+            0.49764466600026935
+          ],
+          "session": 0,
+          "updates_per_block": 2
+        },
+        {
+          "pilot_s": [
+            0.7563537079840899,
+            0.7607364590512589,
+            0.7520797920878977
+          ],
+          "session": 1,
+          "updates_per_block": 3
+        }
+      ],
+      "status": "pass",
+      "unit": "seconds per native update"
+    },
+    "single": {
+      "pilot_s": [
+        0.2515985210193321,
+        0.248243291513063,
+        0.2534891664981842,
+        0.2619953886605799,
+        0.2555983053365101,
+        0.25507452765790123
+      ],
+      "raw_sessions": [
+        {
+          "pilot_s": [
+            0.5031970420386642,
+            0.496486583026126,
+            0.5069783329963684
+          ],
+          "session": 0,
+          "updates_per_block": 2
+        },
+        {
+          "pilot_s": [
+            0.7859861659817398,
+            0.7667949160095304,
+            0.7652235829737037
+          ],
+          "session": 1,
+          "updates_per_block": 3
+        }
+      ],
+      "status": "pass",
+      "unit": "seconds per native update"
+    }
+  },
+  "sessions": [
+    {
+      "base_seed": 61001,
+      "initial_dense_pilot": [
+        {
+          "raw_s": [
+            0.5594220000784844,
+            0.2562749159988016,
+            0.2564268750138581
+          ],
+          "seconds": 0.2562749159988016,
+          "updates": 1
+        },
+        {
+          "raw_s": [
+            0.5051609580405056,
+            0.5072841660585254,
+            0.5143455829238519
+          ],
+          "seconds": 0.5051609580405056,
+          "updates": 2
+        }
+      ],
+      "kind": "model_native",
+      "order_seed": 1610447934873165547,
+      "phase": "variants",
+      "pilot_order": [
+        "single",
+        "default",
+        "foreach",
+        "fused"
+      ],
+      "resources": {
+        "estimated_checkpoint_bytes": 155539456,
+        "predicted_working_set_bytes": 3920281600,
+        "snapshot": {
+          "available_memory_bytes": 15114764288,
+          "memory_percent": 60.9,
+          "metal_current_bytes": 0,
+          "metal_driver_bytes": 475136,
+          "physical_memory_bytes": 38654705664,
+          "process_rss_bytes": 422936576,
+          "swap_in_bytes": 3137238401024,
+          "swap_out_bytes": 15494250496,
+          "swap_used_bytes": 6900744192
+        },
+        "storage": {
+          "free_disk_bytes": 66187067392,
+          "run_output_bytes": 28365798
+        }
+      },
+      "resources_after": {
+        "available_memory_bytes": 12852543488,
+        "memory_percent": 66.8,
+        "metal_current_bytes": 0,
+        "metal_driver_bytes": 2318172160,
+        "physical_memory_bytes": 38654705664,
+        "process_rss_bytes": 726122496,
+        "swap_in_bytes": 3137284816896,
+        "swap_out_bytes": 15494250496,
+        "swap_used_bytes": 6900744192
+      },
+      "selected_variant": "fused",
+      "session": 0,
+      "status": "pass",
+      "synchronize_each_update": false,
+      "variants": {
+        "default": {
+          "median_s": 0.5068655830109492,
+          "pilot_s": [
+            0.5121513330377638,
+            0.49547908396925777,
+            0.5068655830109492
+          ],
+          "qualification_mode": "identical current full-model gradients after native clipping",
+          "qualification_updates": 5,
+          "status": "pass",
+          "updates_per_block": 2,
+          "warmup": {
+            "raw_s": [
+              0.5021316669881344,
+              0.5085104170721024,
+              0.49528370797634125,
+              0.5021580829052255,
+              0.5078028329880908,
+              0.49930295802187175,
+              0.5012672080192715,
+              0.5051888750167564
+            ],
+            "stable": true
+          }
+        },
+        "foreach": {
+          "median_s": 0.5043675829656422,
+          "pilot_s": [
+            0.5200928749982268,
+            0.5011404170654714,
+            0.5043675829656422
+          ],
+          "qualification_mode": "identical current full-model gradients after native clipping",
+          "qualification_updates": 5,
+          "status": "pass",
+          "updates_per_block": 2,
+          "warmup": {
+            "raw_s": [
+              0.510079792002216,
+              0.5096162089612335,
+              0.501976584084332,
+              0.5056830419925973,
+              0.5069070829777047,
+              0.5005530830239877,
+              0.4995888329576701,
+              0.5107105410424992
+            ],
+            "stable": true
+          }
+        },
+        "fused": {
+          "median_s": 0.5007592079928145,
+          "pilot_s": [
+            0.5091021660482511,
+            0.5007592079928145,
+            0.49764466600026935
+          ],
+          "qualification_mode": "identical current full-model gradients after native clipping",
+          "qualification_updates": 5,
+          "status": "pass",
+          "updates_per_block": 2,
+          "warmup": {
+            "raw_s": [
+              0.5005392080638558,
+              0.5079202919732779,
+              0.4951169169507921,
+              0.49998812505509704,
+              0.5066469580633566,
+              0.5032209160272032,
+              0.49492037494201213,
+              0.49664374999701977
+            ],
+            "stable": true
+          }
+        },
+        "single": {
+          "median_s": 0.5031970420386642,
+          "pilot_s": [
+            0.5031970420386642,
+            0.496486583026126,
+            0.5069783329963684
+          ],
+          "qualification_mode": "identical current full-model gradients after native clipping",
+          "qualification_updates": 5,
+          "status": "pass",
+          "updates_per_block": 2,
+          "warmup": {
+            "raw_s": [
+              0.5071121660294011,
+              0.504784542019479,
+              0.4981090410146862,
+              0.503434958984144,
+              0.5079161250032485,
+              0.5048135410761461,
+              0.5071740000275895,
+              0.5160754170501605
+            ],
+            "stable": true
+          }
+        }
+      }
+    },
+    {
+      "base_seed": 61002,
+      "initial_dense_pilot": [
+        {
+          "raw_s": [
+            0.3890767080010846,
+            0.2506698750657961,
+            0.2469103749608621
+          ],
+          "seconds": 0.2469103749608621,
+          "updates": 1
+        },
+        {
+          "raw_s": [
+            0.7708006250904873,
+            0.7457462090533227,
+            0.7615124169969931
+          ],
+          "seconds": 0.7457462090533227,
+          "updates": 3
+        }
+      ],
+      "kind": "model_native",
+      "order_seed": 5475508296096616164,
+      "phase": "variants",
+      "pilot_order": [
+        "single",
+        "fused",
+        "default",
+        "foreach"
+      ],
+      "resources": {
+        "estimated_checkpoint_bytes": 155539456,
+        "predicted_working_set_bytes": 3920281600,
+        "snapshot": {
+          "available_memory_bytes": 14974615552,
+          "memory_percent": 61.3,
+          "metal_current_bytes": 0,
+          "metal_driver_bytes": 475136,
+          "physical_memory_bytes": 38654705664,
+          "process_rss_bytes": 421806080,
+          "swap_in_bytes": 3137302986752,
+          "swap_out_bytes": 15494250496,
+          "swap_used_bytes": 6900744192
+        },
+        "storage": {
+          "free_disk_bytes": 66145079296,
+          "run_output_bytes": 28375901
+        }
+      },
+      "resources_after": {
+        "available_memory_bytes": 13887733760,
+        "memory_percent": 64.1,
+        "metal_current_bytes": 0,
+        "metal_driver_bytes": 2318172160,
+        "physical_memory_bytes": 38654705664,
+        "process_rss_bytes": 723812352,
+        "swap_in_bytes": 3137625751552,
+        "swap_out_bytes": 15495446528,
+        "swap_used_bytes": 5631246336
+      },
+      "selected_variant": "fused",
+      "session": 1,
+      "status": "pass",
+      "synchronize_each_update": false,
+      "variants": {
+        "default": {
+          "median_s": 0.7874929170357063,
+          "pilot_s": [
+            0.7751667080447078,
+            0.7874929170357063,
+            0.8263238749932498
+          ],
+          "qualification_mode": "identical current full-model gradients after native clipping",
+          "qualification_updates": 5,
+          "status": "pass",
+          "updates_per_block": 3,
+          "warmup": {
+            "raw_s": [
+              0.7619487920310348,
+              0.7570251669967547,
+              0.7312735420418903,
+              0.7569812079891562,
+              0.768402916030027,
+              0.7688605829607695,
+              0.7768224159954116,
+              0.7724034170387313
+            ],
+            "stable": true
+          }
+        },
+        "foreach": {
+          "median_s": 0.8436709999805316,
+          "pilot_s": [
+            0.8436709999805316,
+            0.8224621249828488,
+            0.8491440829820931
+          ],
+          "qualification_mode": "identical current full-model gradients after native clipping",
+          "qualification_updates": 5,
+          "status": "pass",
+          "updates_per_block": 3,
+          "warmup": {
+            "raw_s": [
+              0.8116277500521392,
+              0.8186098750447854,
+              0.8249435409670696,
+              0.8280272919218987,
+              0.8216099160490558,
+              0.7853487909305841,
+              0.818533124984242,
+              0.8174555419245735
+            ],
+            "stable": true
+          }
+        },
+        "fused": {
+          "median_s": 0.7563537079840899,
+          "pilot_s": [
+            0.7563537079840899,
+            0.7607364590512589,
+            0.7520797920878977
+          ],
+          "qualification_mode": "identical current full-model gradients after native clipping",
+          "qualification_updates": 5,
+          "status": "pass",
+          "updates_per_block": 3,
+          "warmup": {
+            "raw_s": [
+              0.7494352920912206,
+              0.7590933330357075,
+              0.7518074170220643,
+              0.7527732910821214,
+              0.762127291993238,
+              0.745824082987383,
+              0.7604621249483898,
+              0.7500746659934521
+            ],
+            "stable": true
+          }
+        },
+        "single": {
+          "median_s": 0.7667949160095304,
+          "pilot_s": [
+            0.7859861659817398,
+            0.7667949160095304,
+            0.7652235829737037
+          ],
+          "qualification_mode": "identical current full-model gradients after native clipping",
+          "qualification_updates": 5,
+          "status": "pass",
+          "updates_per_block": 3,
+          "warmup": {
+            "raw_s": [
+              0.7809274169849232,
+              0.7479659171076491,
+              0.7594669999089092,
+              0.7691048749256879,
+              0.759122374933213,
+              0.7604205419775099,
+              0.7496912919450551,
+              0.8057497079716995
+            ],
+            "stable": true
+          }
+        }
+      }
+    }
+  ]
+}

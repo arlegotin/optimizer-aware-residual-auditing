@@ -1,0 +1,8 @@
+{
+  "delta": 0.2085046466766194,
+  "fixed_variant": "fused",
+  "model_AA_delta": 0.1854212253056062,
+  "previous_D_delta": 0.2085046466766194,
+  "source": "pooled full-model native A/A; frozen before all model candidate timings",
+  "synchronize_each_update": false
+}

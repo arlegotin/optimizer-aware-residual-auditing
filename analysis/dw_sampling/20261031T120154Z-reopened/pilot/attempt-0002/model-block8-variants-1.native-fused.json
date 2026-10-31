@@ -1,0 +1,25 @@
+{
+  "median_s": 0.7563537079840899,
+  "pilot_s": [
+    0.7563537079840899,
+    0.7607364590512589,
+    0.7520797920878977
+  ],
+  "qualification_mode": "identical current full-model gradients after native clipping",
+  "qualification_updates": 5,
+  "status": "pass",
+  "updates_per_block": 3,
+  "warmup": {
+    "raw_s": [
+      0.7494352920912206,
+      0.7590933330357075,
+      0.7518074170220643,
+      0.7527732910821214,
+      0.762127291993238,
+      0.745824082987383,
+      0.7604621249483898,
+      0.7500746659934521
+    ],
+    "stable": true
+  }
+}
