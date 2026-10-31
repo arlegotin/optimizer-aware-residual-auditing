@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py", line 3269, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py", line 3182, in main
+    configure_torch()
+    ~~~~~~~~~~~~~~~^^
+  File "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py", line 484, in configure_torch
+    raise RuntimeError('fresh hardware worker must configure policy before Torch import')
+RuntimeError: fresh hardware worker must configure policy before Torch import

@@ -1,0 +1,1 @@
+{"active_s":1.5530318340752274,"classification":"numerical_failure","clock_implementation":"mach_absolute_time()","cumulative_elapsed_s":1.5530318340752274,"ended_perf_s":592495.43046575,"exit_code":1,"failure":null,"launch_sha256":"076811b1000c402468e8735a3309451e2bd5caae5ee7db0c38097b8f57c53dfa","result_sha256":null,"worker_artifacts":{},"worker_failure":{}}

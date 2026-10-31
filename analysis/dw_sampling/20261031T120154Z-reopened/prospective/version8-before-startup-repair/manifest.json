@@ -1,0 +1,31 @@
+{
+  "files": {
+    "analysis/run_dw_sampling.py": {
+      "artifact": "run_dw_sampling.py",
+      "sha256": "07923e3415fe457274fec60eff42af7ff7191fb066f0d776a0787a47cd079c54"
+    },
+    "configs/dw_sampling.yaml": {
+      "artifact": "dw_sampling.yaml",
+      "sha256": "1f1d4bf1c718a942a2e76d9649ab56c10194741ee9a5939a99321aab84e5ac47"
+    },
+    "decisions/dw_sampling_amendment.json": {
+      "artifact": "dw_sampling_amendment.json",
+      "sha256": "65098139b7a433aba28a6030f50bb0b75c5862e105715e17a29e24b510fd9fbf"
+    },
+    "decisions/dw_sampling_reopening.md": {
+      "artifact": "dw_sampling_reopening.md",
+      "sha256": "a7f442d2f526f09a3fed89a7cabc1e8c41a9c1ea4ad84c26780208794abd5e9e"
+    },
+    "src/oar/sampling_lm.py": {
+      "artifact": "sampling_lm.py",
+      "sha256": "ccf487079280d385a9fed1b3eb7069921a34a15fd78cb6b33f7778644a405d3c"
+    },
+    "tests/test_dw_sampling_protocol.py": {
+      "artifact": "test_dw_sampling_protocol.py",
+      "sha256": "7df50efb82f5a841f0d2f3d7da25fd131853a870b1ff046b00904369fa015d4e"
+    }
+  },
+  "reason": "Exact committed frozen v8 before first fresh-worker startup-order failure; no model updates/quality trial ran.",
+  "recorded_utc": "2026-10-31T18:28:28.686687+00:00",
+  "source_head": "fafbcfeeef67c40c4da2a4d7d1de73f7dc104ce1"
+}

@@ -1,0 +1,8 @@
+{
+  "recorded_utc": "2026-10-31T18:22:49.195159+00:00",
+  "hypothesis": "pure worker authority validation imports Torch through sampling seed helper before strict configure_torch entry",
+  "source_sha256": "07923e3415fe457274fec60eff42af7ff7191fb066f0d776a0787a47cd079c54",
+  "head": "fafbcfeeef67c40c4da2a4d7d1de73f7dc104ce1",
+  "bound": "one pure27-row grid build then policy guard, no model/data loader/device/training",
+  "prior_failed_pilot": "pilot/attempt-0003,27startupfailures0modelupdates44.1654s retained"
+}

@@ -1,0 +1,17 @@
+{
+  "charged_as": "retained development/setup failure cost; not silently discarded as free work",
+  "failed_launches": 27,
+  "first_policy_error": "validation imported Torch before configure_torch",
+  "invocation_wall_s": 44.16540000005625,
+  "next_step": "Torch-free validation repair, new prospective source/config freeze and repeat affected E only after current A/C; no new scientific grid",
+  "official_test_body": "unopened",
+  "preserve_policy_guard": true,
+  "protected_validation_losses": "unopened",
+  "raw_record_path": "analysis/dw_sampling/20261031T120154Z-reopened/pilot/attempt-0003/record.json",
+  "raw_record_sha256": "5e2718ebcdaea047a92d58a3a6271f733ab49ba85c471c9fd0e18fa29093f8f7",
+  "raw_status_unchanged": "STOP_QUALITY",
+  "recorded_source_manifest_sha256": "e70ed8da2e7e0738e507bf76e8d33609223aabbee0454d3b2e204179b5b7008b",
+  "recorded_utc": "2026-10-31T18:25:17.378194+00:00",
+  "scientific_interpretation": "startup integration failure; no learning-quality outcome; no model/forward/gradient/update/checkpoint ran",
+  "worker_event_files": 0
+}

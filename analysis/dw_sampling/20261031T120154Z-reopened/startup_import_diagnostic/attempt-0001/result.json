@@ -1,0 +1,14 @@
+{
+  "before_grid_torch_imported": false,
+  "after_grid_torch_imported": true,
+  "grid_rows": 27,
+  "policy_error": {
+    "exception": "RuntimeError",
+    "reason": "fresh hardware worker must configure policy before Torch import"
+  },
+  "elapsed_s": 0.5631050830706954,
+  "python": "3.13.5 (main, Jun 11 2025, 15:36:57) [Clang 17.0.0 (clang-1700.0.13.3)]",
+  "source_sha256": "07923e3415fe457274fec60eff42af7ff7191fb066f0d776a0787a47cd079c54",
+  "no_model_updates": true,
+  "no_device_calls": true
+}
