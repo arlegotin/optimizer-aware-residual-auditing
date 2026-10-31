@@ -1,0 +1,9 @@
+{
+  "delta": 0.2085046466766194,
+  "floor": 0.0,
+  "noise_calibration_shapes": [
+    "middle2048",
+    "middle4096"
+  ],
+  "source": "native-only pooled two-session A/A; frozen before sampler timing"
+}

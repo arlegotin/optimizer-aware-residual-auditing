@@ -1,0 +1,51 @@
+{
+  "automatic_replacement_sessions": 0,
+  "deadline_s": null,
+  "diagnostic_allowance_s": 0,
+  "forecast_s": 6954.365219139494,
+  "includes": "two sessions, 3x component allowance, histories, warmup, reset, variants, startup and serialization; advisory without a configured deadline",
+  "kind": "feasibility",
+  "per_shape": [
+    {
+      "bound_block_s": 0.5394958388060331,
+      "bound_blocks": 388,
+      "forecast_s": 647.905689753592,
+      "minimum_block_s": 0.5,
+      "shape": "middle4096",
+      "updates_per_block": 14
+    },
+    {
+      "bound_block_s": 0.5235208518570289,
+      "bound_blocks": 388,
+      "forecast_s": 627.0586983230896,
+      "minimum_block_s": 0.5,
+      "shape": "middle2048",
+      "updates_per_block": 25
+    },
+    {
+      "bound_block_s": 0.5689845577580854,
+      "bound_blocks": 388,
+      "forecast_s": 680.4645479866304,
+      "minimum_block_s": 0.5,
+      "shape": "middle2048_accum4_stride2",
+      "updates_per_block": 23
+    },
+    {
+      "bound_block_s": 0.6538768317550421,
+      "bound_blocks": 388,
+      "forecast_s": 797.0366907790303,
+      "minimum_block_s": 0.5,
+      "shape": "wide",
+      "updates_per_block": 4
+    },
+    {
+      "bound_block_s": 0.5838094308273867,
+      "bound_blocks": 388,
+      "forecast_s": 694.7169827274047,
+      "minimum_block_s": 0.5,
+      "shape": "tiny",
+      "updates_per_block": 459
+    }
+  ],
+  "sessions": 2
+}

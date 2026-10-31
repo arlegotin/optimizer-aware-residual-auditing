@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 """Protocol tests exercise validation and persisted evidence, not source text."""
 import importlib.util
+import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -76,6 +77,174 @@ def test_missing_failed_and_source_changed_prerequisites_cannot_launch(tmp_path)
     with pytest.raises(ValueError, match='source'):
         d.require_stage(tmp_path, 'feasibility', {'source': 'v2'})
     assert d.require_stage(tmp_path, 'feasibility', {'source': 'v1'})['status'] == 'pass'
+
+
+@pytest.fixture
+def approved_carryover(tmp_path, monkeypatch):
+    """Real sealed filesystem evidence with Git blobs isolated at its boundary."""
+    d = driver()
+    repository = tmp_path/'repository'
+    old = {name: (ROOT/name).read_bytes() for name in d.CORE+d.SAMPLED}
+    old_driver = old['analysis/run_dw_sampling.py'].decode().replace("REVIEWED = '", "OLD_METADATA = True\nREVIEWED = '", 1)
+    old['analysis/run_dw_sampling.py'] = old_driver.encode()
+    old_cfg = yaml.safe_load(old['configs/dw_sampling.yaml'])
+    old_cfg['timing'].pop('cost_gate_upper_ratio')
+    old['configs/dw_sampling.yaml'] = yaml.safe_dump(old_cfg).encode()
+    for name in d.CORE+d.SAMPLED:
+        path = repository/name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes((ROOT/name).read_bytes())
+    (repository/'decisions/dw_sampling_reopening.md').write_text('explicit prospective carryover scope\n')
+    (repository/'tests/test_dw_sampling_protocol.py').write_text('# current, explicitly pinned protocol tests\n')
+    monkeypatch.setattr(d, 'ROOT', repository)
+    monkeypatch.setattr(d, 'git_blob', lambda head, name: old[name], raising=False)
+    out = tmp_path/'run'
+    def make(stage='feasibility', status='pass', missing=None):
+        names = d.CORE if stage == 'feasibility' else d.CORE+d.SAMPLED
+        previous = {name: hashlib.sha256(old[name]).hexdigest() for name in names if name != missing}
+        attempt = d.allocate_attempt(out, stage)
+        d.write_json(attempt/'source_manifest.json', {'actual_head': 'a'*40, 'measurement_hashes': previous,
+                                                    'original_identity': 'retain this source attribution'})
+        d.seal_record(attempt, {'stage': stage, 'status': status, 'measurement_hashes': previous,
+                               'source_manifest_sha256': d.digest(attempt/'source_manifest.json'), 'delta': .2085})
+        entry = {'stage': stage, 'record_sha256': d.digest(attempt/'record.json'),
+                 'previous_measurement_hashes': previous, 'current_measurement_hashes': d.source_hashes('cost')}
+        amendment = {'prerequisite_carryover': [entry], 'bound_files': d.source_hashes('cost')}
+        (repository/'decisions/dw_sampling_amendment.json').write_text(json.dumps(amendment))
+        return attempt, entry, amendment
+    return d, repository, out, old, make
+
+
+@pytest.mark.parametrize('stage', ['prepare', 'feasibility'])
+def test_exact_approved_carryover_preserves_original_record_and_identity(approved_carryover, stage):
+    d, repository, out, old, make = approved_carryover
+    attempt, entry, amendment = make(stage)
+    original = (attempt/'record.json').read_bytes()
+    result = d.require_stage(out, stage, d.source_hashes('cost'))
+    assert result['status'] == 'pass' and result['delta'] == .2085
+    assert result['measurement_hashes'] == entry['previous_measurement_hashes']
+    assert result['carryover']['record_sha256'] == entry['record_sha256']
+    assert result['carryover']['previous_actual_head'] == 'a'*40
+    assert result['carryover']['current_measurement_hashes'] == entry['current_measurement_hashes']
+    assert (attempt/'record.json').read_bytes() == original
+
+
+def test_native_carryover_excludes_only_unconsumed_model_and_asset_dictionaries(approved_carryover):
+    d, repository, out, old, make = approved_carryover
+    attempt, entry, amendment = make()
+    path = repository/'configs/dw_sampling.yaml'
+    cfg = yaml.safe_load(path.read_text())
+    cfg['learning'] = {'separately_frozen_model': 42}
+    cfg['asset'] = {'separately_gated_asset': 'not authorized by native carryover'}
+    path.write_text(yaml.safe_dump(cfg))
+    entry['current_measurement_hashes'] = d.source_hashes('cost')
+    (repository/'decisions/dw_sampling_amendment.json').write_text(json.dumps(amendment))
+    result = d.require_stage(out, 'feasibility', d.source_hashes('cost'))
+    assert result['carryover']['native_config_exclusions'] == ['timing.cost_gate_upper_ratio', 'learning', 'asset']
+    assert result['measurement_hashes'] == entry['previous_measurement_hashes']
+
+
+@pytest.mark.parametrize('setting', ['shape', 'rho', 'optimizer', 'flags', 'timing'])
+def test_carryover_rejects_every_changed_native_setting_even_when_new_hash_is_approved(approved_carryover, setting):
+    d, repository, out, old, make = approved_carryover
+    attempt, entry, amendment = make()
+    path = repository/'configs/dw_sampling.yaml'
+    cfg = yaml.safe_load(path.read_text())
+    if setting == 'shape':
+        cfg['shapes'][0]['n'] = 4097
+    elif setting == 'rho':
+        cfg['rhos'] = [.1]
+    elif setting == 'optimizer':
+        cfg['optimizer']['lr'] = .002
+    elif setting == 'flags':
+        cfg['fallback'] = '1'
+    else:
+        cfg['timing']['pairs'] = 31
+    path.write_text(yaml.safe_dump(cfg))
+    entry['current_measurement_hashes'] = d.source_hashes('cost')
+    (repository/'decisions/dw_sampling_amendment.json').write_text(json.dumps(amendment))
+    with pytest.raises(ValueError, match='native configuration'):
+        d.require_stage(out, 'feasibility', d.source_hashes('cost'))
+
+
+def test_current_carryover_map_must_match_actual_files_even_if_caller_and_entry_agree(approved_carryover):
+    d, repository, out, old, make = approved_carryover
+    attempt, entry, amendment = make()
+    entry['current_measurement_hashes']['analysis/run_dw_sampling.py'] = '0'*64
+    (repository/'decisions/dw_sampling_amendment.json').write_text(json.dumps(amendment))
+    with pytest.raises(ValueError, match='actual consumer'):
+        d.require_stage(out, 'feasibility', entry['current_measurement_hashes'])
+
+
+@pytest.mark.parametrize('missing', ['analysis/run_dw_sampling.py', 'configs/dw_sampling.yaml'])
+def test_carryover_requires_complete_original_measurement_map(approved_carryover, missing):
+    d, repository, out, old, make = approved_carryover
+    make(missing=missing)
+    with pytest.raises(ValueError, match='original measurement map'):
+        d.require_stage(out, 'feasibility', d.source_hashes('cost'))
+
+
+@pytest.mark.parametrize('pin_protocol_test', [True, False])
+def test_native_consumer_carryover_still_requires_explicit_current_protocol_test_pin(approved_carryover, pin_protocol_test):
+    d, repository, out, old, make = approved_carryover
+    attempt, entry, amendment = make(stage='prepare')
+    entry['current_measurement_hashes'] = d.source_hashes('feasibility')
+    if not pin_protocol_test:
+        amendment['bound_files'].pop('tests/test_dw_sampling_protocol.py')
+    (repository/'decisions/dw_sampling_amendment.json').write_text(json.dumps(amendment))
+    if pin_protocol_test:
+        result = d.require_stage(out, 'prepare', d.source_hashes('feasibility'))
+        assert result['carryover']['current_measurement_hashes'] == d.source_hashes('feasibility')
+    else:
+        with pytest.raises(ValueError, match='explicitly pinned'):
+            d.require_stage(out, 'prepare', d.source_hashes('feasibility'))
+
+
+@pytest.mark.parametrize('mutation', ['missing_entry', 'record', 'stage', 'previous_hash', 'current_hash',
+                                    'sampler', 'hardware', 'timing', 'original_scope', 'function',
+                                    'config', 'git_blob', 'failed', 'stale', 'unsealed_manifest'])
+def test_carryover_rejects_wrong_identity_or_changed_measurement(approved_carryover, mutation):
+    d, repository, out, old, make = approved_carryover
+    attempt, entry, amendment = make(status='STOP_COST' if mutation == 'failed' else 'pass')
+    if mutation == 'missing_entry':
+        amendment.pop('prerequisite_carryover')
+    elif mutation == 'record':
+        entry['record_sha256'] = '0'*64
+    elif mutation == 'stage':
+        entry['stage'] = 'prepare'
+    elif mutation == 'previous_hash':
+        entry['previous_measurement_hashes'] = {**entry['previous_measurement_hashes'], 'analysis/run_dw_sampling.py': '0'*64}
+    elif mutation == 'current_hash':
+        entry['current_measurement_hashes'] = {**entry['current_measurement_hashes'], 'analysis/run_dw_sampling.py': '0'*64}
+    elif mutation in ('sampler', 'hardware', 'timing', 'original_scope'):
+        name = {'sampler': 'src/oar/sampled_linear.py', 'hardware': 'src/oar/hardware.py',
+                'timing': 'src/oar/timing.py', 'original_scope': 'decisions/dw_sampling_scope.md'}[mutation]
+        with (repository/name).open('a') as stream:
+            stream.write('\n# unapproved change, even if the entry pins its new hash\n')
+        entry['current_measurement_hashes'] = d.source_hashes('cost')
+    elif mutation == 'function':
+        path = repository/'analysis/run_dw_sampling.py'
+        path.write_text(path.read_text().replace("self.seed = cfg['seed']+session", "self.seed = cfg['seed']+session+1", 1))
+        entry['current_measurement_hashes'] = d.source_hashes('cost')
+    elif mutation == 'config':
+        path = repository/'configs/dw_sampling.yaml'
+        cfg = yaml.safe_load(path.read_text())
+        cfg['timing']['pairs'] = 31
+        path.write_text(yaml.safe_dump(cfg))
+        entry['current_measurement_hashes'] = d.source_hashes('cost')
+    elif mutation == 'git_blob':
+        old['analysis/run_dw_sampling.py'] += b'\n# differs from the sealed source hash\n'
+    elif mutation == 'stale':
+        later = d.allocate_attempt(out, 'feasibility')
+        d.seal_record(later, {'stage': 'feasibility', 'status': 'STOP_COST', 'measurement_hashes': {}})
+    elif mutation == 'unsealed_manifest':
+        path = attempt/'source_manifest.json'
+        identity = json.loads(path.read_text())
+        identity['actual_head'] = 'b'*40
+        path.write_text(json.dumps(identity))
+    (repository/'decisions/dw_sampling_amendment.json').write_text(json.dumps(amendment))
+    with pytest.raises(ValueError):
+        d.require_stage(out, 'feasibility', d.source_hashes('cost'))
 
 
 def test_geometric_paired_estimator_and_noise_threshold():
@@ -361,7 +530,8 @@ def test_unstable_warmup_retains_pairs_and_charged_setup(tmp_path, monkeypatch):
 
 @pytest.mark.parametrize('noise', [.01, .12])
 @pytest.mark.parametrize('kind', ['feasibility', 'cost'])
-def test_stage_uses_only_declared_noise_shapes_without_warmup_veto_or_replacement(tmp_path, monkeypatch, noise, kind):
+@pytest.mark.parametrize('uppers', [(.5, .5), (.9, .9), (.9, 1.01), (.99, 1.)])
+def test_stage_uses_only_declared_noise_shapes_without_warmup_veto_or_replacement(tmp_path, monkeypatch, noise, kind, uppers):
     d = driver()
     cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
     qualification = tmp_path/'qualification.json'
@@ -390,7 +560,7 @@ def test_stage_uses_only_declared_noise_shapes_without_warmup_veto_or_replacemen
             comparison = {'warmup': {'dense': {'stable': False, 'raw_s': [.1, .3]},
                                      'candidate': {'stable': False, 'raw_s': [.1, .3]}},
                           'pairs': [{'seconds': {'dense': 1+error, 'candidate': 1.}}]*30,
-                          'statistics': {'ci95': [.4, .5]}}
+                          'statistics': {'ci95': [.4, uppers[request['session']]]}}
             names = ['AA', 'zero'] if kind == 'feasibility' else [f'{s}-{r}' for s in cfg['samplers'] for r in cfg['rhos']]
             shapes.append({'shape': shape, 'comparisons': {name: comparison for name in names}})
         d.write_json(request['result'], {'status': 'pass', 'session': request['session'], 'shapes': shapes})
@@ -398,12 +568,18 @@ def test_stage_uses_only_declared_noise_shapes_without_warmup_veto_or_replacemen
     monkeypatch.setattr(d, 'command', cpu_worker)
     attempt = d.allocate_attempt(tmp_path, kind)
     result = d.hardware_stage(cfg, ROOT/'configs/dw_sampling.yaml', tmp_path, attempt, kind)
-    assert result['status'] == 'pass'
+    cutoff = 1-2*noise if kind == 'feasibility' else 1.
+    passes = all(upper < cutoff for upper in uppers)
+    assert result['status'] == ('pass' if passes else 'STOP_COST')
     assert result['delta'] == pytest.approx(2*noise)
     assert len(result['sessions']) == 2
     assert all(len(s['shapes']) == 5 for s in result['sessions'])
     assert len(list(attempt.glob('session-invocation-*-request.json'))) == 2
-    assert len(result['eligible']) == (2 if kind == 'feasibility' else 12)
+    expected_arms = 2 if kind == 'feasibility' else 12
+    assert len(result['eligible']) == (expected_arms if passes else 0)
+    guarded = all(upper < 1-2*noise for upper in uppers)
+    assert len(result['noise_guard_eligible']) == (expected_arms if guarded else 0)
+    assert result['gate_upper_ratio'] == pytest.approx(cutoff)
     frozen = json.loads((attempt/'frozen_delta.json').read_text())
     assert frozen['noise_calibration_shapes'] == ['middle2048', 'middle4096']
 

@@ -1,0 +1,126 @@
+FFF..                                                                    [100%]
+=================================== FAILURES ===================================
+_ test_native_carryover_excludes_only_unconsumed_model_and_asset_dictionaries __
+
+approved_carryover = (<module 'dw_sampling_driver' from '/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis...t or language-learning outcome has been observed.\n", ...}, <function approved_carryover.<locals>.make at 0x1091f2700>)
+
+    def test_native_carryover_excludes_only_unconsumed_model_and_asset_dictionaries(approved_carryover):
+        d, repository, out, old, make = approved_carryover
+        attempt, entry, amendment = make()
+        path = repository/'configs/dw_sampling.yaml'
+        cfg = yaml.safe_load(path.read_text())
+        cfg['learning'] = {'separately_frozen_model': 42}
+        cfg['asset'] = {'separately_gated_asset': 'not authorized by native carryover'}
+        path.write_text(yaml.safe_dump(cfg))
+        entry['current_measurement_hashes'] = d.source_hashes('cost')
+        (repository/'decisions/dw_sampling_amendment.json').write_text(json.dumps(amendment))
+>       result = d.require_stage(out, 'feasibility', d.source_hashes('cost'))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_dw_sampling_protocol.py:142: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+analysis/run_dw_sampling.py:135: in require_stage
+    return prerequisite_carryover(paths[-1], record, stage, measurement_hashes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-2466/test_native_carryover_excludes0/run/feasibility/attempt-0001/record.json')
+record = {'artifacts': {'source_manifest.json': '155c8dff2ba3f4bfa0bd0ec6781ccd82ebd55901be905d9a7b547469245bda89'}, 'delta': 0...117f83e39c648e48d435de75ab9ea5a3b6bc197b216c4b73c11181', ...}, 'recorded_utc': '2026-10-31T12:54:54.446644+00:00', ...}
+stage = 'feasibility'
+measurement_hashes = {'analysis/run_dw_sampling.py': '0a2ee7d9a9d7cd3263bc7315b8c3dd2185029282c07626eee72e9150f833489d', 'configs/dw_sampli...c11181', 'decisions/dw_sampling_reopening.md': '36d76fc68d36a1ddadf3f53354245e13fb1bf644de941be92ba59c9b6a4342d5', ...}
+
+    def prerequisite_carryover(path, record, stage, measurement_hashes):
+        """Explicit A/B continuity only; preserve the prior sealed attribution."""
+        import yaml
+        from oar.config import _UniqueLoader
+        amendment = json.loads((ROOT/'decisions/dw_sampling_amendment.json').read_text())
+        entries = amendment.get('prerequisite_carryover', [])
+        entry = next((item for item in entries if item.get('stage') == stage
+                      and item.get('record_sha256') == digest(path)
+                      and item.get('previous_measurement_hashes') == record['measurement_hashes']
+                      and item.get('current_measurement_hashes') == measurement_hashes), None)
+        if stage not in ('prepare', 'feasibility') or record['status'] != 'pass' or entry is None:
+            raise ValueError('prerequisite source/config mismatch: no exact approved carryover')
+        current = source_hashes('cost')
+        native = {name: current[name] for name in CORE}
+        if measurement_hashes not in (native, current) or not set(record['measurement_hashes']).issubset(current):
+            raise ValueError('carryover current source/config map differs from actual consumer sources')
+        manifest_path = Path(path).parent/'source_manifest.json'
+        if record.get('source_manifest_sha256') != digest(manifest_path) or 'source_manifest.json' not in record['artifacts']:
+            raise ValueError('carryover original source manifest is not sealed')
+        manifest = json.loads(manifest_path.read_text())
+        if manifest['measurement_hashes'] != record['measurement_hashes']:
+            raise ValueError('carryover original source identity mismatch')
+        head = manifest['actual_head']
+        if not re.fullmatch('[0-9a-f]{40}', head):
+            raise ValueError('invalid carryover original Git head')
+        original = {name: git_blob(head, name) for name in current}
+        old_hashes = {name: hashlib.sha256(blob).hexdigest() for name, blob in original.items()}
+        if any(old_hashes[name] != expected for name, expected in record['measurement_hashes'].items()):
+            raise ValueError('carryover original Git blobs differ from sealed measurement hashes')
+        allowed = {'analysis/run_dw_sampling.py', 'configs/dw_sampling.yaml',
+                   'decisions/dw_sampling_reopening.md', 'tests/test_dw_sampling_protocol.py'}
+        changed = {name for name in current if old_hashes[name] != current[name]}
+        if changed-allowed:
+            raise ValueError('carryover changed protected measured source: '+', '.join(sorted(changed-allowed)))
+        # A native-only consumer omits protocol tests from its map. Their changed
+        # hash must still be explicitly pinned by the current amendment's freeze.
+        for name in changed-set(measurement_hashes):
+            if amendment.get('bound_files', {}).get(name) != current[name]:
+                raise ValueError('carryover omitted changed source is not explicitly pinned')
+        measured = ('configure_torch', 'Fixture', 'zero_dw_linear', 'native_variant_qualification',
+                    'timed_pairs', 'state_streams', 'cost_session', 'select_native_variant',
+                    'assert_native_equivalent', 'choose_block_length', 'primitive_qualification',
+                    'environment', 'dependency_inventory', 'prepare')
+        def measured_asts(source):
+            nodes = {node.name: ast.dump(node, include_attributes=False) for node in ast.parse(source).body
+                     if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and node.name in measured}
+            if set(nodes) != set(measured):
+                raise ValueError('carryover is missing a measured function or class')
+            return nodes
+        if measured_asts(original['analysis/run_dw_sampling.py']) != measured_asts((ROOT/'analysis/run_dw_sampling.py').read_bytes()):
+            raise ValueError('carryover measured function/class AST changed')
+        def native_config(source):
+            value = yaml.load(source, Loader=_UniqueLoader)
+            value['timing'].pop('cost_gate_upper_ratio', None)
+            # Native A/B do not consume model/data settings. This exclusion does
+            # not establish any learning/asset permission or model qualification.
+            return canonical(value)
+        if native_config(original['configs/dw_sampling.yaml']) != native_config((ROOT/'configs/dw_sampling.yaml').read_bytes()):
+>           raise ValueError('carryover native configuration changed')
+E           ValueError: carryover native configuration changed
+
+analysis/run_dw_sampling.py:207: ValueError
+_ test_carryover_requires_complete_original_measurement_map[analysis/run_dw_sampling.py] _
+
+approved_carryover = (<module 'dw_sampling_driver' from '/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis...t or language-learning outcome has been observed.\n", ...}, <function approved_carryover.<locals>.make at 0x1090358a0>)
+missing = 'analysis/run_dw_sampling.py'
+
+    @pytest.mark.parametrize('missing', ['analysis/run_dw_sampling.py', 'configs/dw_sampling.yaml'])
+    def test_carryover_requires_complete_original_measurement_map(approved_carryover, missing):
+        d, repository, out, old, make = approved_carryover
+        make(missing=missing)
+>       with pytest.raises(ValueError, match='original measurement map'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_dw_sampling_protocol.py:183: Failed
+_ test_carryover_requires_complete_original_measurement_map[configs/dw_sampling.yaml] _
+
+approved_carryover = (<module 'dw_sampling_driver' from '/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis...t or language-learning outcome has been observed.\n", ...}, <function approved_carryover.<locals>.make at 0x1091f2d40>)
+missing = 'configs/dw_sampling.yaml'
+
+    @pytest.mark.parametrize('missing', ['analysis/run_dw_sampling.py', 'configs/dw_sampling.yaml'])
+    def test_carryover_requires_complete_original_measurement_map(approved_carryover, missing):
+        d, repository, out, old, make = approved_carryover
+        make(missing=missing)
+>       with pytest.raises(ValueError, match='original measurement map'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_dw_sampling_protocol.py:183: Failed
+=========================== short test summary info ============================
+FAILED tests/test_dw_sampling_protocol.py::test_native_carryover_excludes_only_unconsumed_model_and_asset_dictionaries
+FAILED tests/test_dw_sampling_protocol.py::test_carryover_requires_complete_original_measurement_map[analysis/run_dw_sampling.py]
+FAILED tests/test_dw_sampling_protocol.py::test_carryover_requires_complete_original_measurement_map[configs/dw_sampling.yaml]
+3 failed, 2 passed, 82 deselected in 0.42s

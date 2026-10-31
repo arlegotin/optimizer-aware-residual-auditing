@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: CC-BY-4.0
-# Owner-authorized exploratory reopening; immutable prior configuration is archived.
+# Owner-authorized exploratory reopening; prior configurations are archived.
 schema_version: 2
 experiment: fixed_budget_norm_importance_dw
 reviewed_head: 9d8ad069c51b4d0e6c13e9c6e465579e9b44a339
@@ -79,6 +79,7 @@ timing:
   noise_calibration_shapes:
   - middle2048
   - middle4096
+  cost_gate_upper_ratio: 1.0
 optimizer:
   lr: 0.001
   betas:

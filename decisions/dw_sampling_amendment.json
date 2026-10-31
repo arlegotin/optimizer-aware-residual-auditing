@@ -1,5 +1,5 @@
 {
-  "actual_head_at_freeze": "40fd56fa71ec80bb0d28aa2e49ab8e5b2a13fef4",
+  "actual_head_at_freeze": "d7782862c025da6ee27dc9f7692b75fe926cb070",
   "allowed_commands": [
     "PYTHONPATH=src .venv/bin/python analysis/run_dw_sampling.py --stage prepare --config configs/dw_sampling.yaml --out analysis/dw_sampling/20261031T120154Z-reopened",
     "PYTHONPATH=src .venv/bin/python analysis/run_dw_sampling.py --stage feasibility --config configs/dw_sampling.yaml --out analysis/dw_sampling/20261031T120154Z-reopened",
@@ -9,7 +9,7 @@
     "PYTHONPATH=src .venv/bin/python analysis/run_dw_sampling.py --stage confirm --config configs/dw_sampling.yaml --out analysis/dw_sampling/20261031T120154Z-reopened",
     "PYTHONPATH=src .venv/bin/python analysis/run_dw_sampling.py --stage summarize --config configs/dw_sampling.yaml --out analysis/dw_sampling/20261031T120154Z-reopened"
   ],
-  "authorization": "Latest owner explicitly authorizes rewriting artificial measurement caps, seeking useful positive results, fixing and continuing; fresh exploratory timing after retained original stop. Accuracy, actual full costs and asset restrictions remain.",
+  "authorization": "Latest owner explicitly authorizes rewriting artificial measurement caps, seeking useful positive results, fixing and continuing; fresh exploratory timing after retained original stop. Accuracy, actual full costs and asset restrictions remain. Before any sampled outcomes, remove the remaining minimum-gain heuristic: D requires paired upper95%<1 in both sessions, with original noise screen separately retained. Exact reviewed A/B native-work continuity approved; old evidence keeps original source attribution.",
   "bound_files": {
     ".gitattributes": "c4108d9ba3c343b34d21a91045dce326d162403b24d46428a58ffc5eb46d7be0",
     ".gitignore": "612dbae2647f4e03e7404f50f8d206cee70bcd79f3fcb3d5a0573725c8325833",
@@ -30,11 +30,18 @@
     "analysis/collector_manifest.json": "6720db8392db71ecfedf3db1ee2ddd41fe90efa96e04bb033ed5712427a35baf",
     "analysis/dw_sampling/20261031T105213Z/final_hashes.json": "4fdd90c000ee32c79b9e4405361a27819c88690b3d225df09dc1bfacac9daaf8",
     "analysis/dw_sampling/20261031T105213Z/final_report-v2.md": "b5aeb14457b33fa2ae61753c4fdff543cc31071f608b60628c656f65b0e7d34e",
+    "analysis/dw_sampling/20261031T120154Z-reopened/feasibility/attempt-0001/record.json": "716ec10cfe1827b8e85f03deb5229484ff7c20b80d2c7178b1395c4b5acda506",
     "analysis/dw_sampling/20261031T120154Z-reopened/initial_inspection.json": "1958a0004115bd34164d297c38e6b911a11001d208ca48322adcfc1c0e6cf90c",
+    "analysis/dw_sampling/20261031T120154Z-reopened/prepare/attempt-0002/record.json": "15ce3e2a98ab2a4275cc6a251539b76c3ff274f51d2d5cf3166600438d2cf961",
     "analysis/dw_sampling/20261031T120154Z-reopened/prospective/asset_documentary_review.md": "a055e9c5e67b0d5d93ee6b9f110cfb281361c9b0d5334d792499c4d183e44421",
     "analysis/dw_sampling/20261031T120154Z-reopened/prospective/asset_local_use_decision.json": "c08a9d0689c51733a585151ecb7197a0df449d20a0daac589ed14a9b94a2f064",
+    "analysis/dw_sampling/20261031T120154Z-reopened/prospective/cost_policy_review.md": "bdaadd31a0da33741b71596c292dfe9666ac9be774458a43a6f7cd2eacd79567",
     "analysis/dw_sampling/20261031T120154Z-reopened/prospective/previous-dw_sampling.yaml": "afbff17b101ffc45963b0bb8132574c405ba821f196704ff254e721e9e7ad4c3",
     "analysis/dw_sampling/20261031T120154Z-reopened/prospective/previous-dw_sampling_amendment.json": "7c269df87b3c726def0dccebf245e978da00f1835def79482ecaaf425d613c27",
+    "analysis/dw_sampling/20261031T120154Z-reopened/prospective/version4-before-cost-policy/dw_sampling.yaml": "f3ca918c8feb299ccc595169c15b1e7dc8800be105c1dbda154f8ac8752f0c9f",
+    "analysis/dw_sampling/20261031T120154Z-reopened/prospective/version4-before-cost-policy/dw_sampling_amendment.json": "e978e62fc6997fc20ebfff56a98a2bcc9e80fc97a4799a20e31011bcff138d34",
+    "analysis/dw_sampling/20261031T120154Z-reopened/prospective/version4-before-cost-policy/dw_sampling_reopening.md": "e494ab971dfdba55b8673242cc149e7b8180d86bb1b8452037c71652999c1618",
+    "analysis/dw_sampling/20261031T120154Z-reopened/prospective/version4-before-cost-policy/run_dw_sampling.py": "95fcdc418b000afd5a405bfb42076b76ef86b31ffe34c94abced68cbee69e22d",
     "analysis/evidence_history.json": "3c1f20b20f93682330ba0992e930e2165815ef442b92de30d11f01c4944f7894",
     "analysis/evidence_index.json": "94909a9f7f2fb7b4044907815a4c17e8f1ffcea4718abea6c6be5ff8a0b71143",
     "analysis/guardband_calibration.json": "24d5455bb39376610c2c0767a2ceb0744b741347dae37a5d399e12e6556ff387",
@@ -85,7 +92,7 @@
     "analysis/reproduction/wp09/structural_oracle_schema.json": "b702c98a720f0932954f575f1893769b3860b474921b872e0e87ecc8405af524",
     "analysis/reproduction/wp09/structural_oracle_summary.json": "f9f2fac192c011f2f2c9944d49cccda47deaa35a6d10a90c6ab4e06cb3ab2b56",
     "analysis/resource_context.json": "e389ac6bad68c2252c2a6ba27de9dd75143c4e0d9cbefd4a7352482566bcd5d5",
-    "analysis/run_dw_sampling.py": "95fcdc418b000afd5a405bfb42076b76ef86b31ffe34c94abced68cbee69e22d",
+    "analysis/run_dw_sampling.py": "ef2ac4894f1217f6fbf3ef844febf360aaea6448f6d4028ce9a0e42b11604059",
     "analysis/scientific_gate_snapshot.json": "62c3af64f199cb398c6e24e1cc6655f2c9b8b9e90a3bad2aa684bd60d8a6cf32",
     "analysis/structural_oracle_aggregate.json": "90c4bcba1138a07a01c2bd6295de8846cafa02f678e9f8ecd17cf886a91d54b8",
     "analysis/structural_oracle_audit.jsonl": "2c7c4374a58037a27d2ae4b76ee799089328690b07e7c2194ca3317e8f70c518",
@@ -102,12 +109,12 @@
     "analysis/timing_calibration_wide.json": "04a0157a7c5c0b4821a1ebabdb157237e185e21a154199f3d52dad38def2b0e6",
     "analysis/wp09_verification.json": "697516d857645b8aaf407f2ba88615619f32def41801289e162f381f01afe31d",
     "configs/discovery.yaml": "0fa914fb68e6b48eaf2e19a5f3b1aefcbf5189e5860d28f2349969994177d99d",
-    "configs/dw_sampling.yaml": "f3ca918c8feb299ccc595169c15b1e7dc8800be105c1dbda154f8ac8752f0c9f",
+    "configs/dw_sampling.yaml": "fdfcadb9298c6a57057c0bb6d646c2b997f7298efbfdd301bd9016471238fe34",
     "configs/operator.yaml": "fc6caa711980c09d315bc205cf4cb121e662bc02659bc916702cc62bf7b4ffcb",
     "configs/operator_wide.yaml": "1ea9e3ca5ffadd83316e9d1240896c0bab2e7897b9af4bafc4c61159dfe9f400",
     "configs/structural_oracle.yaml": "a387445beda9eeb81f4d2107cfa3c457fb89b3399c5684035d6c5fb5990c169b",
     "decisions/amendments.jsonl": "78ae5c0c6d1daa0e819e77da889553efa72547693451b8cfbf9627c6f2e23bda",
-    "decisions/dw_sampling_reopening.md": "e494ab971dfdba55b8673242cc149e7b8180d86bb1b8452037c71652999c1618",
+    "decisions/dw_sampling_reopening.md": "a6e074e7c36536fe118d8bb7a9ff3107426f347ed672a31071d22a419029f76e",
     "decisions/dw_sampling_scope.md": "d91d9350dc117f83e39c648e48d435de75ab9ea5a3b6bc197b216c4b73c11181",
     "decisions/gates.jsonl": "7afc234d1e978292d65da6bc961455480f63418c4a6c5fb5b14b8afcacd779dc",
     "decisions/outcome.json": "d06b25e1b475d1527f9f8a4e9a618bae20f82ad3c48abcd131e3847f37fb4aad",
@@ -162,7 +169,7 @@
     "tests/test_confidence.py": "7f6f16f8bac0ec4cdec5dfec10ca6b122a9ce5702d8f2dc0cb2b18be4c2ca690",
     "tests/test_config_records.py": "bb50cd9aea2f98f928324ab2f13e4dee29612804cb06f1efef78e86d92dcdd23",
     "tests/test_discovery.py": "337f2ed69cc17225e2198532ce23d957cec87688d25fd744d96b1605456685b2",
-    "tests/test_dw_sampling_protocol.py": "202d7ee25cc06f44e8d3c48895d17719b99bc4802ab34e50a40d6cd9f6081ab6",
+    "tests/test_dw_sampling_protocol.py": "9306b07f009ab8c83e82c278675867c012fabc3671db60a052a7fb6e3643532b",
     "tests/test_exact_adjoints.py": "7276d899195b667615e19ee75a8ab955dfcff24bd25c9f6259ae13173cc229ba",
     "tests/test_optimizer_preview.py": "178c6cd2f3275abaf5614c81fea49e6aef665db32d1f269d29c48fa603b75ada",
     "tests/test_oracle.py": "0687bb463152a59768e97f7bb81adc7704bbdfc06160e9e87adc4c59007ed58f",
@@ -211,13 +218,66 @@
     "third_party/discovery/wikitext/files.json": "9c9602642269af6515e5d7cd452be5e74778f3b94472b31b3cb4559f2d9981f4"
   },
   "branch": "research/dw-sampling",
-  "config_sha256": "f3ca918c8feb299ccc595169c15b1e7dc8800be105c1dbda154f8ac8752f0c9f",
+  "carryover_review_sha256": "bdaadd31a0da33741b71596c292dfe9666ac9be774458a43a6f7cd2eacd79567",
+  "carryover_scope": "Only the exact hash-bound unchanged A/B work, verified against old Git blobs and current native functions/config, plus complete diff review. No general future-change authorization.",
+  "config_sha256": "fdfcadb9298c6a57057c0bb6d646c2b997f7298efbfdd301bd9016471238fe34",
   "device": "mps",
   "dtype": "float32",
-  "frozen_utc": "2026-10-31T12:15:43.277873+00:00",
+  "frozen_utc": "2026-10-31T12:59:41.171354+00:00",
   "historical_amendment_file_sha256": "78ae5c0c6d1daa0e819e77da889553efa72547693451b8cfbf9627c6f2e23bda",
   "historical_gate_file_sha256": "7afc234d1e978292d65da6bc961455480f63418c4a6c5fb5b14b8afcacd779dc",
   "kind": "owner_reopened_fixed_budget_dw_sampling",
+  "prerequisite_carryover": [
+    {
+      "current_measurement_hashes": {
+        "analysis/run_dw_sampling.py": "ef2ac4894f1217f6fbf3ef844febf360aaea6448f6d4028ce9a0e42b11604059",
+        "configs/dw_sampling.yaml": "fdfcadb9298c6a57057c0bb6d646c2b997f7298efbfdd301bd9016471238fe34",
+        "decisions/dw_sampling_reopening.md": "a6e074e7c36536fe118d8bb7a9ff3107426f347ed672a31071d22a419029f76e",
+        "decisions/dw_sampling_scope.md": "d91d9350dc117f83e39c648e48d435de75ab9ea5a3b6bc197b216c4b73c11181",
+        "src/oar/hardware.py": "4ba118d816eec9d255cfb3d7925416373119fe181f82529fb58a96347d8e5048",
+        "src/oar/sampled_linear.py": "11398f9340a48b0dcabdc733c74dfa52b53663ea2005989f2ad7b53079827ca3",
+        "src/oar/timing.py": "25351cd20abc14385dd1cb3e482c67f73619b1ead30900ca0150fe57072458e5",
+        "tests/test_dw_sampling_protocol.py": "9306b07f009ab8c83e82c278675867c012fabc3671db60a052a7fb6e3643532b",
+        "tests/test_sampled_linear.py": "3ed4adbf6f62599172b0322374e84c7552f7fc4b46761f80057053469822eaa9"
+      },
+      "previous_measurement_hashes": {
+        "analysis/run_dw_sampling.py": "95fcdc418b000afd5a405bfb42076b76ef86b31ffe34c94abced68cbee69e22d",
+        "configs/dw_sampling.yaml": "f3ca918c8feb299ccc595169c15b1e7dc8800be105c1dbda154f8ac8752f0c9f",
+        "decisions/dw_sampling_reopening.md": "e494ab971dfdba55b8673242cc149e7b8180d86bb1b8452037c71652999c1618",
+        "decisions/dw_sampling_scope.md": "d91d9350dc117f83e39c648e48d435de75ab9ea5a3b6bc197b216c4b73c11181",
+        "src/oar/hardware.py": "4ba118d816eec9d255cfb3d7925416373119fe181f82529fb58a96347d8e5048",
+        "src/oar/sampled_linear.py": "11398f9340a48b0dcabdc733c74dfa52b53663ea2005989f2ad7b53079827ca3",
+        "src/oar/timing.py": "25351cd20abc14385dd1cb3e482c67f73619b1ead30900ca0150fe57072458e5",
+        "tests/test_dw_sampling_protocol.py": "202d7ee25cc06f44e8d3c48895d17719b99bc4802ab34e50a40d6cd9f6081ab6",
+        "tests/test_sampled_linear.py": "3ed4adbf6f62599172b0322374e84c7552f7fc4b46761f80057053469822eaa9"
+      },
+      "record_sha256": "15ce3e2a98ab2a4275cc6a251539b76c3ff274f51d2d5cf3166600438d2cf961",
+      "stage": "prepare"
+    },
+    {
+      "current_measurement_hashes": {
+        "analysis/run_dw_sampling.py": "ef2ac4894f1217f6fbf3ef844febf360aaea6448f6d4028ce9a0e42b11604059",
+        "configs/dw_sampling.yaml": "fdfcadb9298c6a57057c0bb6d646c2b997f7298efbfdd301bd9016471238fe34",
+        "decisions/dw_sampling_reopening.md": "a6e074e7c36536fe118d8bb7a9ff3107426f347ed672a31071d22a419029f76e",
+        "decisions/dw_sampling_scope.md": "d91d9350dc117f83e39c648e48d435de75ab9ea5a3b6bc197b216c4b73c11181",
+        "src/oar/hardware.py": "4ba118d816eec9d255cfb3d7925416373119fe181f82529fb58a96347d8e5048",
+        "src/oar/sampled_linear.py": "11398f9340a48b0dcabdc733c74dfa52b53663ea2005989f2ad7b53079827ca3",
+        "src/oar/timing.py": "25351cd20abc14385dd1cb3e482c67f73619b1ead30900ca0150fe57072458e5",
+        "tests/test_dw_sampling_protocol.py": "9306b07f009ab8c83e82c278675867c012fabc3671db60a052a7fb6e3643532b",
+        "tests/test_sampled_linear.py": "3ed4adbf6f62599172b0322374e84c7552f7fc4b46761f80057053469822eaa9"
+      },
+      "previous_measurement_hashes": {
+        "analysis/run_dw_sampling.py": "95fcdc418b000afd5a405bfb42076b76ef86b31ffe34c94abced68cbee69e22d",
+        "configs/dw_sampling.yaml": "f3ca918c8feb299ccc595169c15b1e7dc8800be105c1dbda154f8ac8752f0c9f",
+        "decisions/dw_sampling_reopening.md": "e494ab971dfdba55b8673242cc149e7b8180d86bb1b8452037c71652999c1618",
+        "decisions/dw_sampling_scope.md": "d91d9350dc117f83e39c648e48d435de75ab9ea5a3b6bc197b216c4b73c11181",
+        "src/oar/hardware.py": "4ba118d816eec9d255cfb3d7925416373119fe181f82529fb58a96347d8e5048",
+        "src/oar/timing.py": "25351cd20abc14385dd1cb3e482c67f73619b1ead30900ca0150fe57072458e5"
+      },
+      "record_sha256": "716ec10cfe1827b8e85f03deb5229484ff7c20b80d2c7178b1395c4b5acda506",
+      "stage": "feasibility"
+    }
+  ],
   "prerequisites": {
     "confirm": "learning pilot and prospective protected protocol freeze; currently unreached",
     "correctness": "applicable exact-reference/operator/protocol checks; hardware absence permits CPU only",
@@ -228,7 +288,7 @@
     "summarize": "any retained prefix"
   },
   "previous_authorization_sha256": "7c269df87b3c726def0dccebf245e978da00f1835def79482ecaaf425d613c27",
-  "reopening_scope_sha256": "e494ab971dfdba55b8673242cc149e7b8180d86bb1b8452037c71652999c1618",
+  "reopening_scope_sha256": "a6e074e7c36536fe118d8bb7a9ff3107426f347ed672a31071d22a419029f76e",
   "resources": {
     "forecasts": "advisory complete measured forecast, no arbitrary whole-stage kill",
     "guards": "real available memory, native allocator, disk reserve, finite numerics, exclusive session, no outside compute purchase",
@@ -240,6 +300,6 @@
   "schema_version": 1,
   "scope_sha256": "d91d9350dc117f83e39c648e48d435de75ab9ea5a3b6bc197b216c4b73c11181",
   "source_commit_mapping": "Names freeze parent to avoid self-hash cycle. Stage manifests retain actual execution HEAD and direct hashes; subsequent local commit contains exact frozen bytes.",
-  "version": 4,
+  "version": 5,
   "wp02_record_sha256": "e0e18a81aa55be06273890cb1dd3b6fd31dc8dfb237061d2e181f23a9fc82f22"
 }

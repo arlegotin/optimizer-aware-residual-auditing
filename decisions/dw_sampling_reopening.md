@@ -35,13 +35,16 @@ learning outcomes. These are accuracy requirements, not arbitrary runtime caps.
   despite legitimate CPU/device storage differences. Select the fastest
   supported native implementation from baseline-only pilots, retaining all
   observations and warmup flags; no native optimization is disabled.
-- Replace the fixed 5% minimum gain with measured uncertainty. Freeze
-  delta=2*linear_quantile95(abs(TA/TB-1)) using A/A pairs at n2048/n4096 across
-  the two sessions before inspecting sampler timing. There is no 15% delta
-  rejection cap. The paired candidate upper interval must beat 1-delta at a
-  relevant shape in both sessions. This remains an exploratory screening rule,
-  not a familywise guarantee or a learning result. All shape results remain
-  visible, including noisy or negative controls.
+- Remove a fixed minimum required speedup. Preserve
+  delta=2*linear_quantile95(abs(TA/TB-1)) as a native A/A jitter diagnostic,
+  computed from n2048/n4096 across both sessions before sampler timing. There
+  is no 15% delta rejection cap. For sampled cost, require the paired candidate
+  95% upper time-ratio interval to be below 1 at the same relevant shape in
+  BOTH sessions. Also report the old stricter 1-delta screen descriptively.
+  Individual-block jitter is not itself a minimum worthwhile mean improvement;
+  the paired interval quantifies uncertainty in the measured mean log ratio.
+  These are exploratory screens, not familywise guarantees or learning results.
+  All shape results remain visible, including noisy or negative controls.
 - Remove the one-replacement-session rule and arbitrary whole-stage duration
   and output-size ceilings. The initial plan still collects two fresh sessions
   and 30 matched pairs per arm; it does not keep drawing until a positive
@@ -94,3 +97,41 @@ new amendment must be committed before new comparative measurements.
 Software AGPL-3.0-only; original writing/results CC-BY-4.0. Prior-art attribution
 and all original method/data/quality safeguards not explicitly revised above
 remain as recorded in dw_sampling_scope.md and the owner's original task.
+
+## Cost-policy refinement before any sampled timing
+
+After B completed and before D/candidate timing, the native A/A diagnostic was
+0.2085046466766194. Requiring that much minimum gain in addition to a paired
+confidence interval would reject even a repeatable smaller benefit. Under the
+owners explicit removal of artificial limits, use upper95%<1 for D and retain
+the 1-delta comparison as a disclosed sensitivity screen. No sampler timing or
+learning outcome was inspected to make this change. B's native work, raw data,
+original delta and passed headroom result remain exactly as recorded at d778286.
+
+Carry over unaffected A/B prerequisites only through a new hash-bound record
+continuity declaration. It must match the exact prior sealed record, old/new
+measurement maps, Git source identities, unchanged measured function ASTs,
+unchanged sampler/hardware/timing source, and unchanged native configuration
+(after removing only the new cost-gate field). Current correctness tests run
+again. This avoids remeasuring 24 minutes of unchanged native work merely
+because an unused D decision branch or metadata validator changed. It never
+turns a failed gate into a pass or attributes old times to new measured code.
+
+The A/A jitter diagnostic likewise does not become a minimum required learning
+speedup. If learning gates are reached, freeze the held-out target and unchanged
+common-budget quality guard before protected outcomes, and require the seed-pair
+95% upper target-time ratio below 1 plus the existing endpoint-quality bound.
+Monitor resolution, interval sensitivity and simpler-competitor ties are still
+reported. Choose a fixed confirmation run count from independent development
+variability and real available resources; a historical arbitrary maximum of16
+is not a reason to discard an otherwise feasible adequately powered study.
+Do not add seeds after inspecting a confirmation p-value, retune protected
+thresholds, or call an unresolved/negative result positive. These clarifications
+are prospective: no sampled cost or language-learning outcome has been observed.
+
+Continuity declarations approve only the exact source hashes and complete diff
+reviewed for that declaration. The selected AST comparison is a consistency
+check, not a general proof about arbitrary future module code or transitive
+helpers. Every refreshed declaration needs a renewed exact-diff review that
+also checks unchanged helper/initialization/statistical code; an old declaration
+cannot approve a new driver hash automatically.

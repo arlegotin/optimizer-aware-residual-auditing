@@ -7,6 +7,7 @@ while the recorded asset restriction is unresolved. No old oracle is invoked.
 from __future__ import annotations
 
 import argparse
+import ast
 import base64
 import copy
 from contextlib import contextmanager, ExitStack
@@ -27,7 +28,7 @@ import traceback
 
 ROOT = Path(__file__).resolve().parents[1]
 REVIEWED = '9d8ad069c51b4d0e6c13e9c6e465579e9b44a339'
-PROTOCOL = 'f407dd2d636c078bd7e2f79112ea31b665636d42cf818d3f6f835b4a39ab2a80'
+PROTOCOL = '8d0ce1920bdc06d0c02f94a0ca14a7a7e9e976060225820270bf8c1affbeca67'
 STAGES = ('prepare', 'feasibility', 'correctness', 'cost', 'pilot', 'confirm', 'summarize')
 CORE = ('analysis/run_dw_sampling.py', 'configs/dw_sampling.yaml', 'decisions/dw_sampling_scope.md',
         'decisions/dw_sampling_reopening.md',
@@ -124,15 +125,95 @@ def require_stage(out, stage, measurement_hashes):
         raise ValueError(f'missing prerequisite: {stage}')
     # Latest attempt is authoritative; an older pass cannot hide a later stop.
     record = read_record(paths[-1])
-    if record['status'] != 'pass':
+    if record.get('stage') != stage or record['status'] != 'pass':
         raise ValueError(f'failed prerequisite {stage}: {record["status"]}')
     previous = record['measurement_hashes']
     for name, expected in previous.items():
         # A native-only consumer does not depend on the sampled source/tests.
         # Every consumer passes its complete, explicit dependency map.
         if name in measurement_hashes and measurement_hashes[name] != expected:
-            raise ValueError(f'prerequisite source/config mismatch: {name}')
+            return prerequisite_carryover(paths[-1], record, stage, measurement_hashes)
     return record
+
+
+def git_blob(head, name):
+    """Read the exact original committed bytes; never use a working-tree copy."""
+    if not re.fullmatch('[0-9a-f]{40}', head) or name not in CORE+SAMPLED:
+        raise ValueError('invalid carryover Git source identity')
+    try:
+        return subprocess.check_output(['git', 'show', f'{head}:{name}'], cwd=ROOT, stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as exc:
+        raise ValueError('unavailable carryover Git source identity') from exc
+
+
+def prerequisite_carryover(path, record, stage, measurement_hashes):
+    """Explicit A/B continuity only; preserve the prior sealed attribution."""
+    import yaml
+    from oar.config import _UniqueLoader
+    amendment = json.loads((ROOT/'decisions/dw_sampling_amendment.json').read_text())
+    entries = amendment.get('prerequisite_carryover', [])
+    entry = next((item for item in entries if item.get('stage') == stage
+                  and item.get('record_sha256') == digest(path)
+                  and item.get('previous_measurement_hashes') == record['measurement_hashes']
+                  and item.get('current_measurement_hashes') == measurement_hashes), None)
+    if stage not in ('prepare', 'feasibility') or record['status'] != 'pass' or entry is None:
+        raise ValueError('prerequisite source/config mismatch: no exact approved carryover')
+    expected_previous = CORE if stage == 'feasibility' else CORE+SAMPLED
+    if set(record['measurement_hashes']) != set(expected_previous):
+        raise ValueError('carryover incomplete original measurement map')
+    current = source_hashes('cost')
+    native = {name: current[name] for name in CORE}
+    if measurement_hashes not in (native, current) or not set(record['measurement_hashes']).issubset(current):
+        raise ValueError('carryover current source/config map differs from actual consumer sources')
+    manifest_path = Path(path).parent/'source_manifest.json'
+    if record.get('source_manifest_sha256') != digest(manifest_path) or 'source_manifest.json' not in record['artifacts']:
+        raise ValueError('carryover original source manifest is not sealed')
+    manifest = json.loads(manifest_path.read_text())
+    if manifest['measurement_hashes'] != record['measurement_hashes']:
+        raise ValueError('carryover original source identity mismatch')
+    head = manifest['actual_head']
+    if not re.fullmatch('[0-9a-f]{40}', head):
+        raise ValueError('invalid carryover original Git head')
+    original = {name: git_blob(head, name) for name in current}
+    old_hashes = {name: hashlib.sha256(blob).hexdigest() for name, blob in original.items()}
+    if any(old_hashes[name] != expected for name, expected in record['measurement_hashes'].items()):
+        raise ValueError('carryover original Git blobs differ from sealed measurement hashes')
+    allowed = {'analysis/run_dw_sampling.py', 'configs/dw_sampling.yaml',
+               'decisions/dw_sampling_reopening.md', 'tests/test_dw_sampling_protocol.py'}
+    changed = {name for name in current if old_hashes[name] != current[name]}
+    if changed-allowed:
+        raise ValueError('carryover changed protected measured source: '+', '.join(sorted(changed-allowed)))
+    # A native-only consumer omits protocol tests from its map. Their changed
+    # hash must still be explicitly pinned by the current amendment's freeze.
+    for name in changed-set(measurement_hashes):
+        if amendment.get('bound_files', {}).get(name) != current[name]:
+            raise ValueError('carryover omitted changed source is not explicitly pinned')
+    measured = ('configure_torch', 'Fixture', 'zero_dw_linear', 'native_variant_qualification',
+                'timed_pairs', 'state_streams', 'cost_session', 'select_native_variant',
+                'assert_native_equivalent', 'choose_block_length', 'primitive_qualification',
+                'environment', 'dependency_inventory', 'prepare')
+    def measured_asts(source):
+        nodes = {node.name: ast.dump(node, include_attributes=False) for node in ast.parse(source).body
+                 if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and node.name in measured}
+        if set(nodes) != set(measured):
+            raise ValueError('carryover is missing a measured function or class')
+        return nodes
+    if measured_asts(original['analysis/run_dw_sampling.py']) != measured_asts((ROOT/'analysis/run_dw_sampling.py').read_bytes()):
+        raise ValueError('carryover measured function/class AST changed')
+    def native_config(source):
+        value = yaml.load(source, Loader=_UniqueLoader)
+        value['timing'].pop('cost_gate_upper_ratio', None)
+        # Native A/B do not consume model/data settings. This exclusion does
+        # not establish any learning/asset permission or model qualification.
+        value.pop('learning', None)
+        value.pop('asset', None)
+        return canonical(value)
+    if native_config(original['configs/dw_sampling.yaml']) != native_config((ROOT/'configs/dw_sampling.yaml').read_bytes()):
+        raise ValueError('carryover native configuration changed')
+    return {**record, 'carryover': {'stage': stage, 'record_path': str(path), 'record_sha256': digest(path),
+            'previous_actual_head': head, 'previous_measurement_hashes': record['measurement_hashes'],
+            'current_measurement_hashes': measurement_hashes, 'measured_functions_unchanged': list(measured),
+            'native_config_exclusions': ['timing.cost_gate_upper_ratio', 'learning', 'asset']}}
 
 
 def source_hashes(stage):
@@ -990,17 +1071,21 @@ def hardware_stage(cfg, config, out, attempt, kind):
         if code:
             return {'status': 'INCOMPLETE_RESOURCE', 'reason': 'paid offline diagnostic incomplete; raw session timing retained', 'sessions': sessions, 'delta': delta}
         diagnostics = str(attempt/'diagnostic.json')
-    eligible = []
+    eligible, noise_guard_eligible = [], []
+    gate_upper_ratio = 1-delta if kind == 'feasibility' else cfg['timing']['cost_gate_upper_ratio']
     names = ['zero'] if kind == 'feasibility' else [f'{s}-{r}' for s in cfg['samplers'] for r in cfg['rhos']]
     for name in names:
         for shape_id in ('middle2048', 'middle4096'):
             comparisons = [next(row for row in s['shapes'] if row['shape']['id'] == shape_id)['comparisons'][name] for s in sessions]
             if all(c['statistics']['ci95'][1] < 1-delta for c in comparisons):
+                noise_guard_eligible.append({'arm': name, 'shape': shape_id})
+            if all(c['statistics']['ci95'][1] < gate_upper_ratio for c in comparisons):
                 eligible.append({'arm': name, 'shape': shape_id})
     return {'status': 'pass' if eligible else 'STOP_COST', 'delta': delta, 'eligible': eligible, 'sessions': sessions,
+            'gate_upper_ratio': gate_upper_ratio, 'noise_guard_upper_ratio': 1-delta, 'noise_guard_eligible': noise_guard_eligible,
             'diagnostics': diagnostics, 'unstable_warmup_diagnostics': unstable,
             'automatic_replacement_sessions': 0,
-            'reason': 'upper95% paired ratio must be below 1-delta in both sessions at a planned-model middle shape',
+            'reason': f'upper95% paired ratio must be below {gate_upper_ratio} in both sessions at a planned-model middle shape',
             'zero_semantics': 'nonlearning dense zero dW with exact dX/db and native optimizer moments/decay; optimistic diagnostic, not universal lower bound'}
 
 

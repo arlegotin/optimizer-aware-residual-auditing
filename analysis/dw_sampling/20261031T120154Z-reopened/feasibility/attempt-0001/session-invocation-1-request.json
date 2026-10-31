@@ -1,0 +1,91 @@
+{
+  "attempt": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/dw_sampling/20261031T120154Z-reopened/feasibility/attempt-0001",
+  "calibration": [
+    {
+      "boundary": "resource forecast calibration only; not comparative performance",
+      "native_complete_step_s": [
+        0.03735870902892202,
+        0.037887708051130176,
+        0.038535417057573795
+      ],
+      "shape": {
+        "di": 512,
+        "do": 2048,
+        "id": "middle4096",
+        "microbatches": 1,
+        "n": 4096,
+        "stride": 1
+      }
+    },
+    {
+      "boundary": "resource forecast calibration only; not comparative performance",
+      "native_complete_step_s": [
+        0.020694333012215793,
+        0.020615125074982643,
+        0.020940834074281156
+      ],
+      "shape": {
+        "di": 512,
+        "do": 2048,
+        "id": "middle2048",
+        "microbatches": 1,
+        "n": 2048,
+        "stride": 1
+      }
+    },
+    {
+      "boundary": "resource forecast calibration only; not comparative performance",
+      "native_complete_step_s": [
+        0.023516458924859762,
+        0.022127667092718184,
+        0.024738459032960236
+      ],
+      "shape": {
+        "di": 512,
+        "do": 2048,
+        "id": "middle2048_accum4_stride2",
+        "microbatches": 4,
+        "n": 2048,
+        "stride": 2
+      }
+    },
+    {
+      "boundary": "resource forecast calibration only; not comparative performance",
+      "native_complete_step_s": [
+        0.16308854205999523,
+        0.16346920793876052,
+        0.16300033300649375
+      ],
+      "shape": {
+        "di": 768,
+        "do": 3072,
+        "id": "wide",
+        "microbatches": 1,
+        "n": 8192,
+        "stride": 1
+      }
+    },
+    {
+      "boundary": "resource forecast calibration only; not comparative performance",
+      "native_complete_step_s": [
+        0.001271915971301496,
+        0.001127124996855855,
+        0.0010899580083787441
+      ],
+      "shape": {
+        "di": 128,
+        "do": 512,
+        "id": "tiny",
+        "microbatches": 1,
+        "n": 128,
+        "stride": 1
+      }
+    }
+  ],
+  "config": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/configs/dw_sampling.yaml",
+  "deadline_s": null,
+  "kind": "feasibility",
+  "out": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/dw_sampling/20261031T120154Z-reopened",
+  "result": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/dw_sampling/20261031T120154Z-reopened/feasibility/attempt-0001/session-invocation-1.json",
+  "session": 0
+}

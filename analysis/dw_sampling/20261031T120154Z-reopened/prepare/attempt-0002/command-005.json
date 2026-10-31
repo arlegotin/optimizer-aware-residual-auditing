@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q"
+  ],
+  "environment_overrides": {
+    "PYTHONPATH": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/src",
+    "PYTORCH_ENABLE_MPS_FALLBACK": "0",
+    "PYTORCH_MPS_FAST_MATH": "0",
+    "PYTORCH_MPS_PREFER_METAL": "0"
+  },
+  "exit_code": 0,
+  "utc": "2026-10-31T12:16:50.879136+00:00",
+  "wall_s": 8.753323292010464
+}

@@ -1,0 +1,441 @@
+{
+  "clock": {
+    "adjustable": false,
+    "implementation": "mach_absolute_time()",
+    "monotonic": true,
+    "resolution": 4.166666666666666e-08
+  },
+  "doctor": {
+    "accelerator": {
+      "absence_is_hardware_limitation": false,
+      "available": true,
+      "built": true,
+      "visibility_note": "unavailable may reflect process restrictions; verify outside sandbox before hardware conclusions"
+    },
+    "capability_scope": "tiny shapes only; no OAR, checkpoint, shape-headroom or speedup qualification",
+    "cpu_reference_eligible": true,
+    "discovery_wall_s": 3.51325037505012,
+    "fallback": {
+      "enabled": false,
+      "environment_value": "0",
+      "environment_value_is_effective_policy": false,
+      "policy": "fresh_worker_environment_0_before_torch_import",
+      "verified_for_mps_checks": true
+    },
+    "gpu_claim_eligible": true,
+    "hardware": {
+      "architecture": "arm64",
+      "chip": "Apple M3 Max",
+      "disk_free_bytes": 46235525120,
+      "gpu_models": [
+        "Apple M3 Max"
+      ],
+      "model": "Mac15,11",
+      "os_version": "26.7.1",
+      "physical_memory_bytes": 38654705664,
+      "power": {
+        "low_power_mode": null,
+        "mode_code": 0,
+        "source": "ac"
+      },
+      "python_architecture": "arm64",
+      "vm_stat_available": true
+    },
+    "memory": {
+      "available_bytes": 6863667200,
+      "process_rss_bytes": 310853632
+    },
+    "native_arm64": true,
+    "observed_at_utc": "2026-10-31T12:16:29.743873+00:00",
+    "operations": {
+      "cpu": [
+        {
+          "critical": true,
+          "device": "cpu",
+          "dtype": "float32",
+          "input_shape": [
+            4,
+            3
+          ],
+          "name": "gemm",
+          "noncontiguous": true,
+          "status": "pass",
+          "wall_s": 0.3774097500136122
+        },
+        {
+          "critical": true,
+          "device": "cpu",
+          "dtype": "float32",
+          "name": "autograd",
+          "status": "pass",
+          "wall_s": 0.0018269589636474848
+        },
+        {
+          "critical": true,
+          "device": "cpu",
+          "dtype": "float32",
+          "foreach": false,
+          "fused": false,
+          "name": "adamw",
+          "status": "pass",
+          "wall_s": 0.32392400002572685
+        },
+        {
+          "critical": true,
+          "device": "cpu",
+          "dtype": "float32",
+          "generation_device": "cpu",
+          "generation_s": 8.508306927978992e-05,
+          "independent_streams": true,
+          "name": "cpu_gaussian_transfer",
+          "status": "pass",
+          "transfer_s": 1.6249250620603561e-06,
+          "wall_s": 0.00018654100131243467
+        },
+        {
+          "critical": true,
+          "device": "cpu",
+          "dtype": "float32",
+          "name": "model_rng_restore",
+          "replayed_equal": true,
+          "status": "pass",
+          "wall_s": 6.212503649294376e-05
+        },
+        {
+          "critical": true,
+          "device": "cpu",
+          "dtype": "float64",
+          "execution_device": "cpu",
+          "name": "reference_fp64",
+          "status": "pass",
+          "wall_s": 6.879190914332867e-05
+        },
+        {
+          "critical": false,
+          "device": "cpu",
+          "dtype": "float32",
+          "execution_device": "cpu",
+          "input_transfer_s": 1.208973117172718e-06,
+          "name": "qr",
+          "policy": "native",
+          "return_transfer_s": 3.250082954764366e-06,
+          "status": "pass",
+          "transfer_s": 4.459056071937084e-06,
+          "wall_s": 0.0004966249689459801
+        },
+        {
+          "critical": false,
+          "device": "cpu",
+          "dtype": "float32",
+          "execution_device": "cpu",
+          "input_transfer_s": 1.0420335456728935e-06,
+          "name": "svd",
+          "policy": "native",
+          "return_transfer_s": 1.959037035703659e-06,
+          "status": "pass",
+          "transfer_s": 3.0010705813765526e-06,
+          "wall_s": 0.0002288749674335122
+        },
+        {
+          "critical": true,
+          "device": "cpu",
+          "dtype": "float32",
+          "name": "norm_gelu_masked_loss_backward",
+          "status": "pass",
+          "wall_s": 0.0013485000235959888
+        },
+        {
+          "critical": true,
+          "device": "cpu",
+          "dtype": "float32",
+          "name": "attention_backward",
+          "status": "pass",
+          "wall_s": 0.0005825000116601586
+        },
+        {
+          "critical": false,
+          "device": "cpu",
+          "dtype": "float32",
+          "name": "gather_scatter_sampling",
+          "status": "pass",
+          "wall_s": 0.0004172499757260084
+        }
+      ],
+      "mps": [
+        {
+          "critical": true,
+          "device": "mps",
+          "dtype": "float32",
+          "execution_isolation": "fresh_process",
+          "fallback_environment_before_torch_import": "0",
+          "input_shape": [
+            4,
+            3
+          ],
+          "name": "gemm",
+          "noncontiguous": true,
+          "status": "pass",
+          "wall_s": 0.40820795798208565
+        },
+        {
+          "critical": true,
+          "device": "mps",
+          "dtype": "float32",
+          "execution_isolation": "fresh_process",
+          "fallback_environment_before_torch_import": "0",
+          "name": "autograd",
+          "status": "pass",
+          "wall_s": 0.005130667006596923
+        },
+        {
+          "critical": true,
+          "device": "mps",
+          "dtype": "float32",
+          "execution_isolation": "fresh_process",
+          "fallback_environment_before_torch_import": "0",
+          "foreach": false,
+          "fused": false,
+          "name": "adamw",
+          "status": "pass",
+          "wall_s": 0.25627379200886935
+        },
+        {
+          "critical": true,
+          "device": "mps",
+          "dtype": "float32",
+          "execution_isolation": "fresh_process",
+          "fallback_environment_before_torch_import": "0",
+          "generation_device": "cpu",
+          "generation_s": 4.458299372345209e-05,
+          "independent_streams": true,
+          "name": "cpu_gaussian_transfer",
+          "status": "pass",
+          "transfer_s": 0.00021774997003376484,
+          "wall_s": 0.0005415419582277536
+        },
+        {
+          "critical": true,
+          "device": "mps",
+          "dtype": "float32",
+          "execution_isolation": "fresh_process",
+          "fallback_environment_before_torch_import": "0",
+          "name": "model_rng_restore",
+          "replayed_equal": true,
+          "status": "pass",
+          "wall_s": 0.0005212080432102084
+        },
+        {
+          "critical": true,
+          "device": "mps",
+          "dtype": "float64",
+          "execution_device": "cpu",
+          "execution_isolation": "fresh_process",
+          "fallback_environment_before_torch_import": "0",
+          "name": "reference_fp64",
+          "status": "pass",
+          "wall_s": 0.00010491593275219202
+        },
+        {
+          "critical": false,
+          "device": "mps",
+          "dtype": "float32",
+          "execution_device": "mps",
+          "execution_isolation": "fresh_process",
+          "fallback_environment_before_torch_import": "0",
+          "input_transfer_s": 4.875008016824722e-06,
+          "name": "qr",
+          "policy": "native",
+          "return_transfer_s": 6.832997314631939e-06,
+          "status": "pass",
+          "transfer_s": 1.1708005331456661e-05,
+          "wall_s": 0.0014792500296607614
+        },
+        {
+          "critical": false,
+          "device": "mps",
+          "dtype": "float32",
+          "execution_device": "mps",
+          "execution_isolation": "fresh_process",
+          "fallback_environment_before_torch_import": "0",
+          "input_transfer_s": 2.7919886633753777e-06,
+          "name": "svd",
+          "policy": "native",
+          "return_transfer_s": 4.083034582436085e-06,
+          "status": "pass",
+          "transfer_s": 6.875023245811462e-06,
+          "wall_s": 0.001854583970271051
+        },
+        {
+          "critical": true,
+          "device": "mps",
+          "dtype": "float64",
+          "execution_device": "cpu",
+          "execution_isolation": "fresh_process",
+          "fallback_environment_before_torch_import": "0",
+          "input_transfer_s": 0.0001985830022022128,
+          "name": "qr_cpu_fp64",
+          "policy": "explicit_cpu_calibration",
+          "return_transfer_s": 0.00020916701760143042,
+          "status": "pass",
+          "transfer_s": 0.0004077500198036432,
+          "wall_s": 0.0009393750224262476
+        },
+        {
+          "critical": true,
+          "device": "mps",
+          "dtype": "float64",
+          "execution_device": "cpu",
+          "execution_isolation": "fresh_process",
+          "fallback_environment_before_torch_import": "0",
+          "input_transfer_s": 0.00016674993094056845,
+          "name": "svd_cpu_fp64",
+          "policy": "explicit_cpu_calibration",
+          "return_transfer_s": 0.0001740839798003435,
+          "status": "pass",
+          "transfer_s": 0.00034083391074091196,
+          "wall_s": 0.0006427500629797578
+        },
+        {
+          "critical": true,
+          "device": "mps",
+          "dtype": "float32",
+          "execution_isolation": "fresh_process",
+          "fallback_environment_before_torch_import": "0",
+          "name": "norm_gelu_masked_loss_backward",
+          "status": "pass",
+          "wall_s": 0.057057667057961226
+        },
+        {
+          "critical": true,
+          "device": "mps",
+          "dtype": "float32",
+          "execution_isolation": "fresh_process",
+          "fallback_environment_before_torch_import": "0",
+          "name": "attention_backward",
+          "status": "pass",
+          "wall_s": 0.015280499937944114
+        },
+        {
+          "critical": false,
+          "device": "mps",
+          "dtype": "float32",
+          "execution_isolation": "fresh_process",
+          "fallback_environment_before_torch_import": "0",
+          "name": "gather_scatter_sampling",
+          "status": "pass",
+          "wall_s": 0.0015189580153673887
+        }
+      ]
+    },
+    "packages": {
+      "Jinja2": {
+        "license": "unresolved",
+        "version": "3.1.6"
+      },
+      "MarkupSafe": {
+        "license": "BSD-3-Clause",
+        "version": "3.0.4"
+      },
+      "PyYAML": {
+        "license": "MIT",
+        "version": "6.0.3"
+      },
+      "Pygments": {
+        "license": "BSD-2-Clause",
+        "version": "2.21.0"
+      },
+      "filelock": {
+        "license": "MIT",
+        "version": "4.2.5"
+      },
+      "fsspec": {
+        "license": "BSD-3-Clause",
+        "version": "2026.9.0"
+      },
+      "iniconfig": {
+        "license": "MIT",
+        "version": "2.3.1"
+      },
+      "mpmath": {
+        "license": "BSD",
+        "version": "1.3.0"
+      },
+      "networkx": {
+        "license": "BSD-3-Clause",
+        "version": "3.7"
+      },
+      "numpy": {
+        "license": "BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0",
+        "version": "2.5.4"
+      },
+      "oar": {
+        "license": "unresolved",
+        "version": "0.1.0"
+      },
+      "packaging": {
+        "license": "Apache-2.0 OR BSD-2-Clause",
+        "version": "26.3"
+      },
+      "pip": {
+        "license": "MIT",
+        "version": "25.1.1"
+      },
+      "pluggy": {
+        "license": "MIT",
+        "version": "1.7.0"
+      },
+      "psutil": {
+        "license": "BSD-3-Clause",
+        "version": "7.2.2"
+      },
+      "pytest": {
+        "license": "MIT",
+        "version": "9.2.0"
+      },
+      "setuptools": {
+        "license": "MIT",
+        "version": "84.2.1"
+      },
+      "sympy": {
+        "license": "BSD",
+        "version": "1.14.0"
+      },
+      "torch": {
+        "license": "Apache-2.0 AND Apache-2.0 WITH LLVM-exception AND BSD-2-Clause AND BSD-3-Clause AND BSL-1.0 AND ISC AND MIT AND Zlib",
+        "version": "2.15.0"
+      },
+      "typing_extensions": {
+        "license": "PSF-2.0",
+        "version": "4.16.0"
+      }
+    },
+    "python": {
+      "implementation": "CPython",
+      "version": "3.13.5"
+    },
+    "schema_version": 1,
+    "scope": "exploratory_gpu"
+  },
+  "executable": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python",
+  "flags": {
+    "PYTORCH_ENABLE_MPS_FALLBACK": "0",
+    "PYTORCH_MPS_FAST_MATH": "0",
+    "PYTORCH_MPS_PREFER_METAL": "0"
+  },
+  "pin_differences": [],
+  "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+  "python": "3.13.5 (main, Jun 11 2025, 15:36:57) [Clang 17.0.0 (clang-1700.0.13.3)]",
+  "resource_snapshot_cpu": {
+    "available_memory_bytes": 6913458176,
+    "memory_percent": 82.1,
+    "metal_current_bytes": null,
+    "metal_driver_bytes": null,
+    "physical_memory_bytes": 38654705664,
+    "process_rss_bytes": 43450368,
+    "swap_in_bytes": 2821174132736,
+    "swap_out_bytes": 13025329152,
+    "swap_used_bytes": 36036476928
+  },
+  "start_utc": "2026-10-31T12:16:30.104262+00:00",
+  "thermal": "unavailable unless exposed by host; no fabricated temperature"
+}

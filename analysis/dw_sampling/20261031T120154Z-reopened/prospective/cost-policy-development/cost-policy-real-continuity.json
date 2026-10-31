@@ -1,0 +1,64 @@
+[
+  {
+    "changed_source_keys": [
+      "analysis/run_dw_sampling.py",
+      "configs/dw_sampling.yaml",
+      "decisions/dw_sampling_reopening.md",
+      "tests/test_dw_sampling_protocol.py"
+    ],
+    "measured_functions": [
+      "configure_torch",
+      "Fixture",
+      "zero_dw_linear",
+      "native_variant_qualification",
+      "timed_pairs",
+      "state_streams",
+      "cost_session",
+      "select_native_variant",
+      "assert_native_equivalent",
+      "choose_block_length",
+      "primitive_qualification",
+      "environment",
+      "dependency_inventory",
+      "prepare"
+    ],
+    "measured_functions_identical": true,
+    "native_configuration_identical": true,
+    "original_actual_head": "d7782862c025da6ee27dc9f7692b75fe926cb070",
+    "original_git_hashes_match_sealed_measurement_map": true,
+    "path": "analysis/dw_sampling/20261031T120154Z-reopened/prepare/attempt-0002/record.json",
+    "record_sha256": "15ce3e2a98ab2a4275cc6a251539b76c3ff274f51d2d5cf3166600438d2cf961",
+    "stage": "prepare"
+  },
+  {
+    "changed_source_keys": [
+      "analysis/run_dw_sampling.py",
+      "configs/dw_sampling.yaml",
+      "decisions/dw_sampling_reopening.md",
+      "tests/test_dw_sampling_protocol.py"
+    ],
+    "measured_functions": [
+      "configure_torch",
+      "Fixture",
+      "zero_dw_linear",
+      "native_variant_qualification",
+      "timed_pairs",
+      "state_streams",
+      "cost_session",
+      "select_native_variant",
+      "assert_native_equivalent",
+      "choose_block_length",
+      "primitive_qualification",
+      "environment",
+      "dependency_inventory",
+      "prepare"
+    ],
+    "measured_functions_identical": true,
+    "native_configuration_identical": true,
+    "original_actual_head": "d7782862c025da6ee27dc9f7692b75fe926cb070",
+    "original_git_hashes_match_sealed_measurement_map": true,
+    "path": "analysis/dw_sampling/20261031T120154Z-reopened/feasibility/attempt-0001/record.json",
+    "record_sha256": "716ec10cfe1827b8e85f03deb5229484ff7c20b80d2c7178b1395c4b5acda506",
+    "stage": "feasibility"
+  }
+]

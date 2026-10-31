@@ -1,0 +1,520 @@
+diff --git a/analysis/run_dw_sampling.py b/analysis/run_dw_sampling.py
+index db22c36..6c418ab 100644
+--- a/analysis/run_dw_sampling.py
++++ b/analysis/run_dw_sampling.py
+@@ -7,6 +7,7 @@ while the recorded asset restriction is unresolved. No old oracle is invoked.
+ from __future__ import annotations
+ 
+ import argparse
++import ast
+ import base64
+ import copy
+ from contextlib import contextmanager, ExitStack
+@@ -27,7 +28,7 @@ import traceback
+ 
+ ROOT = Path(__file__).resolve().parents[1]
+ REVIEWED = '9d8ad069c51b4d0e6c13e9c6e465579e9b44a339'
+-PROTOCOL = 'f407dd2d636c078bd7e2f79112ea31b665636d42cf818d3f6f835b4a39ab2a80'
++PROTOCOL = '8d0ce1920bdc06d0c02f94a0ca14a7a7e9e976060225820270bf8c1affbeca67'
+ STAGES = ('prepare', 'feasibility', 'correctness', 'cost', 'pilot', 'confirm', 'summarize')
+ CORE = ('analysis/run_dw_sampling.py', 'configs/dw_sampling.yaml', 'decisions/dw_sampling_scope.md',
+         'decisions/dw_sampling_reopening.md',
+@@ -124,17 +125,97 @@ def require_stage(out, stage, measurement_hashes):
+         raise ValueError(f'missing prerequisite: {stage}')
+     # Latest attempt is authoritative; an older pass cannot hide a later stop.
+     record = read_record(paths[-1])
+-    if record['status'] != 'pass':
++    if record.get('stage') != stage or record['status'] != 'pass':
+         raise ValueError(f'failed prerequisite {stage}: {record["status"]}')
+     previous = record['measurement_hashes']
+     for name, expected in previous.items():
+         # A native-only consumer does not depend on the sampled source/tests.
+         # Every consumer passes its complete, explicit dependency map.
+         if name in measurement_hashes and measurement_hashes[name] != expected:
+-            raise ValueError(f'prerequisite source/config mismatch: {name}')
++            return prerequisite_carryover(paths[-1], record, stage, measurement_hashes)
+     return record
+ 
+ 
++def git_blob(head, name):
++    """Read the exact original committed bytes; never use a working-tree copy."""
++    if not re.fullmatch('[0-9a-f]{40}', head) or name not in CORE+SAMPLED:
++        raise ValueError('invalid carryover Git source identity')
++    try:
++        return subprocess.check_output(['git', 'show', f'{head}:{name}'], cwd=ROOT, stderr=subprocess.PIPE)
++    except subprocess.CalledProcessError as exc:
++        raise ValueError('unavailable carryover Git source identity') from exc
++
++
++def prerequisite_carryover(path, record, stage, measurement_hashes):
++    """Explicit A/B continuity only; preserve the prior sealed attribution."""
++    import yaml
++    from oar.config import _UniqueLoader
++    amendment = json.loads((ROOT/'decisions/dw_sampling_amendment.json').read_text())
++    entries = amendment.get('prerequisite_carryover', [])
++    entry = next((item for item in entries if item.get('stage') == stage
++                  and item.get('record_sha256') == digest(path)
++                  and item.get('previous_measurement_hashes') == record['measurement_hashes']
++                  and item.get('current_measurement_hashes') == measurement_hashes), None)
++    if stage not in ('prepare', 'feasibility') or record['status'] != 'pass' or entry is None:
++        raise ValueError('prerequisite source/config mismatch: no exact approved carryover')
++    expected_previous = CORE if stage == 'feasibility' else CORE+SAMPLED
++    if set(record['measurement_hashes']) != set(expected_previous):
++        raise ValueError('carryover incomplete original measurement map')
++    current = source_hashes('cost')
++    native = {name: current[name] for name in CORE}
++    if measurement_hashes not in (native, current) or not set(record['measurement_hashes']).issubset(current):
++        raise ValueError('carryover current source/config map differs from actual consumer sources')
++    manifest_path = Path(path).parent/'source_manifest.json'
++    if record.get('source_manifest_sha256') != digest(manifest_path) or 'source_manifest.json' not in record['artifacts']:
++        raise ValueError('carryover original source manifest is not sealed')
++    manifest = json.loads(manifest_path.read_text())
++    if manifest['measurement_hashes'] != record['measurement_hashes']:
++        raise ValueError('carryover original source identity mismatch')
++    head = manifest['actual_head']
++    if not re.fullmatch('[0-9a-f]{40}', head):
++        raise ValueError('invalid carryover original Git head')
++    original = {name: git_blob(head, name) for name in current}
++    old_hashes = {name: hashlib.sha256(blob).hexdigest() for name, blob in original.items()}
++    if any(old_hashes[name] != expected for name, expected in record['measurement_hashes'].items()):
++        raise ValueError('carryover original Git blobs differ from sealed measurement hashes')
++    allowed = {'analysis/run_dw_sampling.py', 'configs/dw_sampling.yaml',
++               'decisions/dw_sampling_reopening.md', 'tests/test_dw_sampling_protocol.py'}
++    changed = {name for name in current if old_hashes[name] != current[name]}
++    if changed-allowed:
++        raise ValueError('carryover changed protected measured source: '+', '.join(sorted(changed-allowed)))
++    # A native-only consumer omits protocol tests from its map. Their changed
++    # hash must still be explicitly pinned by the current amendment's freeze.
++    for name in changed-set(measurement_hashes):
++        if amendment.get('bound_files', {}).get(name) != current[name]:
++            raise ValueError('carryover omitted changed source is not explicitly pinned')
++    measured = ('configure_torch', 'Fixture', 'zero_dw_linear', 'native_variant_qualification',
++                'timed_pairs', 'state_streams', 'cost_session', 'select_native_variant',
++                'assert_native_equivalent', 'choose_block_length', 'primitive_qualification',
++                'environment', 'dependency_inventory', 'prepare')
++    def measured_asts(source):
++        nodes = {node.name: ast.dump(node, include_attributes=False) for node in ast.parse(source).body
++                 if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and node.name in measured}
++        if set(nodes) != set(measured):
++            raise ValueError('carryover is missing a measured function or class')
++        return nodes
++    if measured_asts(original['analysis/run_dw_sampling.py']) != measured_asts((ROOT/'analysis/run_dw_sampling.py').read_bytes()):
++        raise ValueError('carryover measured function/class AST changed')
++    def native_config(source):
++        value = yaml.load(source, Loader=_UniqueLoader)
++        value['timing'].pop('cost_gate_upper_ratio', None)
++        # Native A/B do not consume model/data settings. This exclusion does
++        # not establish any learning/asset permission or model qualification.
++        value.pop('learning', None)
++        value.pop('asset', None)
++        return canonical(value)
++    if native_config(original['configs/dw_sampling.yaml']) != native_config((ROOT/'configs/dw_sampling.yaml').read_bytes()):
++        raise ValueError('carryover native configuration changed')
++    return {**record, 'carryover': {'stage': stage, 'record_path': str(path), 'record_sha256': digest(path),
++            'previous_actual_head': head, 'previous_measurement_hashes': record['measurement_hashes'],
++            'current_measurement_hashes': measurement_hashes, 'measured_functions_unchanged': list(measured),
++            'native_config_exclusions': ['timing.cost_gate_upper_ratio', 'learning', 'asset']}}
++
++
+ def source_hashes(stage):
+     files = CORE + (() if stage == 'feasibility' else SAMPLED)
+     return {name: digest(ROOT/name) for name in files}
+@@ -990,17 +1071,21 @@ def hardware_stage(cfg, config, out, attempt, kind):
+         if code:
+             return {'status': 'INCOMPLETE_RESOURCE', 'reason': 'paid offline diagnostic incomplete; raw session timing retained', 'sessions': sessions, 'delta': delta}
+         diagnostics = str(attempt/'diagnostic.json')
+-    eligible = []
++    eligible, noise_guard_eligible = [], []
++    gate_upper_ratio = 1-delta if kind == 'feasibility' else cfg['timing']['cost_gate_upper_ratio']
+     names = ['zero'] if kind == 'feasibility' else [f'{s}-{r}' for s in cfg['samplers'] for r in cfg['rhos']]
+     for name in names:
+         for shape_id in ('middle2048', 'middle4096'):
+             comparisons = [next(row for row in s['shapes'] if row['shape']['id'] == shape_id)['comparisons'][name] for s in sessions]
+             if all(c['statistics']['ci95'][1] < 1-delta for c in comparisons):
++                noise_guard_eligible.append({'arm': name, 'shape': shape_id})
++            if all(c['statistics']['ci95'][1] < gate_upper_ratio for c in comparisons):
+                 eligible.append({'arm': name, 'shape': shape_id})
+     return {'status': 'pass' if eligible else 'STOP_COST', 'delta': delta, 'eligible': eligible, 'sessions': sessions,
++            'gate_upper_ratio': gate_upper_ratio, 'noise_guard_upper_ratio': 1-delta, 'noise_guard_eligible': noise_guard_eligible,
+             'diagnostics': diagnostics, 'unstable_warmup_diagnostics': unstable,
+             'automatic_replacement_sessions': 0,
+-            'reason': 'upper95% paired ratio must be below 1-delta in both sessions at a planned-model middle shape',
++            'reason': f'upper95% paired ratio must be below {gate_upper_ratio} in both sessions at a planned-model middle shape',
+             'zero_semantics': 'nonlearning dense zero dW with exact dX/db and native optimizer moments/decay; optimistic diagnostic, not universal lower bound'}
+ 
+ 
+diff --git a/configs/dw_sampling.yaml b/configs/dw_sampling.yaml
+index c8081be..fa809ce 100644
+--- a/configs/dw_sampling.yaml
++++ b/configs/dw_sampling.yaml
+@@ -1,5 +1,5 @@
+ # SPDX-License-Identifier: CC-BY-4.0
+-# Owner-authorized exploratory reopening; immutable prior configuration is archived.
++# Owner-authorized exploratory reopening; prior configurations are archived.
+ schema_version: 2
+ experiment: fixed_budget_norm_importance_dw
+ reviewed_head: 9d8ad069c51b4d0e6c13e9c6e465579e9b44a339
+@@ -79,6 +79,7 @@ timing:
+   noise_calibration_shapes:
+   - middle2048
+   - middle4096
++  cost_gate_upper_ratio: 1.0
+ optimizer:
+   lr: 0.001
+   betas:
+diff --git a/decisions/dw_sampling_reopening.md b/decisions/dw_sampling_reopening.md
+index 4f3caf7..98d504c 100644
+--- a/decisions/dw_sampling_reopening.md
++++ b/decisions/dw_sampling_reopening.md
+@@ -35,13 +35,16 @@ learning outcomes. These are accuracy requirements, not arbitrary runtime caps.
+   despite legitimate CPU/device storage differences. Select the fastest
+   supported native implementation from baseline-only pilots, retaining all
+   observations and warmup flags; no native optimization is disabled.
+-- Replace the fixed 5% minimum gain with measured uncertainty. Freeze
+-  delta=2*linear_quantile95(abs(TA/TB-1)) using A/A pairs at n2048/n4096 across
+-  the two sessions before inspecting sampler timing. There is no 15% delta
+-  rejection cap. The paired candidate upper interval must beat 1-delta at a
+-  relevant shape in both sessions. This remains an exploratory screening rule,
+-  not a familywise guarantee or a learning result. All shape results remain
+-  visible, including noisy or negative controls.
++- Remove a fixed minimum required speedup. Preserve
++  delta=2*linear_quantile95(abs(TA/TB-1)) as a native A/A jitter diagnostic,
++  computed from n2048/n4096 across both sessions before sampler timing. There
++  is no 15% delta rejection cap. For sampled cost, require the paired candidate
++  95% upper time-ratio interval to be below 1 at the same relevant shape in
++  BOTH sessions. Also report the old stricter 1-delta screen descriptively.
++  Individual-block jitter is not itself a minimum worthwhile mean improvement;
++  the paired interval quantifies uncertainty in the measured mean log ratio.
++  These are exploratory screens, not familywise guarantees or learning results.
++  All shape results remain visible, including noisy or negative controls.
+ - Remove the one-replacement-session rule and arbitrary whole-stage duration
+   and output-size ceilings. The initial plan still collects two fresh sessions
+   and 30 matched pairs per arm; it does not keep drawing until a positive
+@@ -94,3 +97,34 @@ new amendment must be committed before new comparative measurements.
+ Software AGPL-3.0-only; original writing/results CC-BY-4.0. Prior-art attribution
+ and all original method/data/quality safeguards not explicitly revised above
+ remain as recorded in dw_sampling_scope.md and the owner's original task.
++
++## Cost-policy refinement before any sampled timing
++
++After B completed and before D/candidate timing, the native A/A diagnostic was
++0.2085046466766194. Requiring that much minimum gain in addition to a paired
++confidence interval would reject even a repeatable smaller benefit. Under the
++owners explicit removal of artificial limits, use upper95%<1 for D and retain
++the 1-delta comparison as a disclosed sensitivity screen. No sampler timing or
++learning outcome was inspected to make this change. B's native work, raw data,
++original delta and passed headroom result remain exactly as recorded at d778286.
++
++Carry over unaffected A/B prerequisites only through a new hash-bound record
++continuity declaration. It must match the exact prior sealed record, old/new
++measurement maps, Git source identities, unchanged measured function ASTs,
++unchanged sampler/hardware/timing source, and unchanged native configuration
++(after removing only the new cost-gate field). Current correctness tests run
++again. This avoids remeasuring 24 minutes of unchanged native work merely
++because an unused D decision branch or metadata validator changed. It never
++turns a failed gate into a pass or attributes old times to new measured code.
++
++The A/A jitter diagnostic likewise does not become a minimum required learning
++speedup. If learning gates are reached, freeze the held-out target and unchanged
++common-budget quality guard before protected outcomes, and require the seed-pair
++95% upper target-time ratio below 1 plus the existing endpoint-quality bound.
++Monitor resolution, interval sensitivity and simpler-competitor ties are still
++reported. Choose a fixed confirmation run count from independent development
++variability and real available resources; a historical arbitrary maximum of16
++is not a reason to discard an otherwise feasible adequately powered study.
++Do not add seeds after inspecting a confirmation p-value, retune protected
++thresholds, or call an unresolved/negative result positive. These clarifications
++are prospective: no sampled cost or language-learning outcome has been observed.
+diff --git a/tests/test_dw_sampling_protocol.py b/tests/test_dw_sampling_protocol.py
+index a8ae590..5f730ce 100644
+--- a/tests/test_dw_sampling_protocol.py
++++ b/tests/test_dw_sampling_protocol.py
+@@ -1,6 +1,7 @@
+ # SPDX-License-Identifier: AGPL-3.0-only
+ """Protocol tests exercise validation and persisted evidence, not source text."""
+ import importlib.util
++import hashlib
+ import json
+ from pathlib import Path
+ import subprocess
+@@ -78,6 +79,174 @@ def test_missing_failed_and_source_changed_prerequisites_cannot_launch(tmp_path)
+     assert d.require_stage(tmp_path, 'feasibility', {'source': 'v1'})['status'] == 'pass'
+ 
+ 
++@pytest.fixture
++def approved_carryover(tmp_path, monkeypatch):
++    """Real sealed filesystem evidence with Git blobs isolated at its boundary."""
++    d = driver()
++    repository = tmp_path/'repository'
++    old = {name: (ROOT/name).read_bytes() for name in d.CORE+d.SAMPLED}
++    old_driver = old['analysis/run_dw_sampling.py'].decode().replace("REVIEWED = '", "OLD_METADATA = True\nREVIEWED = '", 1)
++    old['analysis/run_dw_sampling.py'] = old_driver.encode()
++    old_cfg = yaml.safe_load(old['configs/dw_sampling.yaml'])
++    old_cfg['timing'].pop('cost_gate_upper_ratio')
++    old['configs/dw_sampling.yaml'] = yaml.safe_dump(old_cfg).encode()
++    for name in d.CORE+d.SAMPLED:
++        path = repository/name
++        path.parent.mkdir(parents=True, exist_ok=True)
++        path.write_bytes((ROOT/name).read_bytes())
++    (repository/'decisions/dw_sampling_reopening.md').write_text('explicit prospective carryover scope\n')
++    (repository/'tests/test_dw_sampling_protocol.py').write_text('# current, explicitly pinned protocol tests\n')
++    monkeypatch.setattr(d, 'ROOT', repository)
++    monkeypatch.setattr(d, 'git_blob', lambda head, name: old[name], raising=False)
++    out = tmp_path/'run'
++    def make(stage='feasibility', status='pass', missing=None):
++        names = d.CORE if stage == 'feasibility' else d.CORE+d.SAMPLED
++        previous = {name: hashlib.sha256(old[name]).hexdigest() for name in names if name != missing}
++        attempt = d.allocate_attempt(out, stage)
++        d.write_json(attempt/'source_manifest.json', {'actual_head': 'a'*40, 'measurement_hashes': previous,
++                                                    'original_identity': 'retain this source attribution'})
++        d.seal_record(attempt, {'stage': stage, 'status': status, 'measurement_hashes': previous,
++                               'source_manifest_sha256': d.digest(attempt/'source_manifest.json'), 'delta': .2085})
++        entry = {'stage': stage, 'record_sha256': d.digest(attempt/'record.json'),
++                 'previous_measurement_hashes': previous, 'current_measurement_hashes': d.source_hashes('cost')}
++        amendment = {'prerequisite_carryover': [entry], 'bound_files': d.source_hashes('cost')}
++        (repository/'decisions/dw_sampling_amendment.json').write_text(json.dumps(amendment))
++        return attempt, entry, amendment
++    return d, repository, out, old, make
++
++
++@pytest.mark.parametrize('stage', ['prepare', 'feasibility'])
++def test_exact_approved_carryover_preserves_original_record_and_identity(approved_carryover, stage):
++    d, repository, out, old, make = approved_carryover
++    attempt, entry, amendment = make(stage)
++    original = (attempt/'record.json').read_bytes()
++    result = d.require_stage(out, stage, d.source_hashes('cost'))
++    assert result['status'] == 'pass' and result['delta'] == .2085
++    assert result['measurement_hashes'] == entry['previous_measurement_hashes']
++    assert result['carryover']['record_sha256'] == entry['record_sha256']
++    assert result['carryover']['previous_actual_head'] == 'a'*40
++    assert result['carryover']['current_measurement_hashes'] == entry['current_measurement_hashes']
++    assert (attempt/'record.json').read_bytes() == original
++
++
++def test_native_carryover_excludes_only_unconsumed_model_and_asset_dictionaries(approved_carryover):
++    d, repository, out, old, make = approved_carryover
++    attempt, entry, amendment = make()
++    path = repository/'configs/dw_sampling.yaml'
++    cfg = yaml.safe_load(path.read_text())
++    cfg['learning'] = {'separately_frozen_model': 42}
++    cfg['asset'] = {'separately_gated_asset': 'not authorized by native carryover'}
++    path.write_text(yaml.safe_dump(cfg))
++    entry['current_measurement_hashes'] = d.source_hashes('cost')
++    (repository/'decisions/dw_sampling_amendment.json').write_text(json.dumps(amendment))
++    result = d.require_stage(out, 'feasibility', d.source_hashes('cost'))
++    assert result['carryover']['native_config_exclusions'] == ['timing.cost_gate_upper_ratio', 'learning', 'asset']
++    assert result['measurement_hashes'] == entry['previous_measurement_hashes']
++
++
++@pytest.mark.parametrize('setting', ['shape', 'rho', 'optimizer', 'flags', 'timing'])
++def test_carryover_rejects_every_changed_native_setting_even_when_new_hash_is_approved(approved_carryover, setting):
++    d, repository, out, old, make = approved_carryover
++    attempt, entry, amendment = make()
++    path = repository/'configs/dw_sampling.yaml'
++    cfg = yaml.safe_load(path.read_text())
++    if setting == 'shape':
++        cfg['shapes'][0]['n'] = 4097
++    elif setting == 'rho':
++        cfg['rhos'] = [.1]
++    elif setting == 'optimizer':
++        cfg['optimizer']['lr'] = .002
++    elif setting == 'flags':
++        cfg['fallback'] = '1'
++    else:
++        cfg['timing']['pairs'] = 31
++    path.write_text(yaml.safe_dump(cfg))
++    entry['current_measurement_hashes'] = d.source_hashes('cost')
++    (repository/'decisions/dw_sampling_amendment.json').write_text(json.dumps(amendment))
++    with pytest.raises(ValueError, match='native configuration'):
++        d.require_stage(out, 'feasibility', d.source_hashes('cost'))
++
++
++def test_current_carryover_map_must_match_actual_files_even_if_caller_and_entry_agree(approved_carryover):
++    d, repository, out, old, make = approved_carryover
++    attempt, entry, amendment = make()
++    entry['current_measurement_hashes']['analysis/run_dw_sampling.py'] = '0'*64
++    (repository/'decisions/dw_sampling_amendment.json').write_text(json.dumps(amendment))
++    with pytest.raises(ValueError, match='actual consumer'):
++        d.require_stage(out, 'feasibility', entry['current_measurement_hashes'])
++
++
++@pytest.mark.parametrize('missing', ['analysis/run_dw_sampling.py', 'configs/dw_sampling.yaml'])
++def test_carryover_requires_complete_original_measurement_map(approved_carryover, missing):
++    d, repository, out, old, make = approved_carryover
++    make(missing=missing)
++    with pytest.raises(ValueError, match='original measurement map'):
++        d.require_stage(out, 'feasibility', d.source_hashes('cost'))
++
++
++@pytest.mark.parametrize('pin_protocol_test', [True, False])
++def test_native_consumer_carryover_still_requires_explicit_current_protocol_test_pin(approved_carryover, pin_protocol_test):
++    d, repository, out, old, make = approved_carryover
++    attempt, entry, amendment = make(stage='prepare')
++    entry['current_measurement_hashes'] = d.source_hashes('feasibility')
++    if not pin_protocol_test:
++        amendment['bound_files'].pop('tests/test_dw_sampling_protocol.py')
++    (repository/'decisions/dw_sampling_amendment.json').write_text(json.dumps(amendment))
++    if pin_protocol_test:
++        result = d.require_stage(out, 'prepare', d.source_hashes('feasibility'))
++        assert result['carryover']['current_measurement_hashes'] == d.source_hashes('feasibility')
++    else:
++        with pytest.raises(ValueError, match='explicitly pinned'):
++            d.require_stage(out, 'prepare', d.source_hashes('feasibility'))
++
++
++@pytest.mark.parametrize('mutation', ['missing_entry', 'record', 'stage', 'previous_hash', 'current_hash',
++                                    'sampler', 'hardware', 'timing', 'original_scope', 'function',
++                                    'config', 'git_blob', 'failed', 'stale', 'unsealed_manifest'])
++def test_carryover_rejects_wrong_identity_or_changed_measurement(approved_carryover, mutation):
++    d, repository, out, old, make = approved_carryover
++    attempt, entry, amendment = make(status='STOP_COST' if mutation == 'failed' else 'pass')
++    if mutation == 'missing_entry':
++        amendment.pop('prerequisite_carryover')
++    elif mutation == 'record':
++        entry['record_sha256'] = '0'*64
++    elif mutation == 'stage':
++        entry['stage'] = 'prepare'
++    elif mutation == 'previous_hash':
++        entry['previous_measurement_hashes'] = {**entry['previous_measurement_hashes'], 'analysis/run_dw_sampling.py': '0'*64}
++    elif mutation == 'current_hash':
++        entry['current_measurement_hashes'] = {**entry['current_measurement_hashes'], 'analysis/run_dw_sampling.py': '0'*64}
++    elif mutation in ('sampler', 'hardware', 'timing', 'original_scope'):
++        name = {'sampler': 'src/oar/sampled_linear.py', 'hardware': 'src/oar/hardware.py',
++                'timing': 'src/oar/timing.py', 'original_scope': 'decisions/dw_sampling_scope.md'}[mutation]
++        with (repository/name).open('a') as stream:
++            stream.write('\n# unapproved change, even if the entry pins its new hash\n')
++        entry['current_measurement_hashes'] = d.source_hashes('cost')
++    elif mutation == 'function':
++        path = repository/'analysis/run_dw_sampling.py'
++        path.write_text(path.read_text().replace("self.seed = cfg['seed']+session", "self.seed = cfg['seed']+session+1", 1))
++        entry['current_measurement_hashes'] = d.source_hashes('cost')
++    elif mutation == 'config':
++        path = repository/'configs/dw_sampling.yaml'
++        cfg = yaml.safe_load(path.read_text())
++        cfg['timing']['pairs'] = 31
++        path.write_text(yaml.safe_dump(cfg))
++        entry['current_measurement_hashes'] = d.source_hashes('cost')
++    elif mutation == 'git_blob':
++        old['analysis/run_dw_sampling.py'] += b'\n# differs from the sealed source hash\n'
++    elif mutation == 'stale':
++        later = d.allocate_attempt(out, 'feasibility')
++        d.seal_record(later, {'stage': 'feasibility', 'status': 'STOP_COST', 'measurement_hashes': {}})
++    elif mutation == 'unsealed_manifest':
++        path = attempt/'source_manifest.json'
++        identity = json.loads(path.read_text())
++        identity['actual_head'] = 'b'*40
++        path.write_text(json.dumps(identity))
++    (repository/'decisions/dw_sampling_amendment.json').write_text(json.dumps(amendment))
++    with pytest.raises(ValueError):
++        d.require_stage(out, 'feasibility', d.source_hashes('cost'))
++
++
+ def test_geometric_paired_estimator_and_noise_threshold():
+     d = driver()
+     # Ratios .5,2 have geometric mean1, arithmetic mean1.25.
+@@ -361,7 +530,8 @@ def test_unstable_warmup_retains_pairs_and_charged_setup(tmp_path, monkeypatch):
+ 
+ @pytest.mark.parametrize('noise', [.01, .12])
+ @pytest.mark.parametrize('kind', ['feasibility', 'cost'])
+-def test_stage_uses_only_declared_noise_shapes_without_warmup_veto_or_replacement(tmp_path, monkeypatch, noise, kind):
++@pytest.mark.parametrize('uppers', [(.5, .5), (.9, .9), (.9, 1.01), (.99, 1.)])
++def test_stage_uses_only_declared_noise_shapes_without_warmup_veto_or_replacement(tmp_path, monkeypatch, noise, kind, uppers):
+     d = driver()
+     cfg = yaml.safe_load((ROOT/'configs/dw_sampling.yaml').read_text())
+     qualification = tmp_path/'qualification.json'
+@@ -390,7 +560,7 @@ def test_stage_uses_only_declared_noise_shapes_without_warmup_veto_or_replacemen
+             comparison = {'warmup': {'dense': {'stable': False, 'raw_s': [.1, .3]},
+                                      'candidate': {'stable': False, 'raw_s': [.1, .3]}},
+                           'pairs': [{'seconds': {'dense': 1+error, 'candidate': 1.}}]*30,
+-                          'statistics': {'ci95': [.4, .5]}}
++                          'statistics': {'ci95': [.4, uppers[request['session']]]}}
+             names = ['AA', 'zero'] if kind == 'feasibility' else [f'{s}-{r}' for s in cfg['samplers'] for r in cfg['rhos']]
+             shapes.append({'shape': shape, 'comparisons': {name: comparison for name in names}})
+         d.write_json(request['result'], {'status': 'pass', 'session': request['session'], 'shapes': shapes})
+@@ -398,12 +568,18 @@ def test_stage_uses_only_declared_noise_shapes_without_warmup_veto_or_replacemen
+     monkeypatch.setattr(d, 'command', cpu_worker)
+     attempt = d.allocate_attempt(tmp_path, kind)
+     result = d.hardware_stage(cfg, ROOT/'configs/dw_sampling.yaml', tmp_path, attempt, kind)
+-    assert result['status'] == 'pass'
++    cutoff = 1-2*noise if kind == 'feasibility' else 1.
++    passes = all(upper < cutoff for upper in uppers)
++    assert result['status'] == ('pass' if passes else 'STOP_COST')
+     assert result['delta'] == pytest.approx(2*noise)
+     assert len(result['sessions']) == 2
+     assert all(len(s['shapes']) == 5 for s in result['sessions'])
+     assert len(list(attempt.glob('session-invocation-*-request.json'))) == 2
+-    assert len(result['eligible']) == (2 if kind == 'feasibility' else 12)
++    expected_arms = 2 if kind == 'feasibility' else 12
++    assert len(result['eligible']) == (expected_arms if passes else 0)
++    guarded = all(upper < 1-2*noise for upper in uppers)
++    assert len(result['noise_guard_eligible']) == (expected_arms if guarded else 0)
++    assert result['gate_upper_ratio'] == pytest.approx(cutoff)
+     frozen = json.loads((attempt/'frozen_delta.json').read_text())
+     assert frozen['noise_calibration_shapes'] == ['middle2048', 'middle4096']
+ 
+
+REAL CONTINUITY AUDIT
+[
+  {
+    "changed_source_keys": [
+      "analysis/run_dw_sampling.py",
+      "configs/dw_sampling.yaml",
+      "decisions/dw_sampling_reopening.md",
+      "tests/test_dw_sampling_protocol.py"
+    ],
+    "measured_functions": [
+      "configure_torch",
+      "Fixture",
+      "zero_dw_linear",
+      "native_variant_qualification",
+      "timed_pairs",
+      "state_streams",
+      "cost_session",
+      "select_native_variant",
+      "assert_native_equivalent",
+      "choose_block_length",
+      "primitive_qualification",
+      "environment",
+      "dependency_inventory",
+      "prepare"
+    ],
+    "measured_functions_identical": true,
+    "native_configuration_identical": true,
+    "original_actual_head": "d7782862c025da6ee27dc9f7692b75fe926cb070",
+    "original_git_hashes_match_sealed_measurement_map": true,
+    "path": "analysis/dw_sampling/20261031T120154Z-reopened/prepare/attempt-0002/record.json",
+    "record_sha256": "15ce3e2a98ab2a4275cc6a251539b76c3ff274f51d2d5cf3166600438d2cf961",
+    "stage": "prepare"
+  },
+  {
+    "changed_source_keys": [
+      "analysis/run_dw_sampling.py",
+      "configs/dw_sampling.yaml",
+      "decisions/dw_sampling_reopening.md",
+      "tests/test_dw_sampling_protocol.py"
+    ],
+    "measured_functions": [
+      "configure_torch",
+      "Fixture",
+      "zero_dw_linear",
+      "native_variant_qualification",
+      "timed_pairs",
+      "state_streams",
+      "cost_session",
+      "select_native_variant",
+      "assert_native_equivalent",
+      "choose_block_length",
+      "primitive_qualification",
+      "environment",
+      "dependency_inventory",
+      "prepare"
+    ],
+    "measured_functions_identical": true,
+    "native_configuration_identical": true,
+    "original_actual_head": "d7782862c025da6ee27dc9f7692b75fe926cb070",
+    "original_git_hashes_match_sealed_measurement_map": true,
+    "path": "analysis/dw_sampling/20261031T120154Z-reopened/feasibility/attempt-0001/record.json",
+    "record_sha256": "716ec10cfe1827b8e85f03deb5229484ff7c20b80d2c7178b1395c4b5acda506",
+    "stage": "feasibility"
+  }
+]
