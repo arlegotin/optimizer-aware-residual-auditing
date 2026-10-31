@@ -1,0 +1,1 @@
+{"stage": "summarize", "status": "pass", "attempt": "/private/tmp/dw-sampling-review-2ydqirjv/checkout/analysis/dw_sampling/20261031T105213Z/summarize/attempt-0002", "reason": "incomplete/blocked summary rendered without upgrading scientific evidence"}

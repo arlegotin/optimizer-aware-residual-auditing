@@ -1,0 +1,106 @@
+{
+  "checkout": "/private/tmp/dw-sampling-review-2ydqirjv/checkout",
+  "head": "48d02b26caac2fa24bd95eac4745b334e8d32af7",
+  "historical_files_verified": 184,
+  "amendment_bound_files_verified": 190,
+  "current_source_hashes": {
+    "analysis/run_dw_sampling.py": "227f6977d4713e84d01cf2ebeb61d390d769f391da6fe14e65704daac47df663",
+    "configs/dw_sampling.yaml": "afbff17b101ffc45963b0bb8132574c405ba821f196704ff254e721e9e7ad4c3",
+    "decisions/dw_sampling_scope.md": "d91d9350dc117f83e39c648e48d435de75ab9ea5a3b6bc197b216c4b73c11181",
+    "src/oar/timing.py": "25351cd20abc14385dd1cb3e482c67f73619b1ead30900ca0150fe57072458e5",
+    "src/oar/hardware.py": "4ba118d816eec9d255cfb3d7925416373119fe181f82529fb58a96347d8e5048",
+    "src/oar/sampled_linear.py": "11398f9340a48b0dcabdc733c74dfa52b53663ea2005989f2ad7b53079827ca3",
+    "tests/test_sampled_linear.py": "3ed4adbf6f62599172b0322374e84c7552f7fc4b46761f80057053469822eaa9",
+    "tests/test_dw_sampling_protocol.py": "9772893f8002de46004ff334a39209d9df9438fc6bbf51b9dac91cf004dd1c3f"
+  },
+  "amendment_sha256": "7c269df87b3c726def0dccebf245e978da00f1835def79482ecaaf425d613c27",
+  "historical_inventory_sha256": "10fc155f316905ba509ee1f76b4b8bd8d6a4c438537b153e026100d346e666fc",
+  "sealed_records_verified": 7,
+  "sealed_artifacts_verified": 84,
+  "records": [
+    {
+      "path": "analysis/dw_sampling/20261031T105213Z/correctness/attempt-0001/record.json",
+      "status": "pass",
+      "record_sha256": "ef921e7744261da918d5c9853aead656c91f62796c5680b00244a1ae9212e435",
+      "artifact_count": 6,
+      "source_head": "cf6481741933130f2e86b440e750909686b81eb3",
+      "source_verified_at_commit": "cf6481741933130f2e86b440e750909686b81eb3",
+      "source_git_files_verified": 190,
+      "amendment_sha256": "7c269df87b3c726def0dccebf245e978da00f1835def79482ecaaf425d613c27"
+    },
+    {
+      "path": "analysis/dw_sampling/20261031T105213Z/feasibility/attempt-0001/record.json",
+      "status": "INCONCLUSIVE_MEASUREMENT",
+      "record_sha256": "e675cdd60e4607536ba33bc10c788bb380ed42d4c293c2b86913c4227f4fe869",
+      "artifact_count": 16,
+      "source_head": "3500387ec42f0559299ab919d6e3e6af26c3f069",
+      "source_verified_at_commit": "3500387ec42f0559299ab919d6e3e6af26c3f069",
+      "source_git_files_verified": 190,
+      "amendment_sha256": "5a507edd7e23dee07374f92de0882ab4e0f785f52061a04a9af617b85a2e67dc"
+    },
+    {
+      "path": "analysis/dw_sampling/20261031T105213Z/prepare/attempt-0001/record.json",
+      "status": "not_run",
+      "record_sha256": "a6348138bf8279f18bffdfb5504562bbe56e2cd7a801fb296b74afad992df3bd",
+      "artifact_count": 1,
+      "source_head": "9d8ad069c51b4d0e6c13e9c6e465579e9b44a339",
+      "source_verified_at_commit": "afa51cb",
+      "source_git_files_verified": 190,
+      "amendment_sha256": "e419f3c6fff306a30dcffd1ba8aa78321717f76c603e28c0901073c1cddab38a"
+    },
+    {
+      "path": "analysis/dw_sampling/20261031T105213Z/prepare/attempt-0002/record.json",
+      "status": "BLOCKED_HARDWARE",
+      "record_sha256": "5a235228d924db2e56fd88cc6769c9babaac9aaa8f6770c7db0559188ef40ca5",
+      "artifact_count": 27,
+      "source_head": "afa51cb078fa8ace8a26d2ef267c522cb90cc562",
+      "source_verified_at_commit": "afa51cb078fa8ace8a26d2ef267c522cb90cc562",
+      "source_git_files_verified": 190,
+      "amendment_sha256": "e419f3c6fff306a30dcffd1ba8aa78321717f76c603e28c0901073c1cddab38a"
+    },
+    {
+      "path": "analysis/dw_sampling/20261031T105213Z/prepare/attempt-0003/record.json",
+      "status": "pass",
+      "record_sha256": "5810353e689e742e3aff1e25f9b893a89adb348123523c8091b35d9763be32ec",
+      "artifact_count": 28,
+      "source_head": "3500387ec42f0559299ab919d6e3e6af26c3f069",
+      "source_verified_at_commit": "3500387ec42f0559299ab919d6e3e6af26c3f069",
+      "source_git_files_verified": 190,
+      "amendment_sha256": "5a507edd7e23dee07374f92de0882ab4e0f785f52061a04a9af617b85a2e67dc"
+    },
+    {
+      "path": "analysis/dw_sampling/20261031T105213Z/summarize/attempt-0001/record.json",
+      "status": "pass",
+      "record_sha256": "20332c88e893aeb067b5f0def0ce48eb9e4ebcfff1038292dae5822ea6b5571c",
+      "artifact_count": 3,
+      "source_head": "cf6481741933130f2e86b440e750909686b81eb3",
+      "source_verified_at_commit": "cf6481741933130f2e86b440e750909686b81eb3",
+      "source_git_files_verified": 190,
+      "amendment_sha256": "7c269df87b3c726def0dccebf245e978da00f1835def79482ecaaf425d613c27"
+    },
+    {
+      "path": "analysis/dw_sampling/20261031T105213Z/summarize/attempt-0002/record.json",
+      "status": "pass",
+      "record_sha256": "29977f162f032a7536ee2403373f8ac5eb17915848f04188eb786dcf4861c2e2",
+      "artifact_count": 3,
+      "source_head": "48d02b26caac2fa24bd95eac4745b334e8d32af7",
+      "source_verified_at_commit": "48d02b26caac2fa24bd95eac4745b334e8d32af7",
+      "source_git_files_verified": 190,
+      "amendment_sha256": "7c269df87b3c726def0dccebf245e978da00f1835def79482ecaaf425d613c27"
+    }
+  ],
+  "summary_terminal": "INCONCLUSIVE_MEASUREMENT",
+  "summary_records": 5,
+  "blocked_prerequisite_checks": {
+    "prepare": "prerequisite source/config mismatch: analysis/run_dw_sampling.py",
+    "feasibility": "failed prerequisite feasibility: INCONCLUSIVE_MEASUREMENT"
+  },
+  "historical_render_sha256": "adccda057cf2b9a6d231190f03754bf9c73c6cf08cbbf404fe40d53050d97c6c",
+  "historical_render_matches_archived_report": false,
+  "tracked_diff": "",
+  "hardware_identification": {
+    "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+    "machine": "arm64"
+  },
+  "limitations": "CPU-only same-machine/day/operator review; shared pinned environment; no independent performance or learning replication"
+}

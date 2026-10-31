@@ -1,0 +1,32 @@
+[
+  {
+    "argv": [
+      "/usr/sbin/sysctl",
+      "-n",
+      "machdep.cpu.brand_string"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "sysctl: sysctl fmt -1 1024 1: Operation not permitted\n"
+  },
+  {
+    "argv": [
+      "/usr/sbin/sysctl",
+      "-n",
+      "hw.model"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "sysctl: sysctl fmt -1 1024 1: Operation not permitted\n"
+  },
+  {
+    "argv": [
+      "/usr/sbin/sysctl",
+      "-n",
+      "hw.memsize"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "sysctl: sysctl fmt -1 1024 1: Operation not permitted\n"
+  }
+]

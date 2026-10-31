@@ -1,0 +1,2354 @@
+
+FILE decisions/dw_sampling_scope.md SHA256 d91d9350dc117f83e39c648e48d435de75ab9ea5a3b6bc197b216c4b73c11181
+<!-- SPDX-License-Identifier: CC-BY-4.0 -->
+# Prospective scope: fixed-budget norm-importance dW sampling
+
+Authorized by the owner's “FINAL CODING-AGENT INSTRUCTION: Bounded evaluation
+of importance-sampled weight gradients with exact input adjoints”, received
+2026-10-31. Recorded before new tests, device qualification or measurements.
+Reviewed and initial actual HEAD: `9d8ad069c51b4d0e6c13e9c6e465579e9b44a339`
+(`v0.1.0`); the checkout was clean on `main`. Initial inventory and hashes of
+every historical tracked file are in
+`analysis/dw_sampling/20261031T105213Z/initial_inspection.json`.
+
+This is a separate prospective branch, not permission to resume online OAR.
+Historical WP02 remains stopped, WP03 unfulfilled, WP04 inconclusive and
+NumericalPolicy unresolved. Historical gates, amendments, evidence, configs,
+index, report and restrictions will not be modified. The old measurements
+retain their recorded source identities, including structural queries at
+`2e89e742131eb5eebaeb7a028d8e8f2e4fc50e07` and unremeasured maintenance at
+`7628be7792030e3cfbb17dba82d3517642c866ca`.
+
+## Question and authorized implementation
+
+Test whether current-row sampling of selected FFN weight gradients can reduce
+charged time to a fixed held-out target on the specified FP32 MPS byte language
+model, with a common-budget endpoint quality guard. A blocked/negative result
+with correct code and evidence completes this scope. No broader accelerator,
+optimizer, model, memory-saving or mathematical acceptance claim is permitted.
+
+Implement independently with native Torch. For flattened X,D, n>0,
+G=D.T@X, a_i=norm(D_i)*norm(X_i), p_i=.9*a_i/sum(a)+.1/n. Draw k iid rows
+with replacement, retaining duplicates and using the same indices in X and D.
+Return sum(D_i.T X_i/(k p_i)); do not divide by n again. Production
+k=max(1,ceil(rho*n)), rho in {1/8,1/4,1/2}, fixed across layers/steps.
+k>=n dispatches directly to native F.linear outside custom autograd.
+Forward, input and bias derivatives are exact. No parameters change before
+the entire effective-batch backward completes. Native AdamW consumes actual
+dense gradient tensors, including zeros; no preview, audit, rejection or replay.
+
+Compute detached device FP32 scores after separately scaling X and D by their
+maximum absolute values. Verify finite scales. Only a proved zero *unscaled*
+entire X or D allows zero dW without sampling. Nonzero operands with zero,
+invalid or nonfinite score sum abort. In particular reciprocal-scale rows
+X=(1e30,1e-30), D=(1e-30,1e30) must abort, not return zero. Transfer only the
+n-element scores to CPU FP64, normalize/validate the mixture there, use native
+CPU torch.multinomial with the layer generator, and derive inverse-square-root
+weights from the SAME FP64 probabilities. Transfer indices and cast weights;
+gather, split-scale, and use a smaller dense GEMM. No full-n masked GEMM,
+n-by-n sketch, per-row outer product stack, custom CDF or device kernel.
+Uniform uses direct CPU randint and constant n/k, with no score work.
+
+Support FP32 CPU/MPS and explicit CPU FP64 reference fixtures; reject AMP,
+other dtypes, higher derivatives and sampled shared/tied weights. Each sampled
+weight has one module owner; every unique optimizer parameter occurs once.
+The native embedding/output tie remains exact. Accumulation weights each
+microbatch loss by its valid-target fraction, with independent local draws.
+
+Named seeds are SHA256 of ASCII compact JSON [base_seed,domain,*ids], first
+eight bytes big endian modulo 2**63-1. Domains: init,data,sampling,order.
+Each layer/sampler has a dedicated CPU generator; IDs block0.ffn_in/out through
+block3. Exact and proved-zero paths consume no draws. Record seeds and states.
+
+## Gates and resource boundaries
+
+The driver exposes prepare, feasibility, correctness, cost, pilot, confirm,
+summarize, with required --stage/--config/--out. Fresh attempt directories,
+hash-validated prerequisites, no import-time execution, downloads or training.
+Preparation and --help never download corpus bodies. Summaries work when
+blocked/incomplete. A measured source/config change invalidates affected
+downstream evidence; direct source hashes accompany Git identity. New stage
+records are separate from the old schema/ledgers. Freeze an immutable dated
+manifest before execution; commit the prospective specification if permitted.
+
+A: use the existing pinned native arm64 Python3.13 environment, verify package
+and dependency hashes, CPU suite and new-path historical report rendering.
+Start fresh interpreters with fallback=0, fast-math=0, prefer-metal held fixed.
+Doctor's active fallback check, nine existing MPS tests, full suite and actual
+sampler primitive checks qualify hardware. Record OS/device/power/memory,
+versions, flags, skips, unavailable telemetry and command exits. No genuine
+MPS access => CPU correctness/dry runs only, BLOCKED_HARDWARE; no CPU cost claim.
+Inspect documentary WikiText status immediately, without corpus bodies.
+
+B: before trainer work, complete two-linear GELU residual-block steps including
+root dX, bias, loss, clipping and native AdamW. Qualify default/single/foreach/
+fused against multistep scalar native, select fastest with baseline-only blocks.
+Shapes: (128,128,512), (2048,512,2048), (4096,512,2048), (8192,768,3072), plus
+separate n2048 four-microbatch stride-2 control. Zero-dW returns dense zeros,
+keeps exact dX/db and all optimizer work; it is a nonlearning diagnostic.
+Native A/A freezes delta=max(.05,2*linear_quantile95(abs(TA/TB-1))) pooled
+across both sessions, before sampler timing inspection. delta>.15 or unstable
+warmup permits one replacement exclusive session; retained invalid evidence.
+Require upper paired-bootstrap zero/native ratio <1-delta at a middle shape
+in BOTH sessions; wide-only success cannot authorize model growth.
+
+C: implement only sampled_linear and meaningful tests, even if B is hardware
+blocked. Exact enumeration n,k=(2,1),(3,1),(3,2), actual gather/weight path,
+expectation/variance/duplicates, exact dispatch, exact network adjoints,
+accumulation, needs_input_grad, layouts, streams/restore, shared exclusion,
+numerical extremes and the biased Adam displacement counterexample. Injected
+identical samples must give identical multistep native AdamW with clipping,
+groups, decay and nonzero moments. FP64 tolerance <=1e-10/1e-12; FP32
+<=1e-4/1e-6 except prospectively justified scale-aware cancellation checks.
+CPU probabilities: sum tolerance 5e-15, min >=(.1/n)*(1-1e-12).
+FP32 cast weights: abs(k*p*w*w-1)<=8*FP32 eps. No flaky distribution gate.
+
+D: dense/importance/uniform, all three rho values, all five shape/layout
+fixtures. Charge every reduction/check/synchronization/transfer/gather,
+allocation, optimizer and setup. Separate profiles cannot be summed into
+observed step times. In each of two fresh exclusive sessions: warmup min8,
+max32, last8 relative range<=.10; 30 randomized pairs; dense fixes block length
+>=.2s capped100 updates. Restore common parameters, nonzero native moments,
+data and named streams outside timing, recording reset costs. Record every
+raw block/order and endpoint memory (RSS/Metal/driver separately). Ratio is
+exp(mean(log(candidate/dense))); 10,000 paired percentile bootstrap resamples,
+seed62001, linear percentiles. Require upper95%<1-delta in BOTH sessions at
+n2048/4096. If only uniform passes, retain only that contingency. Neither
+passes => STOP_COST, no trainer. Bounded offline variance/information work:
+32 draws at native states0/32/128, charged separately, never runtime input.
+No slow valid block may be discarded. No kernel/controller project.
+
+Before each hardware stage bind an inclusive conservative forecast and a
+deadline twice that forecast, including startup/warmup/reset/serialization.
+Initial qualification forecast: 120s (deadline240s), <=256MB output. Later
+forecasts must use measured conservative complete costs, not old timings.
+No implicit external compute or storage purchase; unavailable resources stop.
+
+E/F are conditional, not authorized through a failed A/B/D. WikiText must have
+a new documentary/owner asset decision resolving the recorded contradictory
+notices before any corpus body use. No alternative corpus. The current
+restriction is retained, not interpreted away by this scope. If still blocked
+after useful earlier work, BLOCKED_ASSET with no trainer/data expansion.
+
+If reached, E is exactly the owner's byte LM: four pre-LN width512/head8/
+FFN2048 blocks, context256, exact GELU, dropout0, biased QKV/attention/FFNs,
+LN eps1e-5, tied exact 259-token output, N(0,.02^2) unique weights in declared
+order. Explicit Boolean causal/key-valid SDPA mask; no embedding/residual
+scales. Candidate B16; dense B4/8/16/32 without accumulation back to16.
+Full-model native variants and two-session cost gate must pass again. Data
+are pinned revision b08601e04326c79dfdd32d625aee71d232d685c3 with manifest
+LFS hashes; pyarrow only if necessary. Preserve rows/line endings/articles,
+single-level title regex, nonempty preambles; train-hash modulo10 development;
+exact cross-split evaluation dedup; no near-duplicate selection. UTF-8 bytes,
+BOS256/EOS257/PAD258; all targets including EOS once. Training chunks256;
+evaluation stride128 with up to256 context, at most64 hash-selected monitors,
+batch16, CPU FP64 accumulation of per-target losses. Official test sealed.
+
+E uses native AdamW (.9,.999), eps1e-8, matrix decay.01, other decay0,
+clip1 error_if_nonfinite. Canonical launch clock includes imports/setup/data/
+checks/monitors/checkpoints/restarts. Eight-update synchronized blocks (or the
+single prescribed all-arm fallback to1). H/Delta/R/T_budget/r_time frozen by
+three baseline cost measurements and j=100,50,25 rule, with monitor overhead
+<=2%, resolution delta<=.15, overshoot bound and >=8 periodic monitors.
+Time-budget LR has run-specific preserved t0, 5% warmup then cosine to.1peak.
+No catch-up monitors. Numerical evaluation epsilon from three identical-weight
+repeats; >1e-3 stops. Tuning seed3101, LR1e-4/3e-4/1e-3, at most12 dense,
+9 importance,9 uniform trials; independent development3102/3103/3104.
+Freeze q_star at R0's first monitor at/after.6H, epsilon_q=min(log1.01,.1gain),
+require meaningful baseline gain and two later crossings. Choose fastest
+target-time eligible endpoint arms, with declared simplicity tie rules.
+Uniform and smaller-dense competitors may defeat the candidate. One native
+correct-autocast precision screen and three-seed reproduction of dominance;
+no model.half shortcut. Moment-history shift/context128 are diagnostics only.
+
+F freezes all choices/hashes before official-validation losses. Fixed N8..16
+from the specified three-seed time/quality variability formula; invalid or
+N>16 => INCONCLUSIVE_PRECISION. Seeds5001..5000+N, sequential randomized
+AB/BA fresh processes, twice-consecutive observed monitor crossing, no
+censored-time substitution. Paired seed-level log-time t CI and arithmetic
+quality t CI (given df7..15 quantiles), 10,000 bootstrap sensitivity seed62002;
+upper time<1-delta AND upper quality<=epsilon_q, disagreements inconclusive.
+Endpoint/clock/reserve failures preclude a positive claim. Frozen final models
+score test once after analysis freeze; material regression withholds broad
+learning conclusion. Independent fresh-checkout/context first-three-pair
+repeats are corroboration, not additional seeds. Maximum55+2N full-budget
+equivalents (87 at16), deduplicate without spending saved slots. Bind total
+hours/storage and twice-inclusive-stage deadline before any language trials.
+
+Only synchronized committed checkpoints may resume: atomic integrity-checked
+write, model/native optimizer/scheduler/counters/data cursor/shuffle/sampler/
+model RNG/time/t0/source/config/assets/schema. Preserve last valid checkpoint
+on errors; no partial optimizer checkpoint, resampling or retrying bad draws.
+Test fixed-clock replay and separately charged real-clock restart if reached.
+
+## Implementation plan and reviews
+
+1. Preserve inventory; documentary asset query; scope/config/amendment freeze.
+2. Test-first standalone sampler and protocol/prerequisite/immutability checks.
+3. Prepare/A; CPU correctness may precede blocked B. Execute B and D only
+   after qualified actual MPS, valid immutable prerequisites and resources.
+4. Stop at failed prerequisite; E/F infrastructure is implemented only if
+   reached. Summarize every attempt, hashes, costs, skips and precise stop.
+5. Explicit mathematical/statistical, backend/optimizer/cost/recovery, and
+   clean-process autonomous reproduction reviews; correct substantive defects
+   and repeat only affected checks, retaining earlier failures.
+
+Terminal states: STOP_COST, STOP_QUALITY, STOP_DOMINATED, BLOCKED_HARDWARE,
+BLOCKED_ASSET, INCONCLUSIVE_MEASUREMENT, INCONCLUSIVE_PRECISION,
+INCOMPLETE_RESOURCE, CONFIRMED_SCOPED_BENEFIT. No positive claim from a blocked
+or synthetic-only branch. Final report includes actual commands/counts/device,
+source/artifact hashes, omissions, adverse cases, review corrections and one
+stop/continue recommendation.
+
+Software is AGPL-3.0-only; original writing/results CC-BY-4.0. Established
+column-row sampling: [Adelman et al., NeurIPS2021](https://arxiv.org/pdf/1805.08079).
+[Wang et al., ICLR2024](https://arxiv.org/pdf/2402.17227) additionally adapts
+ratios and samples activation gradients. This implementation is **fixed-budget
+norm-importance dW sampling**, not a faithful VCAS reproduction; their CUDA
+timings are not evidence here. No third-party sampler code is copied.
+
+FILE configs/dw_sampling.yaml SHA256 afbff17b101ffc45963b0bb8132574c405ba821f196704ff254e721e9e7ad4c3
+# SPDX-License-Identifier: CC-BY-4.0
+schema_version: 1
+experiment: fixed_budget_norm_importance_dw
+reviewed_head: 9d8ad069c51b4d0e6c13e9c6e465579e9b44a339
+device: mps
+dtype: float32
+fallback: '0'
+fast_math: '0'
+prefer_metal: '0'
+samplers: [importance, uniform]
+rhos: [0.125, 0.25, 0.5]
+mixture_uniform: 0.1
+seed: 61001
+analysis_seed: 62001
+confirmation_analysis_seed: 62002
+shapes:
+  - {id: tiny, n: 128, di: 128, do: 512, microbatches: 1, stride: 1}
+  - {id: middle2048, n: 2048, di: 512, do: 2048, microbatches: 1, stride: 1}
+  - {id: middle4096, n: 4096, di: 512, do: 2048, microbatches: 1, stride: 1}
+  - {id: wide, n: 8192, di: 768, do: 3072, microbatches: 1, stride: 1}
+  - {id: middle2048_accum4_stride2, n: 2048, di: 512, do: 2048, microbatches: 4, stride: 2}
+timing:
+  sessions: 2
+  pairs: 30
+  minimum_block_s: 0.2
+  maximum_updates_per_block: 100
+  bootstrap_replicates: 10000
+  warmup: {minimum: 8, maximum: 32, window: 8, relative_range: 0.1}
+  delta_floor: 0.05
+  delta_noise_multiplier: 2
+  delta_cap: 0.15
+  history_updates: 8
+  native_variants: [default, single, foreach, fused]
+  replacement_sessions_maximum: 1
+  invalid_conditions: [missing_synchronization, overlapping_process, failed_warmup, device_error]
+optimizer:
+  lr: 0.001
+  betas: [0.9, 0.999]
+  eps: 0.00000001
+  weight_decay: 0.01
+  clip_norm: 1.0
+diagnostic:
+  native_states: [0, 32, 128]
+  draws: 32
+resources:
+  qualification_forecast_s: 120
+  deadline_multiplier: 2
+  maximum_stage_s: 21600
+  minimum_free_disk_bytes: 1073741824
+  maximum_output_bytes: 268435456
+  memory_fraction: 0.7
+asset:
+  name: wikitext-2-raw-v1
+  revision: b08601e04326c79dfdd32d625aee71d232d685c3
+  decision: blocked_pending_documentary_resolution_or_owner_determination
+  body_downloads: false
+learning:
+  implemented_only_after_cost: true
+  blocks: 4
+  width: 512
+  heads: 8
+  ffn_width: 2048
+  context: 256
+  candidate_batch: 16
+  dense_batches: [4, 8, 16, 32]
+  peak_lrs: [0.0001, 0.0003, 0.001]
+  tuning_seed: 3101
+  development_seeds: [3102, 3103, 3104]
+  confirmation_seed_start: 5001
+  confirmation_minimum: 8
+  confirmation_maximum: 16
+  full_budget_equivalents_maximum: 87
+  monitor_windows_maximum: 64
+  evaluation_batch: 16
+  evaluation_stride: 128
+  synchronized_updates: 8
+  synchronized_updates_fallback: 1
+  monitor_count_candidates: [100, 50, 25]
+  scheduler_warmup_fraction: 0.05
+  scheduler_final_fraction: 0.1
+  epsilon_eval_floor: 0.000001
+  epsilon_eval_ceiling: 0.001
+  target_calibration_fraction: 0.6
+  minimum_periodic_monitors: 8
+  grid_dense_maximum: 12
+  grid_importance_maximum: 9
+  grid_uniform_maximum: 9
+  independent_development_maximum: 15
+  precision_screens_maximum: 1
+  secondary_batch16_maximum: 3
+  independent_repeat_pairs: 3
+
+FILE src/oar/sampled_linear.py SHA256 26a3c880e9bc6e1093a6f1487b20e7df05cf0a76e663da44011fd0914cf7d228
+# SPDX-License-Identifier: AGPL-3.0-only
+"""Fixed-budget row sampling of dense weight gradients, with exact dX/db.
+
+The caller weights losses before backward, excludes shared sampled parameters,
+checks every model gradient before optimizer.step, and owns effective batches.
+Exact dispatch is native F.linear (including its native differentiation policy).
+Sampled backwards check their produced gradients and reject higher derivatives.
+Dynamic shared-weight detection requires Torch's current-backward-task primitive;
+no private optimizer/kernel implementation is used.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import math
+import weakref
+from dataclasses import dataclass, field
+from typing import Iterable
+
+import torch
+from torch import Tensor, nn
+from torch.nn import functional as F
+
+
+def named_seed(base_seed: int, domain: str, *ids: str) -> int:
+    """Resolve the prospective compact ASCII JSON SHA256 named stream."""
+    if type(base_seed) is not int or not isinstance(domain, str) or any(not isinstance(i, str) for i in ids):
+        raise ValueError('named seeds require integer base_seed and string domain/ids')
+    encoded = json.dumps([base_seed, domain, *ids], separators=(',', ':'), ensure_ascii=True).encode('ascii')
+    return int.from_bytes(hashlib.sha256(encoded).digest()[:8], 'big') % (2**63-1)
+
+
+@dataclass
+class SamplingState:
+    base_seed: int
+    layer_id: str
+    sampler: str = 'importance'
+    rho: float = .25
+    seed: int = field(init=False)
+    generator: torch.Generator = field(init=False, repr=False)
+
+    def __post_init__(self):
+        if self.sampler not in ('importance', 'uniform'):
+            raise ValueError('sampler must be importance or uniform')
+        if self.rho not in (.125, .25, .5, 1):
+            raise ValueError('rho must be one of 1/8, 1/4, 1/2, 1')
+        self.seed = named_seed(self.base_seed, 'sampling', self.layer_id, self.sampler)
+        self.generator = torch.Generator(device='cpu').manual_seed(self.seed)
+
+    def state_dict(self) -> dict:
+        return {'base_seed': self.base_seed, 'layer_id': self.layer_id, 'sampler': self.sampler,
+                'rho': self.rho, 'seed': self.seed, 'generator_state': self.generator.get_state().clone()}
+
+    def load_state_dict(self, state: dict) -> None:
+        for key in ('base_seed', 'layer_id', 'sampler', 'rho', 'seed'):
+            if state.get(key) != getattr(self, key):
+                raise ValueError(f'sampling state metadata mismatch: {key}')
+        rng = state.get('generator_state')
+        if not isinstance(rng, Tensor) or rng.device.type != 'cpu' or rng.dtype != torch.uint8:
+            raise ValueError('generator_state must be a CPU byte tensor')
+        self.generator.set_state(rng.clone())
+
+
+def _finite(tensor: Tensor, name: str) -> None:
+    if not bool(torch.isfinite(tensor).all()):
+        raise RuntimeError(f'{name} must be finite')
+
+
+def _operand_scales(x2: Tensor, d2: Tensor) -> tuple[Tensor, Tensor]:
+    # Preserve CPU FP64 extreme reference scales until AFTER normalization.
+    sx, sd = x2.detach().abs().amax(), d2.detach().abs().amax()
+    _finite(sx, 'X scale')
+    _finite(sd, 'D scale')
+    return sx, sd
+
+
+def importance_probabilities(x2: Tensor, d2: Tensor) -> Tensor | None:
+    """CPU FP64 mixture probabilities; None only for proved unscaled zero.
+
+    Only the n device FP32 scores move to CPU; complete operands stay on device.
+    Nonzero operands whose normalized FP32 scores vanish are an explicit error.
+    """
+    if x2.ndim != 2 or d2.ndim != 2 or x2.shape[0] != d2.shape[0] or not x2.shape[0]:
+        raise ValueError('score operands require matching nonempty row matrices')
+    sx, sd = _operand_scales(x2, d2)
+    if bool(sx == 0) or bool(sd == 0):
+        return None
+    xs = (x2.detach()/sx).to(dtype=torch.float32)
+    ds = (d2.detach()/sd).to(dtype=torch.float32)
+    scores = torch.linalg.vector_norm(xs, dim=1)*torch.linalg.vector_norm(ds, dim=1)
+    _finite(scores, 'sampling scores')
+    scores_cpu = scores.to(device='cpu', dtype=torch.float64)
+    total = scores_cpu.sum()
+    if not bool(torch.isfinite(total)) or not bool(total > 0):
+        raise RuntimeError('nonzero operands produced invalid or zero sampling score sum')
+    n = len(scores_cpu)
+    p = .9*(scores_cpu/total)+.1/n
+    if (not bool(torch.isfinite(p).all()) or not bool((p > 0).all())
+            or abs(p.sum().item()-1) > 5e-15
+            or p.min().item() < .1/n*(1-1e-12)):
+        raise RuntimeError('invalid sampling probabilities')
+    return p
+
+
+def gather_weight_gradient(x2: Tensor, d2: Tensor, indices_cpu: Tensor,
+                           probabilities_cpu: Tensor, k: int) -> Tensor:
+    """Actual importance gather/split-inverse-scale/small-GEMM runtime path.
+
+    Does not dispatch k>=n: enumeration deliberately exercises duplicates for
+    any supplied k. Production exact dispatch happens in sampled_linear.
+    """
+    if type(k) is not int or k <= 0:
+        raise ValueError('k must be a positive integer')
+    n = x2.shape[0]
+    if (indices_cpu.device.type != 'cpu' or indices_cpu.dtype != torch.int64
+            or indices_cpu.shape != (k,) or probabilities_cpu.device.type != 'cpu'
+            or probabilities_cpu.dtype != torch.float64 or probabilities_cpu.shape != (n,)):
+        raise ValueError('gather requires CPU int64 indices and CPU FP64 probabilities')
+    if bool((indices_cpu < 0).any()) or bool((indices_cpu >= n).any()):
+        raise ValueError('sample index out of bounds')
+    selected = probabilities_cpu.index_select(0, indices_cpu)
+    if not bool(torch.isfinite(selected).all()) or not bool((selected > 0).all()):
+        raise RuntimeError('sample probabilities must be positive and finite')
+    weights_cpu = (k*selected).rsqrt()
+    weights = weights_cpu.to(device=x2.device, dtype=x2.dtype)
+    # The FP64 probabilities above also determine the inverse scales, with no
+    # second normalization or independently rounded probability calculation.
+    rows = indices_cpu.to(device=x2.device)
+    xs = x2.index_select(0, rows)*weights[:, None]
+    ds = d2.index_select(0, rows)*weights[:, None]
+    dw = ds.T@xs
+    _finite(dw, 'sampled dW')
+    return dw
+
+
+# One live weak reference and last graph-task ID per sampled weight; no graph
+# or operand is retained. Different SamplingState objects cannot evade this.
+_last_backward: dict[int, tuple[weakref.ReferenceType, int]] = {}
+
+
+def _claim_backward(weight: Tensor) -> None:
+    primitive = getattr(torch._C, '_current_graph_task_id', None)
+    if primitive is None:
+        raise RuntimeError('Torch current backward graph task primitive unavailable')
+    task = primitive()
+    if task < 0:
+        raise RuntimeError('Torch current backward graph task primitive unsupported')
+    key = id(weight)
+    previous = _last_backward.get(key)
+    if previous is not None and previous[0]() is weight and previous[1] == task:
+        raise RuntimeError('same weight reused/shared in one sampled backward graph')
+    def remove(ref, key=key):
+        current = _last_backward.get(key)
+        if current is not None and current[0] is ref:
+            _last_backward.pop(key, None)
+    _last_backward[key] = (weakref.ref(weight, remove), task)
+
+
+class _SampledLinear(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, x, weight, bias, state, k):
+        ctx.save_for_backward(x, weight)
+        ctx.state, ctx.k, ctx.has_bias = state, k, bias is not None
+        return F.linear(x, weight, bias)
+
+    @staticmethod
+    def backward(ctx, d):
+        if torch.is_grad_enabled():
+            raise RuntimeError('sampled_linear does not support higher-order differentiation')
+        x, weight = ctx.saved_tensors
+        x2, d2 = x.reshape(-1, weight.shape[1]), d.reshape(-1, weight.shape[0])
+        dx = (d2@weight).reshape(x.shape) if ctx.needs_input_grad[0] else None
+        db = d2.sum(0) if ctx.has_bias and ctx.needs_input_grad[2] else None
+        dw = None
+        if ctx.needs_input_grad[1]:
+            _claim_backward(weight)
+            state, k = ctx.state, ctx.k
+            if state.sampler == 'importance':
+                p = importance_probabilities(x2, d2)
+                if p is None:
+                    dw = torch.zeros_like(weight)
+                else:
+                    indices = torch.multinomial(p, k, replacement=True, generator=state.generator)
+                    dw = gather_weight_gradient(x2, d2, indices, p, k)
+            else:
+                sx, sd = _operand_scales(x2, d2)
+                if bool(sx == 0) or bool(sd == 0):
+                    dw = torch.zeros_like(weight)
+                else:
+                    rows = torch.randint(x2.shape[0], (k,), generator=state.generator).to(x2.device)
+                    xs, ds = x2.index_select(0, rows), d2.index_select(0, rows)
+                    # Uniform has no per-row inverse probabilities: apply its
+                    # single constant to the narrower gathered operand once.
+                    scale = x2.shape[0]/k
+                    dw = ds.T@(xs*scale) if xs.shape[1] <= ds.shape[1] else (ds*scale).T@xs
+        for value, name in ((dx, 'dX'), (dw, 'dW'), (db, 'db')):
+            if value is not None:
+                _finite(value, name)
+        return dx, dw, db, None, None
+
+
+def sampled_linear(x: Tensor, weight: Tensor, bias: Tensor | None,
+                   state: SamplingState, *, k: int | None = None) -> Tensor:
+    """Native forward/exact input and bias adjoints; iid sampled dense dW.
+
+    k defaults to max(1, ceil(rho*n)). k>=n uses native F.linear directly,
+    consumes no sampler RNG, and permits native shared/tied weights. The caller
+    checks native and unsampled gradients for finiteness before optimizer.step.
+    """
+    if any(torch.is_autocast_enabled(device) for device in ('cpu', 'cuda', 'mps')):
+        raise RuntimeError('sampled_linear rejects autocast/AMP')
+    if (weight.ndim != 2 or x.ndim < 1 or min(weight.shape) == 0
+            or x.shape[-1] != weight.shape[1]):
+        raise ValueError('incompatible linear shapes')
+    n = x.numel()//weight.shape[1]
+    if n == 0:
+        raise ValueError('empty linear rows are unsupported')
+    if weight.dtype != torch.float32 and not (weight.dtype == torch.float64 and weight.device.type == 'cpu'):
+        raise ValueError('dtype must be FP32 CPU/MPS or CPU FP64 reference')
+    if weight.device.type not in ('cpu', 'mps'):
+        raise ValueError('device must be CPU or MPS')
+    tensors = (x, weight) if bias is None else (x, weight, bias)
+    if any(t.dtype != weight.dtype or t.device != weight.device for t in tensors):
+        raise ValueError('linear tensors must share dtype/device')
+    if bias is not None and bias.shape != (weight.shape[0],):
+        raise ValueError('bias shape must match output width')
+    if not isinstance(state, SamplingState):
+        raise TypeError('state must be SamplingState')
+    budget = max(1, math.ceil(state.rho*n)) if k is None else k
+    if type(budget) is not int or budget < 1:
+        raise ValueError('k must be a positive integer')
+    if budget >= n:
+        return F.linear(x, weight, bias)
+    return _SampledLinear.apply(x, weight, bias, state, budget)
+
+
+def validate_sampled_parameters(model: nn.Module, eligible_module_names: Iterable[str],
+                                optimizer_parameters: Iterable[Tensor]) -> None:
+    """Reject sampled aliases/views/reused modules and nonunique optimizer sets.
+
+    Exact ties elsewhere in the model remain allowed; the optimizer must contain
+    every unique model Parameter exactly once, with no additional parameters.
+    """
+    modules = dict(model.named_modules(remove_duplicate=False))
+    names = list(eligible_module_names)
+    if len(set(names)) != len(names):
+        raise ValueError('sampled module names must be unique')
+    all_entries = list(model.named_parameters(remove_duplicate=False))
+    unique = {id(p): p for _, p in all_entries}
+    optimized = list(optimizer_parameters)
+    if len(optimized) != len(unique) or {id(p) for p in optimized} != set(unique):
+        raise ValueError('optimizer must contain every unique model parameter exactly once')
+    for name in names:
+        module = modules.get(name)
+        if module is None or not isinstance(module, nn.Linear):
+            raise ValueError(f'sampled module {name!r} must be Linear')
+        if sum(other is module for other in modules.values()) != 1:
+            raise ValueError(f'sampled module {name!r} is reused/shared')
+        weight = module.weight
+        if sum(p is weight for _, p in all_entries) != 1:
+            raise ValueError(f'sampled weight {name!r} has multiple owners/aliases')
+        storage = weight.untyped_storage()
+        for param in unique.values():
+            if param is weight:
+                continue
+            if param.device == weight.device and param.untyped_storage().data_ptr() == storage.data_ptr():
+                raise ValueError(f'sampled weight {name!r} has shared parameter storage/view')
+
+FILE tests/test_sampled_linear.py SHA256 e4f131100065a836281030db98880530316086fce0f0be4e00b99fa63c838443
+# SPDX-License-Identifier: AGPL-3.0-only
+"""Deterministic CPU correctness for fixed-budget row-sampled dW."""
+import hashlib
+import importlib
+import itertools
+import json
+import math
+
+import pytest
+import torch
+from torch import nn
+from torch.nn import functional as F
+
+
+@pytest.fixture
+def op():
+    # Missing implementation is a behavioral RED failure, not collection failure.
+    assert importlib.util.find_spec('oar.sampled_linear') is not None, 'standalone sampler missing'
+    return importlib.import_module('oar.sampled_linear')
+
+
+def close(a, b):
+    torch.testing.assert_close(a, b, rtol=1e-10, atol=1e-12)
+
+
+def fixture(n=5, dtype=torch.float64):
+    g = torch.Generator().manual_seed(91)
+    return (torch.randn(n, 4, generator=g, dtype=dtype),
+            torch.randn(3, 4, generator=g, dtype=dtype),
+            torch.randn(3, generator=g, dtype=dtype),
+            torch.randn(n, 3, generator=g, dtype=dtype))
+
+
+@pytest.mark.parametrize('n,k', [(2, 1), (3, 1), (3, 2)])
+@pytest.mark.parametrize('sampler', ['importance', 'uniform'])
+def test_enumeration_unbiased_variance_duplicates(op, n, k, sampler):
+    # Omitting duplicates, 1/(kp), or dividing by n breaks expectation/variance.
+    x = torch.tensor([[1., 2.], [-3., .5], [2., -1.]], dtype=torch.float64)[:n]
+    d = torch.tensor([[.5, -2.], [4., 1.], [-1., 3.]], dtype=torch.float64)[:n]
+    # Enumeration probabilities are a separate FP64 reference, independent of
+    # production FP32 score rounding. Only gather/weight/GEMM uses runtime code.
+    norms = torch.linalg.vector_norm(x, dim=1)*torch.linalg.vector_norm(d, dim=1)
+    p = .9*norms/norms.sum()+.1/n if sampler == 'importance' else torch.full((n,), 1/n, dtype=torch.float64)
+    exact = d.T @ x
+    expected = torch.zeros_like(exact)
+    variance = torch.zeros_like(exact)
+    duplicate_seen = False
+    for rows in itertools.product(range(n), repeat=k):
+        indices = torch.tensor(rows)
+        estimate = op.gather_weight_gradient(x, d, indices, p, k)
+        probability = math.prod(p[i].item() for i in rows)
+        expected += probability * estimate
+        variance += probability * (estimate - exact).square()
+        duplicate_seen |= len(set(rows)) < k
+    single_second = sum(torch.outer(d[i], x[i]).square() / p[i] for i in range(n))
+    close(expected, exact)
+    close(variance, (single_second - exact.square()) / k)
+    if k > 1:
+        assert duplicate_seen
+
+
+@pytest.mark.parametrize('sampler', ['importance', 'uniform'])
+@pytest.mark.parametrize('k', [1, 4, 5, 8])
+@pytest.mark.parametrize('dtype', [torch.float32, torch.float64])
+def test_linear_forward_exact_adjoints_and_native_dispatch(op, k, dtype, sampler):
+    x, w, b, d = fixture(dtype=dtype)
+    x, w, b = [t.requires_grad_() for t in (x, w, b)]
+    state = op.SamplingState(2, 'block0.ffn_in', sampler=sampler)
+    saved = state.generator.get_state().clone()
+    y = op.sampled_linear(x, w, b, state, k=k)
+    native = F.linear(x, w, b)
+    torch.testing.assert_close(y, native, rtol=0, atol=0)
+    actual = torch.autograd.grad(y, (x, w, b), d)
+    expected = torch.autograd.grad(native, (x, w, b), d)
+    for i in (0, 2):
+        torch.testing.assert_close(actual[i], expected[i], rtol=1e-10 if dtype == torch.float64 else 1e-4,
+                                   atol=1e-12 if dtype == torch.float64 else 1e-6)
+    if k >= len(x):
+        torch.testing.assert_close(actual[1], expected[1], rtol=0, atol=0)
+        assert torch.equal(saved, state.generator.get_state())
+        assert type(y.grad_fn) is type(native.grad_fn)
+    else:
+        assert not torch.equal(saved, state.generator.get_state())
+
+
+def test_deep_nonlinear_residual_keeps_root_bias_and_unsampled_grads_exact(op):
+    def run(sample):
+        g = torch.Generator().manual_seed(6)
+        x = torch.randn(2, 3, 4, generator=g, dtype=torch.float64).requires_grad_()
+        h, params, exact_indices = x, [], []
+        for layer in range(3):
+            w1 = (torch.randn(7, 4, generator=g, dtype=x.dtype)/4).requires_grad_()
+            w2 = (torch.randn(4, 7, generator=g, dtype=x.dtype)/4).requires_grad_()
+            b1 = torch.randn(7, generator=g, dtype=x.dtype).requires_grad_()
+            b2 = torch.randn(4, generator=g, dtype=x.dtype).requires_grad_()
+            hidden = op.sampled_linear(h, w1, b1, op.SamplingState(3, str(layer)), k=2) if sample else F.linear(h, w1, b1)
+            h = h + F.linear(F.gelu(hidden), w2, b2)
+            exact_indices.extend([1+len(params)+1, 1+len(params)+2, 1+len(params)+3])
+            params.extend((w1, w2, b1, b2))
+        return h, torch.autograd.grad((h.sin()+h.square()/3).mean(), (x, *params)), exact_indices
+    a, ag, indices = run(True)
+    b, bg, _ = run(False)
+    close(a, b)
+    for i in [0, *indices]:
+        close(ag[i], bg[i])
+
+
+@pytest.mark.parametrize('bias', [False, True])
+@pytest.mark.parametrize('freeze', ['x', 'weight', 'neither'])
+def test_layout_leading_axes_optional_bias_and_needs_input_grad(op, bias, freeze):
+    x = torch.arange(48., dtype=torch.float64).reshape(2, 4, 6).transpose(0, 1)[..., ::2]
+    assert not x.is_contiguous()
+    x.requires_grad_(freeze != 'x')
+    w = torch.ones(2, 3, dtype=x.dtype, requires_grad=freeze != 'weight')
+    b = torch.zeros(2, dtype=x.dtype, requires_grad=True) if bias else None
+    state = op.SamplingState(9, 'layout')
+    saved = state.generator.get_state().clone()
+    y = op.sampled_linear(x, w, b, state, k=1)
+    leaves = [v for v in (x, w, b) if v is not None and v.requires_grad]
+    grads = torch.autograd.grad(y.sum(), leaves)
+    assert all(torch.isfinite(v).all() for v in grads)
+    if freeze == 'weight':
+        assert torch.equal(saved, state.generator.get_state())
+    if x.requires_grad:
+        close(grads[0], torch.full_like(x, 2))
+
+
+@pytest.mark.parametrize('which', ['x', 'd'])
+@pytest.mark.parametrize('sampler', ['importance', 'uniform'])
+def test_proved_zero_dense_gradient_without_draws(op, which, sampler):
+    x, w, b, d = fixture()
+    if which == 'x': x.zero_()
+    else: d.zero_()
+    x, w, b = [v.requires_grad_() for v in (x, w, b)]
+    state = op.SamplingState(4, 'zero', sampler=sampler)
+    saved = state.generator.get_state().clone()
+    gx, gw, gb = torch.autograd.grad(op.sampled_linear(x, w, b, state, k=1), (x, w, b), d)
+    assert gw is not None
+    close(gw, torch.zeros_like(w))
+    close(gx, d @ w)
+    close(gb, d.sum(0))
+    assert torch.equal(saved, state.generator.get_state())
+
+
+@pytest.mark.parametrize('dtype', [torch.float32, torch.float64])
+def test_reciprocal_scale_score_underflow_aborts_before_draw(op, dtype):
+    x = torch.tensor([[1e30], [1e-30]], dtype=dtype, requires_grad=True)
+    d = torch.tensor([[1e-30], [1e30]], dtype=dtype)
+    w = torch.ones(1, 1, dtype=dtype, requires_grad=True)
+    state = op.SamplingState(1, 'underflow')
+    saved = state.generator.get_state().clone()
+    with pytest.raises(RuntimeError, match='score'):
+        op.sampled_linear(x, w, None, state, k=1).backward(d)
+    assert torch.equal(saved, state.generator.get_state())
+
+
+@pytest.mark.parametrize('n', [1, 3, 8192])
+def test_probability_bounds_concentration_and_cast_inverse_weights(op, n):
+    x = torch.ones(n, 2)
+    d = torch.ones(n, 2)
+    if n > 1:
+        x[0] = 1e30
+        x[-1] = 1e-30
+    p = op.importance_probabilities(x, d)
+    assert p.dtype == torch.float64 and p.device.type == 'cpu'
+    assert abs(p.sum().item()-1) <= 5e-15
+    assert p.min() >= .1/n*(1-1e-12)
+    k = max(1, n//4)
+    weights = (k*p).rsqrt().float().double()
+    assert ((k*p*weights.square()-1).abs() <= 8*torch.finfo(torch.float32).eps).all()
+
+
+@pytest.mark.parametrize('value', [float('nan'), float('inf')])
+@pytest.mark.parametrize('operand', ['x', 'd'])
+def test_nonfinite_operands_abort(op, value, operand):
+    x, w, _, d = fixture(dtype=torch.float32)
+    (x if operand == 'x' else d)[0, 0] = value
+    w.requires_grad_()
+    state = op.SamplingState(3, 'bad')
+    with pytest.raises(RuntimeError, match='finite'):
+        op.sampled_linear(x, w, None, state, k=1).backward(d)
+
+
+def test_finite_operands_with_gradient_overflow_abort(op):
+    x = torch.full((3, 1), 1e30)
+    w = torch.ones(1, 1, requires_grad=True)
+    d = torch.full((3, 1), 1e30)
+    with pytest.raises(RuntimeError, match='finite'):
+        op.sampled_linear(x, w, None, op.SamplingState(1, 'overflow'), k=1).backward(d)
+
+
+@pytest.mark.parametrize('scale', [1e-150, 1e150])
+def test_fp64_reference_scale_is_preserved_before_score_cast(op, scale):
+    x = torch.tensor([[1., 2.], [2., -1.], [-1., 3.]], dtype=torch.float64)*scale
+    d = torch.tensor([[2.], [1.], [3.]], dtype=torch.float64)/scale
+    p = op.importance_probabilities(x, d)
+    expected = torch.tensor([math.sqrt(5)*2, math.sqrt(5), math.sqrt(10)*3], dtype=torch.float64)
+    # Score FP32 rounding, independent of reference operand scale, is allowed.
+    torch.testing.assert_close(p, .9*expected/expected.sum()+.1/3, rtol=1e-4, atol=1e-6)
+    got = op.gather_weight_gradient(x, d, torch.tensor([1]), p, 1)
+    close(got, torch.outer(d[1], x[1])/p[1])
+
+
+def test_rank_deficient_cancellation_wide_and_tiny(op):
+    x = torch.tensor([[1., -1.], [1., -1.], [1e-20, -1e-20]], dtype=torch.float64).repeat(1, 32)
+    d = torch.tensor([[1.], [-1.], [1e-20]], dtype=torch.float64)
+    p = op.importance_probabilities(x, d)
+    expected = d.T @ x
+    mean = sum(p[i]*op.gather_weight_gradient(x, d, torch.tensor([i]), p, 1) for i in range(3))
+    # Absolute roundoff <= 8 eps * sum absolute contributions; fixed before assert.
+    bound = 8*torch.finfo(torch.float64).eps*(d.abs().T@x.abs()).max().item()
+    assert (mean-expected).abs().max() <= bound
+
+
+@pytest.mark.parametrize('dtype', [torch.float16, torch.bfloat16])
+def test_reject_half(op, dtype):
+    with pytest.raises(ValueError, match='dtype'):
+        op.sampled_linear(torch.ones(3, 2, dtype=dtype), torch.ones(1, 2, dtype=dtype), None, op.SamplingState(1, 'dtype'))
+
+
+def test_reject_amp_higher_order_and_empty(op):
+    x, w, b, _ = fixture()
+    x, w = x.requires_grad_(), w.requires_grad_()
+    with torch.autocast('cpu'):
+        with pytest.raises(RuntimeError, match='autocast|AMP'):
+            op.sampled_linear(x, w, b, op.SamplingState(1, 'amp'))
+    with pytest.raises(RuntimeError, match='higher'):
+        torch.autograd.grad(op.sampled_linear(x, w, b, op.SamplingState(1, 'higher'), k=1).sum(), w, create_graph=True)
+    with pytest.raises(ValueError, match='empty|rows'):
+        op.sampled_linear(x[:0], w, b, op.SamplingState(1, 'empty'))
+
+
+def test_named_streams_isolation_consumption_and_restore(op):
+    expected = int.from_bytes(hashlib.sha256(json.dumps([19, 'sampling', 'L', 'importance'], separators=(',', ':'), ensure_ascii=True).encode('ascii')).digest()[:8], 'big') % (2**63-1)
+    state = op.SamplingState(19, 'L')
+    assert state.seed == expected == op.named_seed(19, 'sampling', 'L', 'importance')
+    assert len({op.SamplingState(19, name, sampler=s).seed for name in ['L', 'M'] for s in ['importance', 'uniform']}) == 4
+    global_before = torch.random.get_rng_state().clone()
+    x, w, _, d = fixture()
+    w.requires_grad_()
+    snapshot = state.state_dict()
+    first = torch.autograd.grad(op.sampled_linear(x, w, None, state, k=2), w, d)[0]
+    after = state.generator.get_state().clone()
+    p = op.importance_probabilities(x, d)
+    reference_rng = torch.Generator().manual_seed(expected)
+    torch.multinomial(p, 2, replacement=True, generator=reference_rng)
+    assert torch.equal(after, reference_rng.get_state())
+    state.load_state_dict(snapshot)
+    again = torch.autograd.grad(op.sampled_linear(x, w, None, state, k=2), w, d)[0]
+    close(first, again)
+    assert torch.equal(global_before, torch.random.get_rng_state())
+    assert torch.equal(after, state.generator.get_state())
+
+
+def test_uniform_direct_randint_and_no_score_dependency(op, monkeypatch):
+    x, w, _, d = fixture()
+    state = op.SamplingState(20, 'uniform', sampler='uniform')
+    reference_rng = torch.Generator().manual_seed(state.seed)
+    rows = torch.randint(5, (2,), generator=reference_rng)
+    expected = sum(torch.outer(d[i], x[i]) for i in rows)*5/2
+    def forbidden(*args): raise AssertionError('uniform evaluated scores')
+    monkeypatch.setattr(op, 'importance_probabilities', forbidden)
+    w.requires_grad_()
+    actual = torch.autograd.grad(op.sampled_linear(x, w, None, state, k=2), w, d)[0]
+    close(actual, expected)
+    assert torch.equal(state.generator.get_state(), reference_rng.get_state())
+
+
+def test_microbatch_valid_token_expectation_and_independent_samples(op):
+    x = torch.tensor([[1.], [3.], [2.], [-1.], [5.]], dtype=torch.float64)
+    d = torch.tensor([[2.], [-1.], [3.], [4.], [-2.]], dtype=torch.float64)
+    # Each local mean is weighted by valid/total: D_local / local_n * local_n/5.
+    full = d/5
+    weighted_expectation = torch.zeros(1, 1, dtype=x.dtype)
+    for start, stop in [(0, 2), (2, 5)]:
+        xx, dd = x[start:stop], d[start:stop]/(stop-start)*(stop-start)/5
+        p = op.importance_probabilities(xx, dd)
+        weighted_expectation += sum(p[i]*op.gather_weight_gradient(xx, dd, torch.tensor([i]), p, 1) for i in range(stop-start))
+    close(weighted_expectation, full.T@x)
+    # Independent local draws have support differing from one concatenated draw.
+    local_values = {float(d[i]*x[i]*2/5+d[j]*x[j]*3/5) for i in range(2) for j in range(2, 5)}
+    concat_values = {float(d[i]*x[i]) for i in range(5)}
+    assert local_values != concat_values
+    w = torch.ones(1, 1, dtype=x.dtype, requires_grad=True)
+    state = op.SamplingState(5, 'accum', sampler='uniform')
+    for start, stop in [(0, 2), (2, 5)]:
+        op.sampled_linear(x[start:stop], w, None, state, k=1).backward(full[start:stop])
+    assert w.grad is not None
+
+
+def test_shared_module_alias_storage_and_optimizer_exclusion(op):
+    model = nn.ModuleDict({'a': nn.Linear(3, 2), 'b': nn.Linear(3, 2)})
+    op.validate_sampled_parameters(model, ['a', 'b'], list(model.parameters()))
+    with pytest.raises(ValueError, match='optimizer'):
+        op.validate_sampled_parameters(model, ['a'], [*model.parameters(), model['a'].weight])
+    with pytest.raises(ValueError, match='optimizer'):
+        op.validate_sampled_parameters(model, ['a'], list(model.parameters())[:-1])
+    model['b'].weight = model['a'].weight
+    with pytest.raises(ValueError, match='shared|owner|alias'):
+        op.validate_sampled_parameters(model, ['a'], list(model.parameters()))
+    model['b'] = model['a']
+    with pytest.raises(ValueError, match='shared|owner|alias|reused'):
+        op.validate_sampled_parameters(model, ['a'], list(model.parameters()))
+    storage = nn.ModuleDict({'a': nn.Linear(3, 2), 'b': nn.Linear(3, 2)})
+    storage['b'].weight = nn.Parameter(storage['a'].weight.view_as(storage['a'].weight))
+    with pytest.raises(ValueError, match='storage|shared|alias'):
+        op.validate_sampled_parameters(storage, ['a'], list(storage.parameters()))
+    # Exact embedding/output tie remains legal when neither owner is sampled.
+    tied = nn.ModuleDict({'embed': nn.Embedding(3, 2), 'head': nn.Linear(2, 3, bias=False), 'a': nn.Linear(2, 2)})
+    tied['head'].weight = tied['embed'].weight
+    op.validate_sampled_parameters(tied, ['a'], list(tied.parameters()))
+
+
+def test_dynamic_same_weight_in_one_backward_rejected(op):
+    x, w, _, _ = fixture()
+    w.requires_grad_()
+    state = op.SamplingState(3, 'reused')
+    a = op.sampled_linear(x, w, None, state, k=1)
+    b = op.sampled_linear(x+1, w, None, state, k=1)
+    with pytest.raises(RuntimeError, match='shared|reused|same weight'):
+        (a+b).sum().backward()
+
+
+def test_adamw_multistep_identical_injected_sample_reference(op):
+    x, weight, bias, d = fixture()
+    pairs = [[weight.clone().requires_grad_(), bias.clone().requires_grad_()] for _ in range(2)]
+    opts = [torch.optim.AdamW([{'params': [p[0]], 'weight_decay': .07}, {'params': [p[1]], 'weight_decay': 0}], lr=.03, betas=(.8, .93), eps=.002, foreach=False) for p in pairs]
+    for opt, params in zip(opts, pairs):
+        for param in params:
+            opt.state[param] = {'step': torch.tensor(3.), 'exp_avg': torch.full_like(param, .2), 'exp_avg_sq': torch.full_like(param, .4)}
+    state = op.SamplingState(33, 'adam')
+    reference_rng = torch.Generator().manual_seed(state.seed)
+    for step in range(4):
+        for opt in opts: opt.zero_grad(set_to_none=True)
+        dd = d*(step+1)/4 if step != 2 else torch.zeros_like(d)
+        op.sampled_linear(x, *pairs[0], state, k=2).backward(dd)
+        if step == 2:
+            pairs[1][0].grad = torch.zeros_like(weight)
+        else:
+            p = op.importance_probabilities(x, dd)
+            rows = torch.multinomial(p, 2, replacement=True, generator=reference_rng)
+            pairs[1][0].grad = sum(torch.outer(dd[i], x[i])/(2*p[i]) for i in rows)
+        pairs[1][1].grad = dd.sum(0)
+        for opt, params in zip(opts, pairs):
+            torch.nn.utils.clip_grad_norm_(params, .7, error_if_nonfinite=True)
+            opt.step()
+        for a, b in zip(*pairs): close(a, b)
+        for pa, pb in zip(*pairs):
+            for key in ['step', 'exp_avg', 'exp_avg_sq']:
+                close(opts[0].state[pa][key], opts[1].state[pb][key])
+    assert torch.equal(state.generator.get_state(), reference_rng.get_state())
+
+
+def test_unbiased_gradient_does_not_imply_unbiased_adam_displacement():
+    # Equiprobable -1,3 has mean1. beta=0 makes first Adam displacement sign(g).
+    displacements = []
+    for grad in [-1., 3., 1.]:
+        p = torch.tensor(0., dtype=torch.float64, requires_grad=True)
+        opt = torch.optim.AdamW([p], lr=.1, betas=(0., 0.), eps=.01, weight_decay=0)
+        p.grad = torch.tensor(grad, dtype=p.dtype)
+        opt.step()
+        displacements.append(p.item())
+    assert (-1+3)/2 == 1
+    assert abs(sum(displacements[:2])/2-displacements[2]) > .09
+
+
+@pytest.mark.parametrize('rho', [.125, .25, .5, 1.])
+@pytest.mark.parametrize('n', [1, 2, 9])
+def test_production_budget_rule_and_single_row_native(op, rho, n):
+    x = torch.arange(1., n+1, dtype=torch.float64)[:, None]
+    w = torch.ones(1, 1, dtype=x.dtype, requires_grad=True)
+    d = torch.ones_like(x)
+    state = op.SamplingState(17, 'budget', rho=rho)
+    reference = torch.Generator().manual_seed(state.seed)
+    k = max(1, math.ceil(rho*n))
+    actual = torch.autograd.grad(op.sampled_linear(x, w, None, state), w, d)[0]
+    if k >= n:
+        close(actual, d.T@x)
+    else:
+        p = op.importance_probabilities(x, d)
+        rows = torch.multinomial(p, k, replacement=True, generator=reference)
+        expected = sum(torch.outer(d[i], x[i])/(k*p[i]) for i in rows)
+        close(actual, expected)
+    assert torch.equal(state.generator.get_state(), reference.get_state())
+
+
+def test_probability_mixture_from_hand_computed_scores(op):
+    # Exact normalized scores .5,1,0 yield independent probabilities 1/3,19/30,1/30.
+    x = torch.tensor([[1.], [2.], [0.]], dtype=torch.float64)
+    d = torch.tensor([[2.], [2.], [1.]], dtype=torch.float64)
+    close(op.importance_probabilities(x, d), torch.tensor([1/3, 19/30, 1/30], dtype=torch.float64))
+
+
+@pytest.mark.parametrize('dtype', [torch.float32, torch.float64])
+@pytest.mark.parametrize('sampler', ['importance', 'uniform'])
+@pytest.mark.parametrize('scale', [1e-10, 1., 1e10])
+def test_sampled_dw_matches_independent_outer_product_reference(op, dtype, sampler, scale):
+    x, w, _, d = fixture(dtype=dtype)
+    x = x*scale
+    d = d/scale
+    w.requires_grad_()
+    state = op.SamplingState(71, 'outer', sampler=sampler)
+    gen = torch.Generator().manual_seed(state.seed)
+    p = op.importance_probabilities(x, d) if sampler == 'importance' else torch.full((5,), .2, dtype=torch.float64)
+    rows = torch.multinomial(p, 4, replacement=True, generator=gen) if sampler == 'importance' else torch.randint(5, (4,), generator=gen)
+    expected = sum(torch.outer(d[i].double(), x[i].double())/(4*p[i]) for i in rows)
+    actual = torch.autograd.grad(op.sampled_linear(x, w, None, state, k=4), w, d)[0]
+    torch.testing.assert_close(actual.double(), expected, rtol=1e-4 if dtype == torch.float32 else 1e-10, atol=1e-6 if dtype == torch.float32 else 1e-12)
+
+
+def test_independent_microbatch_draws_match_precomputed_accumulation(op):
+    x, w, _, d = fixture()
+    w.requires_grad_()
+    state = op.SamplingState(82, 'local', sampler='uniform')
+    gen = torch.Generator().manual_seed(state.seed)
+    expected = torch.zeros_like(w)
+    for lo, hi in [(0, 2), (2, 5)]:
+        rows = torch.randint(hi-lo, (1,), generator=gen)+lo
+        # d/5 is valid-token weighted local mean in each unequal partition.
+        expected += torch.outer(d[rows[0]]/5, x[rows[0]])*(hi-lo)
+        op.sampled_linear(x[lo:hi], w, None, state, k=1).backward(d[lo:hi]/5)
+    close(w.grad, expected)
+    assert torch.equal(state.generator.get_state(), gen.get_state())
+
+
+def test_overflow_draw_is_consumed_once_without_retry(op):
+    x = torch.full((3, 1), 1e30)
+    d = torch.full_like(x, 1e30)
+    w = torch.ones(1, 1, requires_grad=True)
+    state = op.SamplingState(1, 'no-retry')
+    gen = torch.Generator().manual_seed(state.seed)
+    torch.multinomial(torch.full((3,), 1/3, dtype=torch.float64), 1, replacement=True, generator=gen)
+    with pytest.raises(RuntimeError, match='finite'):
+        op.sampled_linear(x, w, None, state, k=1).backward(d)
+    assert torch.equal(state.generator.get_state(), gen.get_state())
+
+
+@pytest.mark.parametrize('derivative', ['x', 'bias'])
+def test_zero_dw_still_checks_exact_derivative_overflow(op, derivative):
+    x = torch.zeros(5, 1, requires_grad=True)
+    w = torch.tensor([[1e30 if derivative == 'x' else 0.]], requires_grad=True)
+    b = torch.zeros(1, requires_grad=True)
+    d = torch.full((5, 1), 1e30 if derivative == 'x' else 1e38)
+    state = op.SamplingState(4, 'exact-overflow')
+    before = state.generator.get_state()
+    with pytest.raises(RuntimeError, match='finite'):
+        op.sampled_linear(x, w, b, state, k=1).backward(d)
+    assert torch.equal(before, state.generator.get_state())
+
+
+def test_state_restore_rejects_different_named_stream_and_does_not_alias(op):
+    a = op.SamplingState(5, 'a')
+    b = op.SamplingState(5, 'b')
+    with pytest.raises(ValueError, match='metadata'):
+        b.load_state_dict(a.state_dict())
+    snapshot = a.state_dict()
+    initial = a.generator.get_state().clone()
+    snapshot['generator_state'].zero_()
+    assert torch.equal(a.generator.get_state(), initial)
+
+
+@pytest.mark.parametrize('k', [0, -1, 1.5, True])
+def test_reject_invalid_explicit_budget(op, k):
+    x, w, b, _ = fixture()
+    with pytest.raises(ValueError, match='k'):
+        op.sampled_linear(x, w, b, op.SamplingState(1, 'invalid'), k=k)
+
+
+@pytest.mark.parametrize('kwargs', [{'sampler': 'other'}, {'rho': .3}])
+def test_reject_unsupported_sampler_or_ratio(op, kwargs):
+    with pytest.raises(ValueError):
+        op.SamplingState(1, 'invalid', **kwargs)
+
+
+def test_distinct_state_objects_cannot_evade_shared_weight_detection(op):
+    x, w, _, _ = fixture()
+    w.requires_grad_()
+    a = op.sampled_linear(x, w, None, op.SamplingState(1, 'a'), k=1)
+    b = op.sampled_linear(x, w, None, op.SamplingState(1, 'b'), k=1)
+    with pytest.raises(RuntimeError, match='shared|reused|same weight'):
+        (a+b).sum().backward()
+
+
+def test_missing_backward_task_primitive_fails_visibly(op, monkeypatch):
+    x, w, _, _ = fixture()
+    w.requires_grad_()
+    monkeypatch.delattr(torch._C, '_current_graph_task_id')
+    with pytest.raises(RuntimeError, match='primitive unavailable'):
+        op.sampled_linear(x, w, None, op.SamplingState(1, 'missing'), k=1).sum().backward()
+
+
+def test_zero_tensor_gradient_and_none_have_different_adamw_effects():
+    zero, absent = [torch.tensor(1., requires_grad=True) for _ in range(2)]
+    opts = [torch.optim.AdamW([p], lr=.1, betas=(.8, .9), eps=.01, weight_decay=.1) for p in (zero, absent)]
+    for opt, p in zip(opts, (zero, absent)):
+        opt.state[p] = {'step': torch.tensor(2.), 'exp_avg': torch.tensor(.3), 'exp_avg_sq': torch.tensor(.4)}
+    zero.grad = torch.zeros_like(zero)
+    for opt in opts: opt.step()
+    assert zero.item() < 1 and absent.item() == 1
+    assert opts[0].state[zero]['step'] == 3
+    assert opts[1].state[absent]['step'] == 2
+
+
+@pytest.mark.parametrize('n', [3, 8192])
+def test_actual_fp32_gather_inverse_weight_rounding_bound(op, n):
+    scoring_x = torch.ones(n, 1)
+    scoring_x[0] = 1e30
+    scoring_d = torch.ones_like(scoring_x)
+    p = op.importance_probabilities(scoring_x, scoring_d)
+    # Unit operands isolate the two cast inverse-square-root scales in actual GEMM.
+    unit = torch.ones(n, 1)
+    for row in [0, n-1]:
+        got = op.gather_weight_gradient(unit, unit, torch.tensor([row]), p, 1).double().item()
+        assert abs(p[row].item()*got-1) <= 8*torch.finfo(torch.float32).eps
+
+
+@pytest.mark.parametrize('sampler', ['importance', 'uniform'])
+def test_zero_operand_does_not_hide_nonfinite_other_operand(op, sampler):
+    x = torch.zeros(3, 1)
+    d = torch.tensor([[float('nan')], [1.], [1.]])
+    w = torch.ones(1, 1, requires_grad=True)
+    state = op.SamplingState(9, 'zero-with-nan', sampler=sampler)
+    before = state.generator.get_state()
+    with pytest.raises(RuntimeError, match='finite'):
+        op.sampled_linear(x, w, None, state, k=1).backward(d)
+    assert torch.equal(before, state.generator.get_state())
+
+
+def test_registry_releases_dead_weights_and_keeps_only_last_task(op):
+    import gc
+    import weakref
+    x, w, _, _ = fixture()
+    w.requires_grad_()
+    state = op.SamplingState(1, 'lifecycle')
+    key, ref = id(w), weakref.ref(w)
+    for _ in range(3):
+        op.sampled_linear(x, w, None, state, k=1).sum().backward()
+        assert key in op._last_backward
+    del w
+    gc.collect()
+    assert ref() is None
+    assert key not in op._last_backward
+
+FILE analysis/run_dw_sampling.py SHA256 da4f72ed243325ff877102a9fe933b94abab23369d429cb63fe98902e1717e2f
+# SPDX-License-Identifier: AGPL-3.0-only
+"""Bounded, append-only dW sampling experiment. Importing never starts work.
+
+Only A--D are implemented before their gates. Corpus/trainer work stays absent
+while the recorded asset restriction is unresolved. No old oracle is invoked.
+"""
+from __future__ import annotations
+
+import argparse
+import base64
+import copy
+from contextlib import contextmanager, ExitStack
+from datetime import datetime, timezone
+import hashlib
+from importlib import metadata
+import json
+import math
+import os
+from pathlib import Path
+import random
+import re
+import subprocess
+import shutil
+import sys
+import time
+import traceback
+
+ROOT = Path(__file__).resolve().parents[1]
+REVIEWED = '9d8ad069c51b4d0e6c13e9c6e465579e9b44a339'
+PROTOCOL = '0df9d6d98acb26ff2017984467e543910f33b83566bdd3272c236559dec61259'
+STAGES = ('prepare', 'feasibility', 'correctness', 'cost', 'pilot', 'confirm', 'summarize')
+CORE = ('analysis/run_dw_sampling.py', 'configs/dw_sampling.yaml', 'decisions/dw_sampling_scope.md',
+        'src/oar/timing.py', 'src/oar/hardware.py')
+SAMPLED = ('src/oar/sampled_linear.py', 'tests/test_sampled_linear.py', 'tests/test_dw_sampling_protocol.py')
+HISTORICAL = ('decisions/gates.jsonl', 'decisions/amendments.jsonl', 'manifests/assets.json',
+              'analysis/evidence_index.json', 'analysis/report.md', 'requirements.lock.txt', 'manifests/wheels.sha256')
+
+
+class MeasurementInvalid(RuntimeError):
+    def __init__(self, condition, reason):
+        super().__init__(reason)
+        self.condition = condition
+
+
+def utc():
+    return datetime.now(timezone.utc).isoformat()
+
+
+def digest(path):
+    h = hashlib.sha256()
+    with Path(path).open('rb') as stream:
+        for block in iter(lambda: stream.read(1024*1024), b''):
+            h.update(block)
+    return h.hexdigest()
+
+
+def canonical(value):
+    return json.dumps(value, sort_keys=True, separators=(',', ':'), ensure_ascii=True, allow_nan=False).encode('ascii')
+
+
+def write_json(path, value):
+    with Path(path).open('x') as stream:
+        json.dump(value, stream, indent=2, sort_keys=True, allow_nan=False)
+        stream.write('\n')
+
+
+def load_config(path):
+    import yaml
+    from oar.config import _UniqueLoader
+    try:
+        value = yaml.load(Path(path).read_text(), Loader=_UniqueLoader)
+        valid = hashlib.sha256(canonical(value)).hexdigest() == PROTOCOL
+    except (yaml.YAMLError, TypeError, ValueError) as exc:
+        raise ValueError('invalid strict sampling configuration') from exc
+    if not valid:
+        raise ValueError('unknown or changed protected protocol; freeze a separately reviewed source/config version')
+    return value
+
+
+def allocate_attempt(out, stage):
+    if stage not in STAGES:
+        raise ValueError('unknown stage')
+    directory = Path(out)/stage
+    directory.mkdir(parents=True, exist_ok=True)
+    for number in range(1, 100000):
+        attempt = directory/f'attempt-{number:04d}'
+        try:
+            attempt.mkdir()
+            return attempt
+        except FileExistsError:
+            continue
+    raise RuntimeError('attempt limit reached')
+
+
+def seal_record(attempt, payload):
+    attempt = Path(attempt)
+    if (attempt/'record.json').exists():
+        raise FileExistsError('stage records cannot be overwritten')
+    artifacts = {str(p.relative_to(attempt)): digest(p) for p in sorted(attempt.rglob('*'))
+                 if p.is_file() and p.name not in ('record.json', 'record.sha256')}
+    record = {**payload, 'schema_version': 1, 'recorded_utc': utc(), 'artifacts': artifacts}
+    write_json(attempt/'record.json', record)
+    with (attempt/'record.sha256').open('x') as stream:
+        stream.write(digest(attempt/'record.json')+'\n')
+    return record
+
+
+def read_record(path):
+    path = Path(path)
+    if digest(path) != path.with_suffix('.sha256').read_text().strip():
+        raise ValueError(f'record hash mismatch: {path}')
+    record = json.loads(path.read_text())
+    for name, expected in record['artifacts'].items():
+        item = (path.parent/name).resolve()
+        if not item.is_relative_to(path.parent.resolve()) or not item.is_file() or digest(item) != expected:
+            raise ValueError(f'artifact hash mismatch: {name}')
+    return record
+
+
+def require_stage(out, stage, measurement_hashes):
+    paths = sorted((Path(out)/stage).glob('attempt-*/record.json'))
+    if not paths:
+        raise ValueError(f'missing prerequisite: {stage}')
+    # Latest attempt is authoritative; an older pass cannot hide a later stop.
+    record = read_record(paths[-1])
+    if record['status'] != 'pass':
+        raise ValueError(f'failed prerequisite {stage}: {record["status"]}')
+    previous = record['measurement_hashes']
+    for name, expected in previous.items():
+        # A native-only consumer does not depend on the sampled source/tests.
+        # Every consumer passes its complete, explicit dependency map.
+        if name in measurement_hashes and measurement_hashes[name] != expected:
+            raise ValueError(f'prerequisite source/config mismatch: {name}')
+    return record
+
+
+def source_hashes(stage):
+    files = CORE + (() if stage == 'feasibility' else SAMPLED)
+    return {name: digest(ROOT/name) for name in files}
+
+
+def validate_amendment(config):
+    amendment = json.loads((ROOT/'decisions/dw_sampling_amendment.json').read_text())
+    if amendment['reviewed_head'] != REVIEWED or amendment['device'] != 'mps' or amendment['dtype'] != 'float32':
+        raise ValueError('invalid prospective amendment')
+    subprocess.run(['git', 'cat-file', '-e', REVIEWED+'^{commit}'], cwd=ROOT, check=True, capture_output=True)
+    for name, expected in amendment['bound_files'].items():
+        if digest(ROOT/name) != expected:
+            raise ValueError(f'prospective source/history hash mismatch: {name}')
+    if digest(config) != amendment['bound_files']['configs/dw_sampling.yaml']:
+        raise ValueError('configuration bytes differ from prospective binding')
+    raw = (ROOT/'decisions/gates.jsonl').read_bytes().splitlines()
+    wp02 = [line for line in raw if json.loads(line)['package'] == 'WP02'][-1]
+    if hashlib.sha256(wp02).hexdigest() != amendment['wp02_record_sha256']:
+        raise ValueError('WP02 stop record mismatch')
+    if json.loads(wp02)['status'] != 'stop':
+        raise ValueError('historical WP02 must stay stopped')
+    return amendment
+
+
+def paired_ratio(dense, candidate):
+    import numpy as np
+    a, b = np.asarray(dense, dtype=np.float64), np.asarray(candidate, dtype=np.float64)
+    if a.ndim != 1 or a.shape != b.shape or not len(a) or not np.isfinite(a).all() or not np.isfinite(b).all() or (a <= 0).any() or (b <= 0).any():
+        raise ValueError('paired times must be finite, positive and equally sized')
+    z = np.log(b/a)
+    rng = np.random.default_rng(62001)
+    draws = z[rng.integers(0, len(z), (10000, len(z)))].mean(1)
+    return {'ratio': float(np.exp(z.mean())), 'ci95': np.exp(np.quantile(draws, [.025, .975], method='linear')).tolist(),
+            'pairs': len(z), 'analysis_seed': 62001, 'bootstrap_replicates': 10000, 'unit': 'timing block, not training seed'}
+
+
+def freeze_delta(absolute_aa_errors):
+    import numpy as np
+    values = np.asarray(absolute_aa_errors, dtype=np.float64)
+    if not len(values) or not np.isfinite(values).all() or (values < 0).any():
+        raise ValueError('invalid A/A observations')
+    return max(.05, 2*float(np.quantile(values, .95, method='linear')))
+
+
+_zero_type = None
+
+
+def zero_dw_linear(x, weight, bias):
+    """Nonlearning optimistic diagnostic: dense zero dW, exact dX/db."""
+    import torch
+    from torch.nn import functional as F
+    global _zero_type
+    if _zero_type is None:
+        class ZeroDW(torch.autograd.Function):
+            @staticmethod
+            def forward(ctx, x, w, b):
+                ctx.save_for_backward(x, w)
+                ctx.has_bias = b is not None
+                return F.linear(x, w, b)
+
+            @staticmethod
+            def backward(ctx, d):
+                x, w = ctx.saved_tensors
+                d2 = d.reshape(-1, w.shape[0])
+                return ((d2@w).reshape(x.shape) if ctx.needs_input_grad[0] else None,
+                        torch.zeros_like(w) if ctx.needs_input_grad[1] else None,
+                        d2.sum(0) if ctx.has_bias and ctx.needs_input_grad[2] else None)
+        _zero_type = ZeroDW
+    return _zero_type.apply(x, weight, bias)
+
+
+def command(attempt, args, *, timeout=240, env=None):
+    """Serial subprocess with retained stdout/stderr, invocation and exit code."""
+    started = time.perf_counter()
+    logs = list(Path(attempt).glob('command-*.json'))
+    stem = Path(attempt)/f'command-{len(logs)+1:03d}'
+    try:
+        result = subprocess.run(args, cwd=ROOT, env=env, capture_output=True, text=True, timeout=timeout)
+        code, stdout, stderr = result.returncode, result.stdout, result.stderr
+    except subprocess.TimeoutExpired as exc:
+        code = 124
+        stdout = exc.stdout or b''
+        stderr = exc.stderr or b''
+        if isinstance(stdout, bytes):
+            stdout = stdout.decode(errors='replace')
+        if isinstance(stderr, bytes):
+            stderr = stderr.decode(errors='replace')
+    stem.with_suffix('.stdout.txt').write_text(stdout)
+    stem.with_suffix('.stderr.txt').write_text(stderr)
+    write_json(stem.with_suffix('.json'), {'argv': args, 'exit_code': code, 'wall_s': time.perf_counter()-started,
+                                          'utc': utc(), 'environment_overrides': {k: (env or {}).get(k) for k in
+                                          ('PYTHONPATH', 'PYTORCH_ENABLE_MPS_FALLBACK', 'PYTORCH_MPS_FAST_MATH', 'PYTORCH_MPS_PREFER_METAL')}})
+    with (Path(attempt)/'commands.log').open('a') as stream:
+        stream.write(json.dumps({'argv': args, 'exit_code': code})+'\n')
+    return code, stdout, stderr
+
+
+def environment(cfg):
+    return {**os.environ, 'PYTHONPATH': str(ROOT/'src'), 'PYTORCH_ENABLE_MPS_FALLBACK': cfg['fallback'],
+            'PYTORCH_MPS_FAST_MATH': cfg['fast_math'], 'PYTORCH_MPS_PREFER_METAL': cfg['prefer_metal']}
+
+
+def pin_mismatches(lock_text, installed):
+    installed = {re.sub(r'[-_.]+', '-', k).lower(): v for k, v in installed.items()}
+    differences = []
+    for name, expected in re.findall(r'^([A-Za-z0-9_.-]+)==([^\s]+)', lock_text, re.MULTILINE):
+        observed = installed.get(re.sub(r'[-_.]+', '-', name).lower(), 'unavailable')
+        if observed != expected:
+            differences.append(f'{name}: expected {expected}, observed {observed}')
+    return differences
+
+
+def remaining_timeout(deadline, *, clock=time.perf_counter):
+    remaining = deadline-clock()
+    if remaining <= 0:
+        raise TimeoutError('shared prospective stage deadline reached')
+    return remaining
+
+
+@contextmanager
+def exclusive_session(path):
+    """Advisory host-wide ownership for this repository's experiment driver.
+
+    External applications are not controlled. Competing repository test/bench
+    processes are screened separately; unknown external GPU work is a retained
+    limitation of laptop measurements, never silently killed.
+    """
+    import fcntl
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open('a+') as handle:
+        try:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise RuntimeError('exclusive measurement session already owned') from exc
+        try:
+            yield
+        finally:
+            fcntl.flock(handle, fcntl.LOCK_UN)
+
+
+def competing_processes():
+    import psutil
+    own, ancestors = psutil.Process(), {os.getpid()}
+    ancestors.update(p.pid for p in own.parents())
+    blockers, unavailable = [], 0
+    for process in psutil.process_iter(['pid', 'cmdline']):
+        try:
+            argv = process.info['cmdline'] or []
+            text = ' '.join(argv)
+            if process.pid not in ancestors and str(ROOT) in text and any(k in text for k in ('pytest', 'collect_', 'run_dw_sampling.py', 'oar.cli bench')):
+                blockers.append({'pid': process.pid, 'kind': 'competing repository test/collector/benchmark'})
+        except (psutil.AccessDenied, psutil.NoSuchProcess):
+            unavailable += 1
+    return {'blockers': blockers, 'unavailable_processes': unavailable,
+            'external_policy': 'No other agent tests/collectors/benchmarks scheduled; advisory lock excludes other driver sessions. External applications remain running, are not controlled or killed.'}
+
+
+def storage_guard(cfg, out):
+    free = shutil.disk_usage(out).free
+    used = sum(p.stat().st_size for p in Path(out).rglob('*') if p.is_file())
+    if free < cfg['resources']['minimum_free_disk_bytes'] or used > cfg['resources']['maximum_output_bytes']:
+        raise MemoryError('prospective disk reserve/output allowance exceeded')
+    return {'free_disk_bytes': free, 'run_output_bytes': used}
+
+
+def choose_block_length(measure_for_count, initial):
+    count, observations = initial, []
+    for _ in range(100):
+        seconds = measure_for_count(count)
+        if not math.isfinite(seconds) or seconds <= 0:
+            raise ValueError('invalid dense block duration')
+        observations.append({'updates': count, 'seconds': seconds})
+        if seconds >= .2 or count == 100:
+            return count, observations
+        count = min(100, max(count+1, math.ceil(count*.2/seconds)))
+    raise RuntimeError('dense block calibration did not terminate')
+
+
+def dependency_inventory():
+    packages = []
+    for distribution in metadata.distributions():
+        verified, missing, mismatches = 0, [], []
+        record = distribution.read_text('RECORD')
+        for item in distribution.files or []:
+            if item.hash is None or item.hash.mode != 'sha256':
+                continue
+            path = Path(distribution.locate_file(item))
+            if not path.is_file():
+                missing.append(str(item))
+                continue
+            observed = base64.urlsafe_b64encode(bytes.fromhex(digest(path))).decode().rstrip('=')
+            if observed != item.hash.value:
+                mismatches.append(str(item))
+            verified += 1
+        packages.append({'name': distribution.metadata['Name'], 'version': distribution.version,
+                         'record_sha256': hashlib.sha256(record.encode()).hexdigest() if record else None,
+                         'verified_sha256_files': verified, 'missing': missing, 'mismatches': mismatches})
+    return {'packages': packages, 'lock_sha256': digest(ROOT/'requirements.lock.txt'),
+            'wheel_inventory_sha256': digest(ROOT/'manifests/wheels.sha256'),
+            'wheel_hashes': (ROOT/'manifests/wheels.sha256').read_text(),
+            'note': 'Installed files checked against wheel RECORD SHA256 entries; wheel archive identities retained separately.'}
+
+
+def configure_torch():
+    if 'torch' in sys.modules:
+        raise RuntimeError('fresh hardware worker must configure policy before Torch import')
+    for key in ('PYTORCH_ENABLE_MPS_FALLBACK', 'PYTORCH_MPS_FAST_MATH', 'PYTORCH_MPS_PREFER_METAL'):
+        if os.environ.get(key) != '0':
+            raise RuntimeError(f'{key}=0 required before Torch import')
+    import torch
+    torch.set_float32_matmul_precision('highest')
+    if not torch.backends.mps.is_available():
+        raise RuntimeError('actual MPS unavailable')
+    return torch
+
+
+class Fixture:
+    """One residual block; baseline has no sampling state or hooks."""
+    def __init__(self, cfg, shape, variant='single', mode='dense', rho=.25, session=0):
+        import torch
+        from oar.sampled_linear import SamplingState, named_seed
+        self.cfg, self.s, self.mode = cfg, shape, mode
+        self.torch, self.states = torch, {}
+        self.seed = cfg['seed']+session
+        init = torch.Generator().manual_seed(named_seed(self.seed, 'init', shape['id']))
+        data = torch.Generator().manual_seed(named_seed(self.seed, 'data', shape['id']))
+        self.init_seed, self.data_seed = init.initial_seed(), data.initial_seed()
+        self.init_generator, self.data_generator = init, data
+        n, di, do, stride = (shape[k] for k in ('n', 'di', 'do', 'stride'))
+        storage = torch.randn(n, di*stride, generator=data).to('mps')
+        self.x = storage[:, ::stride].detach().requires_grad_()
+        self.p = {k: torch.nn.Parameter(v.to('mps')) for k, v in {
+            'w1': torch.randn(do, di, generator=init)/math.sqrt(di), 'b1': torch.zeros(do),
+            'w2': torch.randn(di, do, generator=init)/math.sqrt(do), 'b2': torch.zeros(di)}.items()}
+        options = {} if variant == 'default' else {'foreach': variant == 'foreach', 'fused': variant == 'fused'}
+        o = cfg['optimizer']
+        self.opt = torch.optim.AdamW([{'params': [self.p['w1'], self.p['w2']], 'weight_decay': o['weight_decay']},
+                                     {'params': [self.p['b1'], self.p['b2']], 'weight_decay': 0}],
+                                    lr=o['lr'], betas=tuple(o['betas']), eps=o['eps'], **options)
+        self.sampling_setup_s = 0.
+        if mode in ('importance', 'uniform'):
+            setup_start = time.perf_counter()
+            self.states = {k: SamplingState(self.seed, layer, mode, rho) for k, layer in
+                           (('w1', 'block0.ffn_in'), ('w2', 'block0.ffn_out'))}
+            self.sampling_setup_s = time.perf_counter()-setup_start
+        self.updates = 0
+
+    def loss(self, *, diagnostic=False):
+        from torch.nn import functional as F
+        captured = {}
+        losses = []
+        for j, x in enumerate(self.x.chunk(self.s['microbatches'])):
+            def linear(value, w, b):
+                if self.mode == 'dense':
+                    y = F.linear(value, self.p[w], self.p[b])
+                elif self.mode == 'zero':
+                    y = zero_dw_linear(value, self.p[w], self.p[b])
+                else:
+                    from oar.sampled_linear import sampled_linear
+                    y = sampled_linear(value, self.p[w], self.p[b], self.states[w])
+                if diagnostic:
+                    y.retain_grad()
+                    captured[(j, w)] = (value.detach(), y)
+                return y
+            y = x+linear(F.gelu(linear(x, 'w1', 'b1'), approximate='none'), 'w2', 'b2')
+            losses.append(y.square().mean()/self.s['microbatches'])
+        return losses, captured
+
+    def backward(self, diagnostic=False):
+        self.opt.zero_grad(set_to_none=True)
+        self.x.grad = None
+        losses, captured = self.loss(diagnostic=diagnostic)
+        for loss in losses:
+            loss.backward()
+        return captured
+
+    def step(self):
+        torch = self.torch
+        self.backward()
+        # Native clipping checks the complete total norm before native step;
+        # candidate-local probability/gradient checks are inside its backward.
+        torch.nn.utils.clip_grad_norm_(list(self.p.values()), 1., error_if_nonfinite=True)
+        self.opt.step()
+        self.updates += 1
+
+    def snapshot(self):
+        return {'parameters': {k: v.detach().clone() for k, v in self.p.items()},
+                'optimizer': copy.deepcopy(self.opt.state_dict()), 'updates': self.updates,
+                'sampling': {k: v.state_dict() for k, v in self.states.items()},
+                'init_state': self.init_generator.get_state().clone(), 'data_state': self.data_generator.get_state().clone()}
+
+    def restore(self, snapshot):
+        with self.torch.no_grad():
+            for k, p in self.p.items():
+                p.copy_(snapshot['parameters'][k])
+        self.opt.load_state_dict(copy.deepcopy(snapshot['optimizer']))
+        self.updates = snapshot['updates']
+        for k, state in self.states.items():
+            if k in snapshot['sampling']:
+                state.load_state_dict(snapshot['sampling'][k])
+        self.init_generator.set_state(snapshot['init_state'])
+        self.data_generator.set_state(snapshot['data_state'])
+        self.opt.zero_grad(set_to_none=True)
+        self.x.grad = None
+
+
+def primitive_qualification(cfg):
+    import torch
+    from oar.sampled_linear import SamplingState, sampled_linear, importance_probabilities
+    rows, calibrations = [], []
+    from oar.timing import measure_blocks
+    for s in cfg['shapes']:
+        f = Fixture(cfg, s)
+        p = f.p
+        # Actual shape FP32 device reduction, score-only CPU transfer,
+        # FP64 CPU categorical, integer/weight transfers, gather and adjoints.
+        x = f.x
+        for sampler in cfg['samplers']:
+            state = SamplingState(cfg['seed'], 'block0.ffn_in', sampler)
+            f.opt.zero_grad(set_to_none=True)
+            x.grad = None
+            y = sampled_linear(x, p['w1'], p['b1'], state)
+            d = torch.ones_like(y)/y.numel()
+            y.backward(d)
+            torch.mps.synchronize()
+            torch.testing.assert_close(x.grad, d@p['w1'], rtol=1e-4, atol=1e-6)
+            torch.testing.assert_close(p['b1'].grad, d.sum(0), rtol=1e-4, atol=1e-6)
+            assert p['w1'].grad is not None and bool(torch.isfinite(p['w1'].grad).all())
+            probabilities = importance_probabilities(x, d)
+            rows.append({'shape': s, 'sampler': sampler, 'device': str(y.device), 'status': 'pass',
+                         'score_count_transferred': s['n'], 'p_sum': probabilities.sum().item(),
+                         'p_min': probabilities.min().item(), 'input_stride': list(x.stride())})
+        f.step()  # native shader warmup only, not a performance observation
+        raw = measure_blocks(f.step, torch.mps.synchronize, 3)
+        calibrations.append({'shape': s, 'native_complete_step_s': raw,
+                             'boundary': 'resource forecast calibration only; not comparative performance'})
+        del f
+    return {'operations': rows, 'native_resource_calibration': calibrations,
+            'matmul_precision': torch.get_float32_matmul_precision(), 'fallback_before_import': '0'}
+
+
+def prepare(cfg, config, out, attempt):
+    import platform
+    from oar.hardware import resource_snapshot
+    started = time.perf_counter()
+    forecast = cfg['resources']['qualification_forecast_s']
+    deadline = started+2*forecast
+    write_json(attempt/'resource_forecast.json', {'forecast_s': forecast, 'deadline_s': 2*forecast, 'maximum_output_bytes': 268435456})
+    env = environment(cfg)
+    write_json(attempt/'dependencies.json', dependency_inventory())
+    remaining_timeout(deadline)
+    dependencies = json.loads((attempt/'dependencies.json').read_text())
+    if any(p['missing'] or p['mismatches'] for p in dependencies['packages']):
+        return {'status': 'INCONCLUSIVE_MEASUREMENT', 'reason': 'installed dependency RECORD hashes differ; preserve environment, do not change pins'}
+    code, _, _ = command(attempt, [sys.executable, '-m', 'oar.cli', 'doctor', '--config', 'configs/discovery.yaml', '--out', str(attempt/'doctor.json')], env=env, timeout=remaining_timeout(deadline))
+    if code:
+        raise RuntimeError('doctor command failed')
+    doctor = json.loads((attempt/'doctor.json').read_text())
+    differences = pin_mismatches((ROOT/'requirements.lock.txt').read_text(), {p['name']: p['version'] for p in dependencies['packages']})
+    if sys.version_info[:2] != (3, 13) or platform.machine() != 'arm64':
+        differences.append('target runtime requires native arm64 CPython 3.13')
+    write_json(attempt/'environment.json', {'python': sys.version, 'executable': sys.executable, 'platform': platform.platform(),
+               'doctor': doctor, 'resource_snapshot_cpu': resource_snapshot('cpu'), 'flags': {k: env[k] for k in env if k.startswith('PYTORCH_')},
+               'thermal': 'unavailable unless exposed by host; no fabricated temperature', 'start_utc': utc(),
+               'pin_differences': differences, 'clock': vars(time.get_clock_info('perf_counter'))})
+    for args in ([sys.executable, '-m', 'pytest', '-q', '-m', 'not mps'],
+                 [sys.executable, '-m', 'oar.cli', 'report', '--gates', 'decisions/gates.jsonl', '--run-index', 'analysis/evidence_index.json', '--out', str(attempt/'historical-report-check.md')]):
+        code, _, _ = command(attempt, args, env=env, timeout=remaining_timeout(deadline))
+        if code:
+            return {'status': 'INCONCLUSIVE_MEASUREMENT', 'reason': 'existing CPU tests or historical report failed; inspect retained command logs'}
+    if not doctor.get('gpu_claim_eligible'):
+        return {'status': 'BLOCKED_HARDWARE', 'reason': 'actual qualified MPS unavailable in this process; CPU reference work only'}
+    if differences:
+        return {'status': 'INCONCLUSIVE_MEASUREMENT', 'reason': 'target runtime differs from frozen native pins; CPU checks retained, no performance qualification', 'pin_differences': differences}
+    for args in ([sys.executable, '-m', 'pytest', '-q', '-m', 'mps'], [sys.executable, '-m', 'pytest', '-q']):
+        code, _, _ = command(attempt, args, env=env, timeout=remaining_timeout(deadline))
+        if code:
+            return {'status': 'INCONCLUSIVE_MEASUREMENT', 'reason': 'actual-device existing tests failed; inspect retained logs'}
+    request = {'kind': 'qualification', 'config': str(config), 'out': str(out), 'attempt': str(attempt)}
+    write_json(attempt/'qualification-request.json', request)
+    code, _, _ = command(attempt, worker_args('prepare', config, out, attempt/'qualification-request.json'), env=env, timeout=remaining_timeout(deadline))
+    if code:
+        return {'status': 'BLOCKED_HARDWARE', 'reason': 'essential actual-shape primitive failed; retained worker failure, no cost qualification'}
+    if time.perf_counter()-started > 2*forecast:
+        return {'status': 'INCOMPLETE_RESOURCE', 'reason': 'qualification exceeded prospective deadline'}
+    return {'status': 'pass', 'reason': 'existing suite/report, pinned dependencies and actual-shape MPS sampler operations qualified',
+            'asset_status': 'BLOCKED_ASSET', 'qualification': str(attempt/'qualification.json')}
+
+
+def worker_args(stage, config, out, request):
+    return [sys.executable, str(ROOT/'analysis/run_dw_sampling.py'), '--stage', stage, '--config', str(config), '--out', str(out), '--session-worker', str(request)]
+
+
+def validate_worker_request(request, stage, config, out, request_path):
+    out, config, request_path = Path(out).resolve(), Path(config).resolve(), Path(request_path).resolve()
+    attempt = Path(request['attempt']).resolve()
+    permitted = {'prepare': {'qualification'}, 'feasibility': {'feasibility'}, 'cost': {'cost', 'diagnostic'}}
+    if (request['kind'] not in permitted.get(stage, set()) or Path(request['out']).resolve() != out
+            or Path(request['config']).resolve() != config or request_path.parent != attempt
+            or attempt.parent != out/stage or not (attempt/'source_manifest.json').is_file()):
+        raise ValueError('invalid frozen worker request or stage boundary')
+    identity = json.loads((attempt/'source_manifest.json').read_text())
+    if identity['measurement_hashes'] != source_hashes(stage):
+        raise ValueError('worker source hashes changed')
+    if stage in ('feasibility', 'cost'):
+        require_stage(out, 'prepare', source_hashes(stage))
+    if stage == 'cost':
+        require_stage(out, 'feasibility', source_hashes(stage))
+        require_stage(out, 'correctness', source_hashes(stage))
+
+
+def native_variant_qualification(cfg, shape, session, updates):
+    import torch
+    from oar.timing import warmup, measure_blocks
+    results, supported = {}, []
+    for variant in cfg['timing']['native_variants']:
+        try:
+            actual, reference = Fixture(cfg, shape, variant, session=session), Fixture(cfg, shape, 'single', session=session)
+            for _ in range(5):
+                actual.step()
+                reference.step()
+                for k, p in actual.p.items():
+                    torch.testing.assert_close(p, reference.p[k], rtol=1e-4, atol=1e-6)
+                    for field in ('exp_avg', 'exp_avg_sq', 'step'):
+                        torch.testing.assert_close(actual.opt.state[p][field], reference.opt.state[reference.p[k]][field], rtol=1e-4, atol=1e-6)
+            def block():
+                for _ in range(updates):
+                    actual.step()
+            w = warmup(block, torch.mps.synchronize, **cfg['timing']['warmup'])
+            raw = measure_blocks(block, torch.mps.synchronize, 3)
+            results[variant] = {'status': 'pass', 'warmup': w, 'pilot_s': raw, 'mean_s': sum(raw)/len(raw)}
+            supported.append(variant)
+        except (RuntimeError, NotImplementedError, AssertionError) as exc:
+            results[variant] = {'status': 'unsupported', 'reason': str(exc), 'exception': type(exc).__name__}
+    if not supported:
+        raise RuntimeError('no qualified native AdamW variant')
+    selected = None if any(not results[v]['warmup']['stable'] for v in supported) else min(supported, key=lambda v: results[v]['mean_s'])
+    return selected, results
+
+
+def timed_pairs(cfg, dense, candidate, common, updates, seed, raw_path=None):
+    import torch
+    from oar.timing import warmup, measure_blocks
+    fixtures = {'dense': dense, 'candidate': candidate}
+    sync, resets = torch.mps.synchronize, []
+    def restore(f):
+        start = time.perf_counter()
+        f.restore(common)
+        sync()
+        resets.append(time.perf_counter()-start)
+    def block(f):
+        for _ in range(updates):
+            f.step()
+    warming = {}
+    # Common initialization/moment history; no arm inherits another warmup.
+    for name, f in fixtures.items():
+        restore(f)
+        warming[name] = warmup(lambda: block(f), sync, **cfg['timing']['warmup'])
+    if raw_path:
+        write_json(Path(raw_path).with_suffix('.warmup.json'), warming)
+        Path(raw_path).open('x').close()
+    if not all(w['stable'] for w in warming.values()):
+        raise MeasurementInvalid('failed_warmup', 'comparison arm warmup unstable; no paired timing started')
+    rows, rng = [], random.Random(seed)
+    for pair in range(cfg['timing']['pairs']):
+        order = list(fixtures)
+        rng.shuffle(order)
+        seconds = {}
+        for name in order:
+            f = fixtures[name]
+            restore(f)
+            seconds[name] = measure_blocks(lambda: block(f), sync, 1)[0]
+        row = {'pair': pair, 'order': order, 'seconds': seconds}
+        rows.append(row)
+        if raw_path:
+            with Path(raw_path).open('a') as stream:
+                stream.write(json.dumps(row)+'\n')
+                stream.flush()
+    # One-time layer-generator setup is amortized over the declared 30 timed
+    # blocks. Paired reset/cloning remains separately recorded experimental
+    # work, as prescribed, and is not pretended to be runtime training work.
+    setup_per_block = candidate.sampling_setup_s/len(rows)
+    return {'warmup': warming, 'pairs': rows, 'reset_s': resets, 'updates_per_block': updates,
+            'order_seed': seed, 'sampling_setup_s': candidate.sampling_setup_s,
+            'setup_amortization_updates': updates*len(rows),
+            'statistics': paired_ratio([r['seconds']['dense'] for r in rows], [r['seconds']['candidate']+setup_per_block for r in rows]),
+            'steady_state_statistics': paired_ratio([r['seconds']['dense'] for r in rows], [r['seconds']['candidate'] for r in rows])}
+
+
+def state_streams(f):
+    return {'init_seed': f.init_seed, 'data_seed': f.data_seed,
+            'init_state': base64.b64encode(bytes(f.init_generator.get_state().tolist())).decode(),
+            'data_state': base64.b64encode(bytes(f.data_generator.get_state().tolist())).decode(),
+            'sampling': {k: {'seed': s.seed, 'layer_id': s.layer_id, 'sampler': s.sampler,
+                            'state': base64.b64encode(bytes(s.generator.get_state().tolist())).decode()} for k, s in f.states.items()}}
+
+
+def cost_session(cfg, request):
+    import torch
+    from oar.hardware import resource_snapshot
+    from oar.sampled_linear import named_seed
+    started = time.perf_counter()
+    session, kind = request['session'], request['kind']
+    deadline = started+request['deadline_s']
+    results = {'session': session, 'kind': kind, 'start_utc': utc(), 'shapes': [], 'resources_before': resource_snapshot('mps')}
+    result_path = Path(request['result'])
+    def check_deadline():
+        if time.perf_counter() > deadline:
+            raise TimeoutError('prospectively bound complete session deadline exceeded')
+    try:
+        shapes = list(cfg['shapes'])
+        if session % 2:
+            shapes.reverse()
+        for shape in shapes:
+            check_deadline()
+            # Available memory screening precedes shape allocation; never disable
+            # the native allocator's safeguards. Observed RSS/Metal overlap.
+            resource = resource_snapshot('mps')
+            n, di, do = (shape[k] for k in ('n', 'di', 'do'))
+            predicted = 3*64*(2*di*do+di+do)+64*n*do
+            ceiling = min(.7*resource['physical_memory_bytes'], .8*torch.mps.recommended_max_memory(), resource['available_memory_bytes'])
+            if predicted > ceiling:
+                raise MemoryError('fixed shape does not fit conservative current memory screening')
+            calibration = next(v for v in request['calibration'] if v['shape']['id'] == shape['id'])
+            step_s = min(calibration['native_complete_step_s'])
+            updates = max(1, min(100, math.ceil(.2/step_s)))
+            # Native-only pilot can increase block length up to the fixed cap.
+            pilot = Fixture(cfg, shape, session=session)
+            from oar.timing import measure_blocks
+            def pilot_block():
+                for _ in range(updates):
+                    pilot.step()
+            pilot_times = measure_blocks(pilot_block, torch.mps.synchronize, 3)
+            if min(pilot_times) < .2 and updates < 100:
+                updates = min(100, math.ceil(updates*.2/min(pilot_times)))
+            if kind == 'feasibility':
+                variant, variants = native_variant_qualification(cfg, shape, session, updates)
+            else:
+                previous = next(v for v in request['baseline']['shapes'] if v['shape']['id'] == shape['id'])
+                variant, variants = previous['selected_variant'], previous['variants']
+                updates = previous['updates_per_block']
+            del pilot
+            if variant is None:
+                write_json(result_path.parent/(result_path.stem+'-'+shape['id']+'-native-variants.json'), variants)
+                raise MeasurementInvalid('failed_warmup', 'native variant selection warmup unstable')
+            dense = Fixture(cfg, shape, variant, session=session)
+            def measure_selected(count):
+                def block():
+                    for _ in range(count):
+                        dense.step()
+                return min(measure_blocks(block, torch.mps.synchronize, 3))
+            # Block length comes from the selected strongest dense variant.
+            # D uses the frozen B length; if it no longer qualifies, invalidate
+            # the session rather than change the paired timing boundary.
+            if kind == 'feasibility':
+                updates, selected_pilot = choose_block_length(measure_selected, updates)
+            else:
+                selected_pilot = [{'updates': updates, 'seconds': measure_selected(updates)}]
+                if updates < 100 and selected_pilot[-1]['seconds'] < .2:
+                    raise MeasurementInvalid('failed_warmup', 'frozen selected-dense block is shorter than .2s')
+            # Calibration history is discarded; declared common history is 8.
+            del dense
+            dense = Fixture(cfg, shape, variant, session=session)
+            for _ in range(cfg['timing']['history_updates']):
+                dense.step()
+            common = dense.snapshot()
+            row = {'shape': shape, 'selected_variant': variant, 'variants': variants, 'updates_per_block': updates,
+                   'dense_pilot_s': pilot_times, 'comparisons': {}, 'resources_before': resource,
+                   'selected_dense_pilot': selected_pilot,
+                   'predicted_working_set_bytes': predicted, 'streams': state_streams(dense)}
+            if kind == 'feasibility':
+                arms = [('AA', 'dense', 1.), ('zero', 'zero', 1.)]
+            else:
+                arms = [(f'{sampler}-{rho}', sampler, rho) for sampler in cfg['samplers'] for rho in cfg['rhos']]
+                random.Random(named_seed(cfg['seed'], 'order', kind, str(session), shape['id'], 'arms')).shuffle(arms)
+            for name, mode, rho in arms:
+                check_deadline()
+                candidate = Fixture(cfg, shape, variant, mode, rho, session)
+                comparison_common = {**common, 'sampling': {k: v.state_dict() for k, v in candidate.states.items()}}
+                row['comparisons'][name] = timed_pairs(cfg, dense, candidate, comparison_common, updates,
+                    named_seed(cfg['seed'], 'order', kind, str(session), shape['id'], name),
+                    result_path.parent/(result_path.stem+'-'+shape['id']+'-'+name+'-pairs.jsonl'))
+                row['comparisons'][name]['sampling_streams_final'] = state_streams(candidate)
+                torch.mps.synchronize()
+                row['comparisons'][name]['resources_candidate_live'] = resource_snapshot('mps')
+                row['comparisons'][name]['memory_context'] = 'endpoint snapshot with dense/common and candidate live, plus allocator caches; overlapping fields are not added and are not exact peaks'
+                del candidate
+            if kind == 'feasibility':
+                dense.restore(common)
+                operands = list(dense.backward(diagnostic=True).values())
+                def dw_products():
+                    for x, y in operands:
+                        _gradient = y.grad.T@x
+                row['dense_dw_group_profile_s'] = measure_blocks(dw_products, torch.mps.synchronize, 3)
+                row['profile_note'] = 'separate dense-dW GEMM group diagnostic; synchronization/graph boundaries differ, never add component profiles into an observed full-step time'
+            row['resources_after'] = resource_snapshot('mps')
+            results['shapes'].append(row)
+            # Persist each completed shape in its own immutable file.
+            write_json(result_path.parent/(result_path.stem+'-'+shape['id']+'.json'), row)
+            del dense, common
+            check_deadline()
+        results['status'] = 'pass'
+    except (RuntimeError, TimeoutError, MemoryError) as exc:
+        results.update(status='INCOMPLETE_RESOURCE' if isinstance(exc, (TimeoutError, MemoryError)) else 'INCONCLUSIVE_MEASUREMENT',
+                       failure=str(exc), invalid_condition=getattr(exc, 'condition', None), traceback=traceback.format_exc())
+    results.update(wall_s=time.perf_counter()-started, resources_after=resource_snapshot('mps'))
+    write_json(result_path, results)
+    return results
+
+
+def forecast_stage(cfg, calibration, kind):
+    # Conservative measured native maximum; candidate components use an explicit
+    # 3x allowance, with all warmup, pairs, variants, cloning and startup included.
+    arms = 2 if kind == 'feasibility' else 6
+    per_shape = []
+    for row in calibration:
+        maximum = max(row['native_complete_step_s'])
+        updates = max(1, min(100, math.ceil(.2/min(row['native_complete_step_s']))))
+        block = max(.2, updates*maximum)
+        blocks = arms*(2*30+2*32)+(4*(32+3) if kind == 'feasibility' else 0)
+        per_shape.append({'shape': row['shape']['id'], 'bound_block_s': block, 'bound_blocks': blocks,
+                          'forecast_s': 3*block*blocks+128*maximum+15})
+    forecast = 3*sum(r['forecast_s'] for r in per_shape)+60
+    return {'kind': kind, 'sessions': 2, 'replacement_sessions_maximum': 1, 'per_shape': per_shape, 'forecast_s': forecast,
+            'deadline_s': 2*forecast, 'includes': 'both sessions plus one possible invalid-session replacement, 3x component allowance, histories, warmup, reset, variants, startup and serialization',
+            'diagnostic_allowance_s': 0 if kind == 'feasibility' else 300}
+
+
+def offline_diagnostics(cfg, request):
+    """Paid native-state information study, never consumed by timed training."""
+    import torch
+    from oar.sampled_linear import SamplingState, importance_probabilities, gather_weight_gradient
+    from oar.timing import measure_blocks
+    start = time.perf_counter()
+    deadline = start+request['deadline_s']
+    shape = next(s for s in cfg['shapes'] if s['id'] == 'middle4096')
+    f = Fixture(cfg, shape, request['variant'])
+    rows, profiles = [], []
+    for target_update in cfg['diagnostic']['native_states']:
+        while f.updates < target_update:
+            if time.perf_counter() > deadline:
+                raise TimeoutError('offline diagnostic deadline')
+            f.step()
+        common = f.snapshot()
+        captures = f.backward(diagnostic=True)
+        dense_grads = {k: p.grad.detach().clone() for k, p in f.p.items()}
+        operands = {w: (x, y.grad.detach()) for (_micro, w), (x, y) in captures.items()}
+        layer_info = {}
+        for w, (x, d) in operands.items():
+            # FP64 CPU full operands are allowed ONLY in this charged offline
+            # diagnostic, never in the runtime sampler or headline timed step.
+            xd, dd = x.detach().cpu().double(), d.detach().cpu().double()
+            a = xd.norm(dim=1)*dd.norm(dim=1)
+            exact = dd.T@xd
+            norm2 = exact.square().sum().item()
+            p = importance_probabilities(x, d)
+            info = {'n': len(x), 'exact_norm2': norm2,
+                    'heterogeneity': (len(a)*a.square().sum()/a.sum().square()).item(),
+                    'score_min': a.min().item(), 'score_max': a.max().item(), 'variance': {}}
+            for sampler in cfg['samplers']:
+                probabilities = p if sampler == 'importance' else torch.full((len(x),), 1/len(x), dtype=torch.float64)
+                for rho in cfg['rhos']:
+                    k = math.ceil(rho*len(x))
+                    variance = ((a.square()/probabilities).sum().item()-norm2)/k
+                    info['variance'][f'{sampler}-{rho}'] = {'conditional_variance': variance,
+                        'normalized_variance': variance/norm2 if norm2 else None}
+            layer_info[w] = info
+            profiles.append({'native_update': target_update, 'layer': w,
+                'dense_dw_s': measure_blocks(lambda: d.T@x, torch.mps.synchronize, 3),
+                'scores_cpu_probabilities_checks_s': measure_blocks(lambda: importance_probabilities(x, d), torch.mps.synchronize, 3),
+                'note': 'separate synchronized profiles, not additive full-step observations'})
+        # Native displacement/reference loss from the same committed history.
+        def apply_grads(grads):
+            f.restore(common)
+            for key, parameter in f.p.items():
+                parameter.grad = grads[key].detach().clone()
+            torch.nn.utils.clip_grad_norm_(list(f.p.values()), 1., error_if_nonfinite=True)
+            f.opt.step()
+            return {key: parameter.detach().clone() for key, parameter in f.p.items()}
+        native_parameters = apply_grads(dense_grads)
+        with torch.no_grad():
+            native_loss = sum(f.loss()[0]).item()
+        for sampler in cfg['samplers']:
+            for rho in cfg['rhos']:
+                states = {w: SamplingState(cfg['seed'], 'diagnostic.'+w+'.'+str(target_update), sampler, rho) for w in operands}
+                for draw in range(cfg['diagnostic']['draws']):
+                    if time.perf_counter() > deadline:
+                        raise TimeoutError('offline diagnostic deadline')
+                    grads = dict(dense_grads)
+                    errors = {}
+                    for w, (x, d) in operands.items():
+                        k, generator = math.ceil(rho*len(x)), states[w].generator
+                        if sampler == 'importance':
+                            p = importance_probabilities(x, d)
+                            indices = torch.multinomial(p, k, replacement=True, generator=generator)
+                            grads[w] = gather_weight_gradient(x, d, indices, p, k)
+                        else:
+                            indices = torch.randint(len(x), (k,), generator=generator).to(x.device)
+                            grads[w] = d.index_select(0, indices).T@(x.index_select(0, indices)*(len(x)/k))
+                        errors[w] = (grads[w]-dense_grads[w]).square().sum().item()/layer_info[w]['exact_norm2']
+                    sampled_parameters = apply_grads(grads)
+                    with torch.no_grad():
+                        loss = sum(f.loss()[0]).item()
+                    displacement_difference = math.sqrt(sum((sampled_parameters[w]-native_parameters[w]).square().sum().item() for w in f.p))
+                    rows.append({'native_update': target_update, 'sampler': sampler, 'rho': rho, 'draw': draw,
+                                 'normalized_gradient_squared_errors': errors, 'displacement_difference_l2': displacement_difference,
+                                 'native_one_step_loss': native_loss, 'sampled_one_step_loss': loss, 'one_step_loss_difference': loss-native_loss})
+        write_json(Path(request['attempt'])/f'diagnostic-state-{target_update}.json', {'layers': layer_info, 'rows': [r for r in rows if r['native_update'] == target_update]})
+        f.restore(common)
+    torch.mps.synchronize()
+    return {'shape': shape, 'draws': cfg['diagnostic']['draws'], 'states': cfg['diagnostic']['native_states'], 'rows': rows,
+            'profiles': profiles, 'wall_s': time.perf_counter()-start,
+            'interpretation': 'offline conditional variance and copied native-AdamW one-step diagnostics; not learning success or a runtime acceptance rule'}
+
+
+def hardware_stage(cfg, config, out, attempt, kind):
+    bindings = source_hashes(kind)
+    prepared = require_stage(out, 'prepare', bindings)
+    qualification = json.loads(Path(prepared['qualification']).read_text())
+    calibration = qualification['native_resource_calibration']
+    baseline = None
+    if kind == 'cost':
+        feasibility = require_stage(out, 'feasibility', bindings)
+        require_stage(out, 'correctness', bindings)
+        baseline = feasibility
+    forecast = forecast_stage(cfg, calibration, kind)
+    if kind == 'cost':
+        forecast['forecast_s'] += 300
+        forecast['deadline_s'] = 2*forecast['forecast_s']
+    write_json(attempt/'resource_forecast.json', forecast)
+    if forecast['deadline_s'] > cfg['resources']['maximum_stage_s']:
+        return {'status': 'INCOMPLETE_RESOURCE', 'reason': 'inclusive measured forecast exceeds configured stage capacity; no expensive session launched'}
+    deadline = time.perf_counter()+forecast['deadline_s']
+    sessions, invalid_attempts, replacements_used, invocation = [], [], 0, 0
+    def run_session(session, slot):
+        nonlocal invocation
+        invocation += 1
+        request = {'kind': kind, 'session': session, 'config': str(config), 'out': str(out), 'attempt': str(attempt),
+                   'result': str(attempt/f'session-invocation-{invocation}.json'), 'calibration': calibration,
+                   'deadline_s': remaining_timeout(deadline)}
+        if baseline:
+            request['baseline'] = baseline['sessions'][slot]
+        request_path = attempt/f'session-invocation-{invocation}-request.json'
+        write_json(request_path, request)
+        code, _, _ = command(attempt, worker_args(kind, config, out, request_path), env=environment(cfg),
+                             timeout=remaining_timeout(deadline))
+        if code or not Path(request['result']).is_file():
+            return {'status': 'INCOMPLETE_RESOURCE', 'failure': 'session interrupted or deadline exceeded; raw prefix retained'}
+        return json.loads(Path(request['result']).read_text())
+    for slot in range(2):
+        result = run_session(slot, slot)
+        if result['status'] != 'pass' and result.get('invalid_condition') == 'failed_warmup' and replacements_used == 0:
+            invalid_attempts.append(result)
+            replacements_used += 1
+            result = run_session(2, slot)
+        if result['status'] != 'pass':
+            return {'status': result['status'], 'reason': result.get('failure'), 'sessions': sessions,
+                    'invalid_attempts': invalid_attempts, 'replacement_sessions_used': replacements_used}
+        sessions.append(result)
+    delta = baseline['delta'] if baseline else freeze_delta([abs(p['seconds']['dense']/p['seconds']['candidate']-1)
+        for s in sessions for row in s['shapes'] for p in row['comparisons']['AA']['pairs']])
+    if kind == 'feasibility' and delta > .15 and replacements_used == 0:
+        # Predefined A/A noise invalidation, deterministic first-session slot.
+        # Never use zero-dW or sampler speed to choose a replacement.
+        invalid_attempts.append({'invalid_condition': 'aa_noise_above_cap', 'original': sessions[0]})
+        replacements_used += 1
+        result = run_session(2, 0)
+        if result['status'] != 'pass':
+            return {'status': result['status'], 'reason': result.get('failure'), 'sessions': sessions, 'invalid_attempts': invalid_attempts}
+        sessions[0] = result
+        delta = freeze_delta([abs(p['seconds']['dense']/p['seconds']['candidate']-1)
+            for s in sessions for row in s['shapes'] for p in row['comparisons']['AA']['pairs']])
+    write_json(attempt/'frozen_delta.json', {'delta': delta, 'source': 'native-only pooled two-session A/A; frozen before sampler timing', 'cap': .15})
+    unstable = [(s['session'], row['shape']['id'], name) for s in sessions for row in s['shapes']
+                for name, comparison in row['comparisons'].items() if not all(v['stable'] for v in comparison['warmup'].values())]
+    if delta > .15 or unstable:
+        return {'status': 'INCONCLUSIVE_MEASUREMENT', 'reason': 'delta above .15 or unstable warmup; evidence retained, no candidate performance qualification',
+                'delta': delta, 'unstable': unstable, 'sessions': sessions}
+    diagnostics = None
+    if kind == 'cost':
+        request = {'kind': 'diagnostic', 'config': str(config), 'out': str(out), 'attempt': str(attempt),
+                   'variant': next(row for row in baseline['sessions'][0]['shapes'] if row['shape']['id'] == 'middle4096')['selected_variant'],
+                   'deadline_s': max(0, deadline-time.perf_counter())}
+        request_path = attempt/'diagnostic-request.json'
+        write_json(request_path, request)
+        code, _, _ = command(attempt, worker_args(kind, config, out, request_path), env=environment(cfg), timeout=max(1, deadline-time.perf_counter()))
+        if code:
+            return {'status': 'INCOMPLETE_RESOURCE', 'reason': 'paid offline diagnostic incomplete; raw session timing retained', 'sessions': sessions, 'delta': delta}
+        diagnostics = str(attempt/'diagnostic.json')
+    eligible = []
+    names = ['zero'] if kind == 'feasibility' else [f'{s}-{r}' for s in cfg['samplers'] for r in cfg['rhos']]
+    for name in names:
+        for shape_id in ('middle2048', 'middle4096'):
+            comparisons = [next(row for row in s['shapes'] if row['shape']['id'] == shape_id)['comparisons'][name] for s in sessions]
+            if all(c['statistics']['ci95'][1] < 1-delta for c in comparisons):
+                eligible.append({'arm': name, 'shape': shape_id})
+    return {'status': 'pass' if eligible else 'STOP_COST', 'delta': delta, 'eligible': eligible, 'sessions': sessions,
+            'diagnostics': diagnostics, 'invalid_attempts': invalid_attempts, 'replacement_sessions_used': replacements_used,
+            'reason': 'upper95% paired ratio must be below 1-delta in both sessions at a planned-model middle shape',
+            'zero_semantics': 'nonlearning dense zero dW with exact dX/db and native optimizer moments/decay; optimistic diagnostic, not universal lower bound'}
+
+
+def correctness(cfg, config, out, attempt):
+    paths = sorted((out/'prepare').glob('attempt-*/record.json'))
+    prepared = read_record(paths[-1]) if paths else None
+    if prepared and prepared['status'] not in ('pass', 'BLOCKED_HARDWARE'):
+        raise ValueError('CPU correctness permits only qualified or hardware-blocked preparation')
+    env = environment(cfg)
+    code, stdout, _ = command(attempt, [sys.executable, '-m', 'pytest', '-q', 'tests/test_sampled_linear.py', 'tests/test_dw_sampling_protocol.py'], env=env)
+    return {'status': 'pass' if not code else 'INCONCLUSIVE_MEASUREMENT', 'reason': 'CPU operator/protocol reference tests; actual-device qualification separately in prepare',
+            'cpu_correctness_only': prepared is None or prepared['status'] != 'pass', 'test_output': stdout.strip()}
+
+
+def summarize_run(out):
+    records = []
+    for stage in STAGES[:-1]:
+        for path in sorted((Path(out)/stage).glob('attempt-*/record.json')):
+            records.append({'path': str(path), 'record_sha256': digest(path), **read_record(path)})
+    latest = {r['stage']: r for r in records}
+    terminal = next((latest[stage]['status'] for stage in reversed(STAGES[:-1])
+                     if stage in latest and latest[stage]['status'] not in ('pass', 'not_run')), None)
+    if terminal is None:
+        terminal = 'INCOMPLETE_RESOURCE'
+    return {'schema_version': 1, 'terminal_state': terminal, 'records': records, 'primary_time_to_target': None,
+            'new_performance_claim': False, 'historical_evidence': 'inherited, unchanged, separately source-attributed',
+            'recommendation': 'Stop at the recorded boundary; reopening requires the unmet prerequisite and a new hash-bound prospective version.'}
+
+
+def render_summary(summary):
+    lines = ['<!-- SPDX-License-Identifier: CC-BY-4.0 -->', '# Bounded dW sampling report', '',
+             f'Terminal state: **{summary["terminal_state"]}**.', '',
+             'Fixed-budget norm-importance dW sampling and the direct-randint uniform control retain native forward, exact input/bias adjoints and native AdamW. Historical OAR results are unchanged.', '',
+             'No time-to-held-out-target or endpoint language quality result exists. No corpus bodies were ingested; no trainer was added before its prerequisites.', '',
+             '| Stage / attempt | State | Reason |', '| --- | --- | --- |']
+    for r in summary['records']:
+        lines.append(f'| {r["stage"]} / {Path(r["path"]).parent.name} | {r["status"]} | {r.get("reason", "")} |')
+    lines += ['', 'Raw command exits/stdout/stderr, resource forecasts, source identities, stage records and their hashes accompany this report. Timing block intervals describe blocks, never independent training seeds.', '', summary['recommendation'], '']
+    return '\n'.join(lines)
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--stage', required=True, choices=STAGES)
+    parser.add_argument('--config', required=True, type=Path)
+    parser.add_argument('--out', required=True, type=Path)
+    parser.add_argument('--dry-run', action='store_true', help='prepare inventory only; no tests, training, bodies or device operations')
+    parser.add_argument('--session-worker', type=Path, help=argparse.SUPPRESS)
+    args = parser.parse_args(argv)
+    cfg = load_config(args.config)
+    args.config, args.out = args.config.resolve(), args.out.resolve()
+    amendment = validate_amendment(args.config)
+    if args.session_worker:
+        request = json.loads(args.session_worker.read_text())
+        validate_worker_request(request, args.stage, args.config, args.out, args.session_worker)
+        configure_torch()
+        if request['kind'] == 'qualification':
+            write_json(Path(request['attempt'])/'qualification.json', primitive_qualification(cfg))
+        elif request['kind'] == 'diagnostic':
+            write_json(Path(request['attempt'])/'diagnostic.json', offline_diagnostics(cfg, request))
+        else:
+            cost_session(cfg, request)
+        return 0
+    attempt = allocate_attempt(args.out, args.stage)
+    start = time.perf_counter()
+    identity = {'reviewed_head': REVIEWED, 'actual_head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
+                'git_status': subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT, text=True),
+                'amendment_sha256': digest(ROOT/'decisions/dw_sampling_amendment.json'), 'config_path': str(args.config),
+                'measurement_hashes': source_hashes(args.stage), 'bound_files': amendment['bound_files'], 'utc': utc()}
+    write_json(attempt/'source_manifest.json', identity)
+    result = {}
+    ownership = ExitStack()
+    try:
+        if args.stage in ('prepare', 'feasibility', 'correctness', 'cost') and not args.dry_run:
+            ownership.enter_context(exclusive_session(ROOT/'.superpowers/dw_sampling/measurement.lock'))
+            competing = competing_processes()
+            write_json(attempt/'exclusive_session.json', {'pid': os.getpid(), 'start_utc': utc(), **competing,
+                       'storage': storage_guard(cfg, args.out)})
+            if competing['blockers']:
+                raise MeasurementInvalid('overlapping_process', 'competing repository test/collector/benchmark process detected')
+        if args.dry_run:
+            if args.stage != 'prepare':
+                raise ValueError('--dry-run is prepare-only')
+            result = {'status': 'not_run', 'reason': 'prepare-only dry run: validated immutable config/source/history; no device work/tests/training/downloads'}
+        elif args.stage == 'prepare':
+            result = prepare(cfg, args.config, args.out, attempt)
+        elif args.stage in ('feasibility', 'cost'):
+            result = hardware_stage(cfg, args.config, args.out, attempt, args.stage)
+        elif args.stage == 'correctness':
+            result = correctness(cfg, args.config, args.out, attempt)
+        elif args.stage in ('pilot', 'confirm'):
+            prerequisite = 'cost' if args.stage == 'pilot' else 'pilot'
+            require_stage(args.out, prerequisite, source_hashes(args.stage))
+            result = {'status': 'BLOCKED_ASSET', 'reason': 'WikiText license/use restriction unresolved; language infrastructure deliberately not implemented or launched'}
+        else:
+            summary = summarize_run(args.out)
+            write_json(attempt/'summary.json', summary)
+            (attempt/'report.md').write_text(render_summary(summary))
+            result = {'status': 'pass', 'reason': 'incomplete/blocked summary rendered without upgrading scientific evidence', 'terminal_state': summary['terminal_state']}
+        storage_guard(cfg, args.out)
+    except Exception as exc:
+        (attempt/'failure.txt').write_text(traceback.format_exc())
+        result = {'status': 'INCONCLUSIVE_MEASUREMENT' if isinstance(exc, MeasurementInvalid) else 'INCOMPLETE_RESOURCE', 'reason': str(exc), 'exception': type(exc).__name__}
+    finally:
+        ownership.close()
+    record = seal_record(attempt, {'stage': args.stage, **result, 'measurement_hashes': source_hashes(args.stage),
+                                  'invocation_wall_s': time.perf_counter()-start, 'source_manifest_sha256': digest(attempt/'source_manifest.json')})
+    print(json.dumps({'stage': args.stage, 'status': record['status'], 'attempt': str(attempt), 'reason': record['reason']}))
+    return 0 if record['status'] in ('pass', 'not_run', 'BLOCKED_ASSET', 'BLOCKED_HARDWARE', 'STOP_COST', 'INCONCLUSIVE_MEASUREMENT', 'INCOMPLETE_RESOURCE') else 1
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())
+
+FILE tests/test_dw_sampling_protocol.py SHA256 030df25def24da60f35092c35a92372ae630af95dd20de98554e88aa50052c9d
+# SPDX-License-Identifier: AGPL-3.0-only
+"""Protocol tests exercise validation and persisted evidence, not source text."""
+import importlib.util
+import json
+from pathlib import Path
+import subprocess
+import sys
+
+import numpy as np
+import pytest
+import yaml
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def driver():
+    spec = importlib.util.spec_from_file_location('dw_sampling_driver', ROOT / 'analysis/run_dw_sampling.py')
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_configuration_rejects_changed_protected_protocol_and_unknown_fields(tmp_path):
+    d = driver()
+    original = ROOT / 'configs/dw_sampling.yaml'
+    assert d.load_config(original)['device'] == 'mps'
+    for mutation in ('extra', 'rho', 'shape', 'timing', 'asset'):
+        cfg = yaml.safe_load(original.read_text())
+        if mutation == 'extra':
+            cfg['unapproved_sampler'] = True
+        elif mutation == 'rho':
+            cfg['rhos'] = [0.01]
+        elif mutation == 'shape':
+            cfg['shapes'][1]['di'] = 1024
+        elif mutation == 'timing':
+            cfg['timing']['pairs'] = 3
+        else:
+            cfg['asset']['body_downloads'] = True
+        path = tmp_path / (mutation + '.yaml')
+        path.write_text(yaml.safe_dump(cfg))
+        with pytest.raises(ValueError):
+            d.load_config(path)
+    duplicate = tmp_path / 'duplicate.yaml'
+    duplicate.write_text(original.read_text() + '\ndevice: cpu\n')
+    with pytest.raises(ValueError):
+        d.load_config(duplicate)
+
+
+def test_attempts_append_and_sealed_records_detect_tampering(tmp_path):
+    d = driver()
+    one = d.allocate_attempt(tmp_path, 'prepare')
+    two = d.allocate_attempt(tmp_path, 'prepare')
+    assert one != two and one.is_dir() and two.is_dir()
+    artifact = one / 'raw.json'
+    artifact.write_text('{"time":1}\n')
+    d.seal_record(one, {'stage': 'prepare', 'status': 'pass', 'measurement_hashes': {'x': 'a'}})
+    assert d.read_record(one / 'record.json')['status'] == 'pass'
+    with pytest.raises(FileExistsError):
+        d.seal_record(one, {'status': 'pass'})
+    artifact.write_text('{"time":0.1}\n')
+    with pytest.raises(ValueError, match='hash'):
+        d.read_record(one / 'record.json')
+
+
+def test_missing_failed_and_source_changed_prerequisites_cannot_launch(tmp_path):
+    d = driver()
+    with pytest.raises(ValueError, match='prerequisite'):
+        d.require_stage(tmp_path, 'feasibility', {'source': 'v1'})
+    p = d.allocate_attempt(tmp_path, 'feasibility')
+    d.seal_record(p, {'stage': 'feasibility', 'status': 'STOP_COST', 'measurement_hashes': {'source': 'v1'}})
+    with pytest.raises(ValueError, match='prerequisite'):
+        d.require_stage(tmp_path, 'feasibility', {'source': 'v1'})
+    p2 = d.allocate_attempt(tmp_path, 'feasibility')
+    d.seal_record(p2, {'stage': 'feasibility', 'status': 'pass', 'measurement_hashes': {'source': 'v1'}})
+    with pytest.raises(ValueError, match='source'):
+        d.require_stage(tmp_path, 'feasibility', {'source': 'v2'})
+    assert d.require_stage(tmp_path, 'feasibility', {'source': 'v1'})['status'] == 'pass'
+
+
+def test_geometric_paired_estimator_and_noise_threshold():
+    d = driver()
+    # Ratios .5,2 have geometric mean1, arithmetic mean1.25.
+    result = d.paired_ratio([1., 1.], [.5, 2.])
+    assert result['ratio'] == pytest.approx(1.)
+    assert result['ci95'] == pytest.approx([.5, 2.])
+    assert d.paired_ratio([1., 2., 4.], [.8, 1.6, 3.2])['ci95'] == pytest.approx([.8, .8])
+    aa = [0., .01, .02, .03]
+    assert d.freeze_delta(aa) == pytest.approx(max(.05, 2 * np.quantile(aa, .95, method='linear')))
+    for x, y in (([], []), ([0.], [1.]), ([1.], [float('nan')])):
+        with pytest.raises(ValueError):
+            d.paired_ratio(x, y)
+
+
+def test_zero_dw_control_keeps_adjoint_bias_and_native_moment_decay():
+    import torch
+    d = driver()
+    x = torch.tensor([[1., 2.]], requires_grad=True)
+    w = torch.nn.Parameter(torch.tensor([[3., 4.]]))
+    b = torch.nn.Parameter(torch.tensor([5.]))
+    opt = torch.optim.AdamW([w, b], lr=.01, foreach=False)
+    # First give the weight nonzero native history.
+    w.grad = torch.ones_like(w)
+    b.grad = torch.ones_like(b)
+    opt.step()
+    previous = opt.state[w]['exp_avg'].clone()
+    opt.zero_grad(set_to_none=True)
+    d.zero_dw_linear(x, w, b).sum().backward()
+    torch.testing.assert_close(x.grad, w.detach())
+    torch.testing.assert_close(b.grad, torch.ones_like(b))
+    assert w.grad is not None
+    torch.testing.assert_close(w.grad, torch.zeros_like(w))
+    opt.step()
+    torch.testing.assert_close(opt.state[w]['exp_avg'], .9 * previous)
+    assert opt.state[w]['step'].item() == 2
+
+
+def test_summary_handles_incomplete_run_without_promoting_it(tmp_path):
+    d = driver()
+    path = d.allocate_attempt(tmp_path, 'prepare')
+    d.seal_record(path, {'stage': 'prepare', 'status': 'BLOCKED_HARDWARE', 'reason': 'actual MPS unavailable', 'measurement_hashes': {}})
+    report = d.summarize_run(tmp_path)
+    assert report['terminal_state'] == 'BLOCKED_HARDWARE'
+    assert report['primary_time_to_target'] is None
+    assert report['new_performance_claim'] is False
+
+
+def test_help_has_no_output_directory_or_training_side_effect(tmp_path):
+    result = subprocess.run([sys.executable, str(ROOT / 'analysis/run_dw_sampling.py'), '--help'], cwd=tmp_path,
+                            text=True, capture_output=True)
+    assert result.returncode == 0
+    assert 'feasibility' in result.stdout and 'confirm' in result.stdout
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_native_environment_checks_actual_versions_against_pins():
+    d = driver()
+    lock = 'torch==2.15.0 --hash=sha256:abc\nPyYAML==6.0.3 --hash=sha256:def\n'
+    assert d.pin_mismatches(lock, {'torch': '2.15.0', 'pyyaml': '6.0.3'}) == []
+    assert d.pin_mismatches(lock, {'torch': '2.14.0', 'PyYAML': '6.0.3'}) == ['torch: expected 2.15.0, observed 2.14.0']
+    assert d.pin_mismatches(lock, {'torch': '2.15.0'}) == ['PyYAML: expected 6.0.3, observed unavailable']
+
+
+def test_shared_deadline_never_restarts_for_later_commands():
+    d = driver()
+    assert d.remaining_timeout(100., clock=lambda: 75.) == 25.
+    with pytest.raises(TimeoutError):
+        d.remaining_timeout(100., clock=lambda: 101.)
+
+
+def test_worker_stage_boundary_rejects_injected_cost_request(tmp_path):
+    d = driver()
+    attempt = d.allocate_attempt(tmp_path, 'prepare')
+    (attempt/'source_manifest.json').write_text('{}')
+    request = {'kind': 'cost', 'attempt': str(attempt), 'out': str(tmp_path), 'config': str(ROOT/'configs/dw_sampling.yaml')}
+    with pytest.raises(ValueError, match='stage boundary'):
+        d.validate_worker_request(request, 'prepare', ROOT/'configs/dw_sampling.yaml', tmp_path, attempt/'request.json')
+
+
+def test_exclusive_session_rejects_second_owner(tmp_path):
+    d = driver()
+    lock = tmp_path/'measurement.lock'
+    with d.exclusive_session(lock):
+        with pytest.raises(RuntimeError, match='exclusive'):
+            with d.exclusive_session(lock):
+                pytest.fail('a second session acquired the measurement device')
+    with d.exclusive_session(lock):
+        pass
+
+
+def test_selected_dense_block_is_remeasured_until_duration_or_cap():
+    d = driver()
+    count, observations = d.choose_block_length(lambda n: .001*n, 3)
+    assert count == 100 and observations[-1]['seconds'] == pytest.approx(.1)
+    durations = iter([.05, .15, .21])
+    count, observations = d.choose_block_length(lambda n: next(durations), 5)
+    assert count == 27
+    assert observations[-1]['seconds'] >= .2
+
+
+def test_latest_passing_attempt_supersedes_historical_hardware_failure(tmp_path):
+    d = driver()
+    for status in ('BLOCKED_HARDWARE', 'pass'):
+        p = d.allocate_attempt(tmp_path, 'prepare')
+        d.seal_record(p, {'stage': 'prepare', 'status': status, 'measurement_hashes': {}})
+    result = d.summarize_run(tmp_path)
+    assert result['terminal_state'] == 'INCOMPLETE_RESOURCE'
+    assert len(result['records']) == 2

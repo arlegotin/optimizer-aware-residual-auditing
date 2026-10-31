@@ -1,0 +1,15 @@
+usage: run_dw_sampling.py [-h]
+                          --stage {prepare,feasibility,correctness,cost,pilot,confirm,summarize}
+                          --config CONFIG --out OUT [--dry-run]
+
+Bounded, append-only dW sampling experiment. Importing never starts work. Only
+A--D are implemented before their gates. Corpus/trainer work stays absent
+while the recorded asset restriction is unresolved. No old oracle is invoked.
+
+options:
+  -h, --help            show this help message and exit
+  --stage {prepare,feasibility,correctness,cost,pilot,confirm,summarize}
+  --config CONFIG
+  --out OUT
+  --dry-run             prepare inventory only; no tests, training, bodies or
+                        device operations

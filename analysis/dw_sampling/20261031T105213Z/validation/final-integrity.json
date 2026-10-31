@@ -1,0 +1,20 @@
+{
+  "current_amendment_verified": true,
+  "final_report_sha256": "b5aeb14457b33fa2ae61753c4fdff543cc31071f608b60628c656f65b0e7d34e",
+  "historical_files_verified": 184,
+  "no_new_performance_or_training_work": true,
+  "report_local_links_verified": true,
+  "source_hashes": {
+    "analysis/run_dw_sampling.py": "227f6977d4713e84d01cf2ebeb61d390d769f391da6fe14e65704daac47df663",
+    "configs/dw_sampling.yaml": "afbff17b101ffc45963b0bb8132574c405ba821f196704ff254e721e9e7ad4c3",
+    "decisions/dw_sampling_scope.md": "d91d9350dc117f83e39c648e48d435de75ab9ea5a3b6bc197b216c4b73c11181",
+    "src/oar/hardware.py": "4ba118d816eec9d255cfb3d7925416373119fe181f82529fb58a96347d8e5048",
+    "src/oar/sampled_linear.py": "11398f9340a48b0dcabdc733c74dfa52b53663ea2005989f2ad7b53079827ca3",
+    "src/oar/timing.py": "25351cd20abc14385dd1cb3e482c67f73619b1ead30900ca0150fe57072458e5",
+    "tests/test_dw_sampling_protocol.py": "9772893f8002de46004ff334a39209d9df9438fc6bbf51b9dac91cf004dd1c3f",
+    "tests/test_sampled_linear.py": "3ed4adbf6f62599172b0322374e84c7552f7fc4b46761f80057053469822eaa9"
+  },
+  "stage_records_verified": 7,
+  "terminal_state": "INCONCLUSIVE_MEASUREMENT",
+  "utc": "2026-10-31T11:39:39.010575+00:00"
+}

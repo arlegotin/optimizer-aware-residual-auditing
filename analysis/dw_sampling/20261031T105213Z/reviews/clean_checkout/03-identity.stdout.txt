@@ -1,0 +1,31 @@
+{
+  "executable": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python",
+  "version": "3.13.5 (main, Jun 11 2025, 15:36:57) [Clang 17.0.0 (clang-1700.0.13.3)]",
+  "machine": "arm64",
+  "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+  "mac_ver": [
+    "26.7.1",
+    [
+      "",
+      "",
+      ""
+    ],
+    "arm64"
+  ],
+  "torch_version": "2.15.0",
+  "torch_file": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/lib/python3.13/site-packages/torch/__init__.py",
+  "oar_file": "/tmp/dw-sampling-review-2ydqirjv/checkout/src/oar/__init__.py",
+  "sampler_file": "/tmp/dw-sampling-review-2ydqirjv/checkout/src/oar/sampled_linear.py",
+  "mps_built": true,
+  "mps_visible": false,
+  "cpu_used_for_suite": true,
+  "head": "48d02b26caac2fa24bd95eac4745b334e8d32af7",
+  "shallow": "false",
+  "status": "",
+  "flags": {
+    "PYTHONPATH": "/tmp/dw-sampling-review-2ydqirjv/checkout/src",
+    "PYTORCH_ENABLE_MPS_FALLBACK": "0",
+    "PYTORCH_MPS_FAST_MATH": "0",
+    "PYTORCH_MPS_PREFER_METAL": "0"
+  }
+}

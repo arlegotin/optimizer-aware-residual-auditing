@@ -1,0 +1,167 @@
+[
+  {
+    "name": "01-clone",
+    "argv": [
+      "git",
+      "clone",
+      "--no-hardlinks",
+      "--no-checkout",
+      "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing",
+      "/tmp/dw-sampling-review-2ydqirjv/checkout"
+    ],
+    "cwd": "/tmp/dw-sampling-review-2ydqirjv",
+    "exit_code": 0,
+    "duration_s": 0.20710858306847513,
+    "environment": null
+  },
+  {
+    "name": "02-checkout",
+    "argv": [
+      "git",
+      "checkout",
+      "--detach",
+      "48d02b26caac2fa24bd95eac4745b334e8d32af7"
+    ],
+    "cwd": "/tmp/dw-sampling-review-2ydqirjv/checkout",
+    "exit_code": 0,
+    "duration_s": 0.11310870910529047,
+    "environment": null
+  },
+  {
+    "name": "03-identity",
+    "argv": [
+      "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python",
+      "-c",
+      "import sys,os,json,platform,subprocess,torch,oar,oar.sampled_linear\nprint(json.dumps(dict(executable=sys.executable,version=sys.version,machine=platform.machine(),platform=platform.platform(),mac_ver=platform.mac_ver(),torch_version=torch.__version__,torch_file=torch.__file__,oar_file=oar.__file__,sampler_file=oar.sampled_linear.__file__,mps_built=torch.backends.mps.is_built(),mps_visible=torch.backends.mps.is_available(),cpu_used_for_suite=True,head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),shallow=subprocess.check_output(['git','rev-parse','--is-shallow-repository'],text=True).strip(),status=subprocess.check_output(['git','status','--porcelain'],text=True),flags={k:os.environ[k] for k in ('PYTHONPATH','PYTORCH_ENABLE_MPS_FALLBACK','PYTORCH_MPS_FAST_MATH','PYTORCH_MPS_PREFER_METAL')}),indent=2))"
+    ],
+    "cwd": "/tmp/dw-sampling-review-2ydqirjv/checkout",
+    "exit_code": 0,
+    "duration_s": 1.331179500091821,
+    "environment": {
+      "PYTHONPATH": "/tmp/dw-sampling-review-2ydqirjv/checkout/src",
+      "PYTORCH_ENABLE_MPS_FALLBACK": "0",
+      "PYTORCH_MPS_FAST_MATH": "0",
+      "PYTORCH_MPS_PREFER_METAL": "0"
+    }
+  },
+  {
+    "name": "04-cpu-tests-sandbox",
+    "argv": [
+      "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "-m",
+      "not mps"
+    ],
+    "cwd": "/tmp/dw-sampling-review-2ydqirjv/checkout",
+    "exit_code": 0,
+    "duration_s": 6.244866791996174,
+    "environment": {
+      "PYTHONPATH": "/tmp/dw-sampling-review-2ydqirjv/checkout/src",
+      "PYTORCH_ENABLE_MPS_FALLBACK": "0",
+      "PYTORCH_MPS_FAST_MATH": "0",
+      "PYTORCH_MPS_PREFER_METAL": "0"
+    }
+  },
+  {
+    "name": "05-driver-help",
+    "argv": [
+      "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python",
+      "analysis/run_dw_sampling.py",
+      "--help"
+    ],
+    "cwd": "/tmp/dw-sampling-review-2ydqirjv/checkout",
+    "exit_code": 0,
+    "duration_s": 0.05991504201665521,
+    "environment": {
+      "PYTHONPATH": "/tmp/dw-sampling-review-2ydqirjv/checkout/src",
+      "PYTORCH_ENABLE_MPS_FALLBACK": "0",
+      "PYTORCH_MPS_FAST_MATH": "0",
+      "PYTORCH_MPS_PREFER_METAL": "0"
+    }
+  },
+  {
+    "name": "06-historical-renderer",
+    "argv": [
+      "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python",
+      "-m",
+      "oar.cli",
+      "report",
+      "--gates",
+      "decisions/gates.jsonl",
+      "--run-index",
+      "analysis/evidence_index.json",
+      "--out",
+      "/tmp/dw-sampling-review-2ydqirjv/historical-rendered.md"
+    ],
+    "cwd": "/tmp/dw-sampling-review-2ydqirjv/checkout",
+    "exit_code": 0,
+    "duration_s": 0.942506792023778,
+    "environment": {
+      "PYTHONPATH": "/tmp/dw-sampling-review-2ydqirjv/checkout/src",
+      "PYTORCH_ENABLE_MPS_FALLBACK": "0",
+      "PYTORCH_MPS_FAST_MATH": "0",
+      "PYTORCH_MPS_PREFER_METAL": "0"
+    }
+  },
+  {
+    "name": "07-summary",
+    "argv": [
+      "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python",
+      "analysis/run_dw_sampling.py",
+      "--stage",
+      "summarize",
+      "--config",
+      "configs/dw_sampling.yaml",
+      "--out",
+      "analysis/dw_sampling/20261031T105213Z"
+    ],
+    "cwd": "/tmp/dw-sampling-review-2ydqirjv/checkout",
+    "exit_code": 0,
+    "duration_s": 0.12655270798131824,
+    "environment": {
+      "PYTHONPATH": "/tmp/dw-sampling-review-2ydqirjv/checkout/src",
+      "PYTORCH_ENABLE_MPS_FALLBACK": "0",
+      "PYTORCH_MPS_FAST_MATH": "0",
+      "PYTORCH_MPS_PREFER_METAL": "0"
+    }
+  },
+  {
+    "name": "08-post-status",
+    "argv": [
+      "git",
+      "status",
+      "--porcelain"
+    ],
+    "cwd": "/tmp/dw-sampling-review-2ydqirjv/checkout",
+    "exit_code": 0,
+    "duration_s": 0.010442749946378171,
+    "environment": {
+      "PYTHONPATH": "/tmp/dw-sampling-review-2ydqirjv/checkout/src",
+      "PYTORCH_ENABLE_MPS_FALLBACK": "0",
+      "PYTORCH_MPS_FAST_MATH": "0",
+      "PYTORCH_MPS_PREFER_METAL": "0"
+    }
+  },
+  {
+    "name": "09-audit",
+    "argv": [
+      "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python",
+      "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/dw_sampling/20261031T105213Z/reviews/clean_checkout/audit_checkout.py"
+    ],
+    "cwd": "/tmp/dw-sampling-review-2ydqirjv/checkout",
+    "exit_code": 1,
+    "duration_s": 4.941942624980584
+  },
+  {
+    "name": "10-audit",
+    "argv": [
+      "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python",
+      "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/dw_sampling/20261031T105213Z/reviews/clean_checkout/audit_checkout_v2.py"
+    ],
+    "cwd": "/tmp/dw-sampling-review-2ydqirjv/checkout",
+    "exit_code": 0,
+    "duration_s": 11.642250416916795
+  }
+]
