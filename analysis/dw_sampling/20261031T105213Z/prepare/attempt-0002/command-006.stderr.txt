@@ -1,0 +1,41 @@
+Traceback (most recent call last):
+  File "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py", line 1064, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py", line 1009, in main
+    write_json(Path(request['attempt'])/'qualification.json', primitive_qualification(cfg))
+                                                              ~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/run_dw_sampling.py", line 472, in primitive_qualification
+    y.backward(d)
+    ~~~~~~~~~~^^^
+  File "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/lib/python3.13/site-packages/torch/_tensor.py", line 623, in backward
+    torch.autograd.backward(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        self, gradient, retain_graph, create_graph, inputs=inputs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/lib/python3.13/site-packages/torch/autograd/__init__.py", line 395, in backward
+    _engine_run_backward(
+    ~~~~~~~~~~~~~~~~~~~~^
+        tensors,
+        ^^^^^^^^
+    ...<5 lines>...
+        accumulate_grad=True,
+        ^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/lib/python3.13/site-packages/torch/autograd/graph.py", line 1113, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        t_outputs, *args, **kwargs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )  # Calls into the C++ engine to run the backward pass
+    ^
+  File "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/lib/python3.13/site-packages/torch/autograd/function.py", line 452, in apply
+    return user_fn(self, *args)
+  File "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/src/oar/sampled_linear.py", line 179, in backward
+    p = importance_probabilities(x2, d2)
+  File "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/src/oar/sampled_linear.py", line 92, in importance_probabilities
+    scores_cpu = scores.to(device='cpu', dtype=torch.float64)
+RuntimeError: Undefined type Double

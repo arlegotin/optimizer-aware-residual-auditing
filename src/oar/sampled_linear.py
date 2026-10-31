@@ -89,7 +89,8 @@ def importance_probabilities(x2: Tensor, d2: Tensor) -> Tensor | None:
     ds = (d2.detach()/sd).to(dtype=torch.float32)
     scores = torch.linalg.vector_norm(xs, dim=1)*torch.linalg.vector_norm(ds, dim=1)
     _finite(scores, 'sampling scores')
-    scores_cpu = scores.to(device='cpu', dtype=torch.float64)
+    # MPS cannot construct FP64, including within a combined transfer/cast.
+    scores_cpu = scores.to(device='cpu').to(dtype=torch.float64)
     total = scores_cpu.sum()
     if not bool(torch.isfinite(total)) or not bool(total > 0):
         raise RuntimeError('nonzero operands produced invalid or zero sampling score sum')
@@ -122,7 +123,8 @@ def gather_weight_gradient(x2: Tensor, d2: Tensor, indices_cpu: Tensor,
     if not bool(torch.isfinite(selected).all()) or not bool((selected > 0).all()):
         raise RuntimeError('sample probabilities must be positive and finite')
     weights_cpu = (k*selected).rsqrt()
-    weights = weights_cpu.to(device=x2.device, dtype=x2.dtype)
+    # Cast on CPU before transferring so no FP64 operand reaches MPS.
+    weights = weights_cpu.to(dtype=x2.dtype).to(device=x2.device)
     # The FP64 probabilities above also determine the inverse scales, with no
     # second normalization or independently rounded probability calculation.
     rows = indices_cpu.to(device=x2.device)

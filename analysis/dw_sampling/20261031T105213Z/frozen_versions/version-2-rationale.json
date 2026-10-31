@@ -1,0 +1,13 @@
+{
+  "utc": "2026-10-31T11:21:25.425756+00:00",
+  "previous_source_commit": "afa51cb",
+  "previous_amendment_sha256": "e419f3c6fff306a30dcffd1ba8aa78321717f76c603e28c0901073c1cddab38a",
+  "reason": "Actual MPS qualification rejected combined device transfer and FP64 cast (Undefined type Double). Separate score transfer then CPU cast; cast inverse weights on CPU then transfer, exactly matching the prospectively specified boundary. Marked MPS regression RED then GREEN.",
+  "changed_files": [
+    "src/oar/sampled_linear.py",
+    "tests/test_sampled_linear.py"
+  ],
+  "unchanged": "scope/config/algorithm/thresholds/timing/native optimizer/historical files; no comparative sampling timing or learning outcomes yet exposed",
+  "invalidated": "version1 sampler qualification; repeat prepare and new correctness before cost",
+  "failed_attempt_retained": "prepare/attempt-0002"
+}

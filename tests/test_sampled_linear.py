@@ -540,3 +540,42 @@ def test_registry_releases_dead_weights_and_keeps_only_last_task(op):
     gc.collect()
     assert ref() is None
     assert key not in op._last_backward
+
+
+@pytest.mark.mps
+@pytest.mark.skipif(not torch.backends.mps.is_available(), reason='requires actual visible MPS')
+def test_mps_score_transfer_fp64_normalization_weights_and_sampled_backward(op):
+    # All normalized row scores are exactly representable FP32: .5,1,.5,1,0.
+    # The mixture is independently hand-computed, and no FP64 tensor enters MPS.
+    x_cpu = torch.tensor([[1., 0.], [0., 2.], [-1., 0.], [0., -2.], [0., 0.]])
+    d_cpu = torch.tensor([[2.], [2.], [-2.], [-2.], [0.]])
+    w_cpu, b_cpu = torch.tensor([[.3, -.2]]), torch.tensor([.1])
+    x, w, b = [t.to('mps').requires_grad_() for t in (x_cpu, w_cpu, b_cpu)]
+    d = d_cpu.to('mps')
+    p = op.importance_probabilities(x, d)
+    expected_p = torch.tensor([.17, .32, .17, .32, .02], dtype=torch.float64)
+    assert p.device.type == 'cpu' and p.dtype == torch.float64
+    close(p, expected_p)
+    assert abs(p.sum().item()-1) <= 5e-15
+    assert p.min().item() >= .1/len(x)*(1-1e-12)
+
+    # Direct runtime gather also checks the FP64 CPU inverse-weight boundary,
+    # including a duplicate row, independently of random sample selection.
+    rows = torch.tensor([1, 1])
+    gathered = op.gather_weight_gradient(x, d, rows, p, 2)
+    expected_gather = torch.outer(d_cpu[1].double(), x_cpu[1].double())/expected_p[1]
+    assert gathered.device.type == 'mps' and gathered.dtype == torch.float32
+    torch.testing.assert_close(gathered.to('cpu').double(), expected_gather, rtol=1e-4, atol=1e-6)
+
+    state = op.SamplingState(37, 'mps.transfer-boundary')
+    reference_rng = torch.Generator().manual_seed(state.seed)
+    sampled_rows = torch.multinomial(expected_p, 2, replacement=True, generator=reference_rng)
+    expected_dw = sum(torch.outer(d_cpu[i].double(), x_cpu[i].double())/(2*expected_p[i]) for i in sampled_rows)
+    y = op.sampled_linear(x, w, b, state, k=2)
+    torch.testing.assert_close(y.to('cpu'), F.linear(x_cpu, w_cpu, b_cpu), rtol=1e-4, atol=1e-6)
+    dx, dw, db = torch.autograd.grad(y, (x, w, b), d)
+    for actual, expected in ((dx, d_cpu@w_cpu), (dw, expected_dw), (db, d_cpu.sum(0))):
+        assert actual.device.type == 'mps' and actual.dtype == torch.float32
+        assert torch.isfinite(actual).all()
+        torch.testing.assert_close(actual.to('cpu').double(), expected.double(), rtol=1e-4, atol=1e-6)
+    assert torch.equal(state.generator.get_state(), reference_rng.get_state())

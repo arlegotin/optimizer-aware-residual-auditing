@@ -1,5 +1,5 @@
 {
-  "actual_head_at_freeze": "9d8ad069c51b4d0e6c13e9c6e465579e9b44a339",
+  "actual_head_at_freeze": "afa51cb078fa8ace8a26d2ef267c522cb90cc562",
   "allowed_commands": [
     "PYTHONPATH=src .venv/bin/python analysis/run_dw_sampling.py --stage prepare --config configs/dw_sampling.yaml --out <new-run-root>",
     "PYTHONPATH=src .venv/bin/python analysis/run_dw_sampling.py --stage feasibility --config configs/dw_sampling.yaml --out <new-run-root>",
@@ -141,7 +141,7 @@
     "src/oar/records.py": "2f06d6ee5ce7debbc3bfad99fd160fe79a125335a15fdd69f46242a9924bd300",
     "src/oar/report.py": "176a5409f4f669849189d58aa45d7c755c793baa401e3a0835449cab787a22c3",
     "src/oar/reproduction.py": "222ccef3c5da1540f006907c2d6a85f4205621640665e1792cac552b92c66c3c",
-    "src/oar/sampled_linear.py": "26a3c880e9bc6e1093a6f1487b20e7df05cf0a76e663da44011fd0914cf7d228",
+    "src/oar/sampled_linear.py": "11398f9340a48b0dcabdc733c74dfa52b53663ea2005989f2ad7b53079827ca3",
     "src/oar/timing.py": "25351cd20abc14385dd1cb3e482c67f73619b1ead30900ca0150fe57072458e5",
     "tests/fixtures/config_minimal.yaml": "db5c32cab889f61e28315bb3741497fd546f8c393a8ef251eda469f4e057d75e",
     "tests/fixtures/config_reordered.yaml": "7005c9fe144fd0bab730f96125d7cae4e53196da51f0d15031a83f631cb191c4",
@@ -160,7 +160,7 @@
     "tests/test_oracle.py": "0687bb463152a59768e97f7bb81adc7704bbdfc06160e9e87adc4c59007ed58f",
     "tests/test_report.py": "e5c2d01e361f43d49ef3f57787f685c6c9d6a2393b4dcbae6fd65825bb31a284",
     "tests/test_reproduction.py": "60d1e54b0e55359ade742b79033bbcc6e93a9afb70695fbd754fdae2dad03540",
-    "tests/test_sampled_linear.py": "e4f131100065a836281030db98880530316086fce0f0be4e00b99fa63c838443",
+    "tests/test_sampled_linear.py": "3ed4adbf6f62599172b0322374e84c7552f7fc4b46761f80057053469822eaa9",
     "tests/test_synthesis_collection.py": "dc9cc7cba68250e139861e5b984c8c06ef5569cf717e5827a1f736dadd414dc0",
     "tests/test_timing_harness.py": "123cdf5261ff458693c7386e64b7f0d05758a21311aa95bc050fa4059da3de90",
     "third_party/discovery/dropbp/LICENSE": "95414603b4fcb6e19b2cdd3ffea27f19ae3282f42717463cfac313b71b47146d",
@@ -207,7 +207,7 @@
   "config_sha256": "afbff17b101ffc45963b0bb8132574c405ba821f196704ff254e721e9e7ad4c3",
   "device": "mps",
   "dtype": "float32",
-  "frozen_utc": "2026-10-31T11:17:25.257142+00:00",
+  "frozen_utc": "2026-10-31T11:21:25.469236+00:00",
   "historical_amendment_file_sha256": "78ae5c0c6d1daa0e819e77da889553efa72547693451b8cfbf9627c6f2e23bda",
   "historical_gate_file_sha256": "7afc234d1e978292d65da6bc961455480f63418c4a6c5fb5b14b8afcacd779dc",
   "kind": "prospective_fixed_budget_dw_sampling",
