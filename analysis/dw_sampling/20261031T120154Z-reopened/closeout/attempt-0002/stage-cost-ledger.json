@@ -1,0 +1,303 @@
+{
+  "kind": "unique_outer_stage_invocation_ledger",
+  "limits": [
+    "Only outer stage invocations are summed; nested child work/preprocessing is not added twice.",
+    "Includes correctness/reporting CPU and I/O as charged machine time; not measured GPU-busy hours.",
+    "Additional standalone asset acquisition/setup/engineering/review costs not captured by these records are not invented.",
+    "Historical online OAR release measurements are inherited and not included in these new-branch totals."
+  ],
+  "rows": [
+    {
+      "actual_head": "cf6481741933130f2e86b440e750909686b81eb3",
+      "attempt": "attempt-0001",
+      "record_path": "analysis/dw_sampling/20261031T105213Z/correctness/attempt-0001/record.json",
+      "record_sha256": "ef921e7744261da918d5c9853aead656c91f62796c5680b00244a1ae9212e435",
+      "run": "20261031T105213Z",
+      "source_manifest_sha256": "007e40d7ebc2463945fdf7e0dbff8f6b1337311a9f0c7b36955f64ea3ef942cc",
+      "stage": "correctness",
+      "status": "pass",
+      "wall_s": 2.1432692079106346
+    },
+    {
+      "actual_head": "3500387ec42f0559299ab919d6e3e6af26c3f069",
+      "attempt": "attempt-0001",
+      "record_path": "analysis/dw_sampling/20261031T105213Z/feasibility/attempt-0001/record.json",
+      "record_sha256": "e675cdd60e4607536ba33bc10c788bb380ed42d4c293c2b86913c4227f4fe869",
+      "run": "20261031T105213Z",
+      "source_manifest_sha256": "bf8239e07f4434f8aa454be530de6f0ba58f56e083f8a9121603d5622dc6a1ca",
+      "stage": "feasibility",
+      "status": "INCONCLUSIVE_MEASUREMENT",
+      "wall_s": 22.611758666927926
+    },
+    {
+      "actual_head": "9d8ad069c51b4d0e6c13e9c6e465579e9b44a339",
+      "attempt": "attempt-0001",
+      "record_path": "analysis/dw_sampling/20261031T105213Z/prepare/attempt-0001/record.json",
+      "record_sha256": "a6348138bf8279f18bffdfb5504562bbe56e2cd7a801fb296b74afad992df3bd",
+      "run": "20261031T105213Z",
+      "source_manifest_sha256": "0a3bbf9cdd5b3701d6f1437abe1b7b2460ae69e4cfa6c46197c072390952932b",
+      "stage": "prepare",
+      "status": "not_run",
+      "wall_s": 0.017811500001698732
+    },
+    {
+      "actual_head": "afa51cb078fa8ace8a26d2ef267c522cb90cc562",
+      "attempt": "attempt-0002",
+      "record_path": "analysis/dw_sampling/20261031T105213Z/prepare/attempt-0002/record.json",
+      "record_sha256": "5a235228d924db2e56fd88cc6769c9babaac9aaa8f6770c7db0559188ef40ca5",
+      "run": "20261031T105213Z",
+      "source_manifest_sha256": "22a23a2a8729fdc390dffa4ddbedf7f1904ca33c96b5c285c32d8ca62b19e7a5",
+      "stage": "prepare",
+      "status": "BLOCKED_HARDWARE",
+      "wall_s": 29.303346000029705
+    },
+    {
+      "actual_head": "3500387ec42f0559299ab919d6e3e6af26c3f069",
+      "attempt": "attempt-0003",
+      "record_path": "analysis/dw_sampling/20261031T105213Z/prepare/attempt-0003/record.json",
+      "record_sha256": "5810353e689e742e3aff1e25f9b893a89adb348123523c8091b35d9763be32ec",
+      "run": "20261031T105213Z",
+      "source_manifest_sha256": "fed521e2e27ec4a36a1cfe07ff573abc4c71ec83a45465165cef0bf620e5425e",
+      "stage": "prepare",
+      "status": "pass",
+      "wall_s": 29.475645791972056
+    },
+    {
+      "actual_head": "cf6481741933130f2e86b440e750909686b81eb3",
+      "attempt": "attempt-0001",
+      "record_path": "analysis/dw_sampling/20261031T105213Z/summarize/attempt-0001/record.json",
+      "record_sha256": "20332c88e893aeb067b5f0def0ce48eb9e4ebcfff1038292dae5822ea6b5571c",
+      "run": "20261031T105213Z",
+      "source_manifest_sha256": "0ce5bfac18847cc24ccfd300d77f6fe49305c553111ebb708c7da9d2643966a5",
+      "stage": "summarize",
+      "status": "pass",
+      "wall_s": 0.03483791695907712
+    },
+    {
+      "actual_head": "802e1f5b16ac915fcce5204aa96c3a64bacd6154",
+      "attempt": "attempt-0001",
+      "record_path": "analysis/dw_sampling/20261031T120154Z-reopened/correctness/attempt-0001/record.json",
+      "record_sha256": "6f02398a2985f684538f900672defc7987ee49a18e37cee3854e88af0c0c0595",
+      "run": "20261031T120154Z-reopened",
+      "source_manifest_sha256": "34f08c8c869c1962c02bce3c56288a6142baf9b463dab864fa84114990bd9d9a",
+      "stage": "correctness",
+      "status": "pass",
+      "wall_s": 5.15798816701863
+    },
+    {
+      "actual_head": "b7506e537e1bb5e118745caf135e3200d8623d3a",
+      "attempt": "attempt-0002",
+      "record_path": "analysis/dw_sampling/20261031T120154Z-reopened/correctness/attempt-0002/record.json",
+      "record_sha256": "2727dafefe51e3271849dfbb27577e9dcd7dc0962ea717707411860f16c55536",
+      "run": "20261031T120154Z-reopened",
+      "source_manifest_sha256": "87be9b8e71ac61874fce7b1b4da02ca3823e53888b154df67cbcd7e2043e8a08",
+      "stage": "correctness",
+      "status": "pass",
+      "wall_s": 11.841255166917108
+    },
+    {
+      "actual_head": "110be7739067eec0aaddef40e21763818691fea8",
+      "attempt": "attempt-0003",
+      "record_path": "analysis/dw_sampling/20261031T120154Z-reopened/correctness/attempt-0003/record.json",
+      "record_sha256": "d5ff34368da4cb62733c0f4e06ea7511a524ea48193defe376c965b733651c44",
+      "run": "20261031T120154Z-reopened",
+      "source_manifest_sha256": "81ee94054d86782b5867623a689cbdbbd06744c299af53bb1c5a30f931acb02f",
+      "stage": "correctness",
+      "status": "pass",
+      "wall_s": 13.951703166938387
+    },
+    {
+      "actual_head": "9ad9f80a116dca96e87c89311c72f898ffe02910",
+      "attempt": "attempt-0004",
+      "record_path": "analysis/dw_sampling/20261031T120154Z-reopened/correctness/attempt-0004/record.json",
+      "record_sha256": "13ece81c5cc6facb8a02c47b4e517a944f6df65f9f0bd9a4d7aaa9a22776cd91",
+      "run": "20261031T120154Z-reopened",
+      "source_manifest_sha256": "b60b523ba6d95ae0be12c59db2c8df728f838a4b997fa8652b05b60189671b13",
+      "stage": "correctness",
+      "status": "pass",
+      "wall_s": 15.550191374961287
+    },
+    {
+      "actual_head": "a20c929ac2c92f103f8d860c12786221b6ea44ef",
+      "attempt": "attempt-0005",
+      "record_path": "analysis/dw_sampling/20261031T120154Z-reopened/correctness/attempt-0005/record.json",
+      "record_sha256": "413eb36b40c0a92b253de9534abfc8c562ab36939628ec958923b238dd3b1d85",
+      "run": "20261031T120154Z-reopened",
+      "source_manifest_sha256": "6552a2630053b9a3ec47bcbe4e595d63e89da47721da8916763fcc59e3ccb146",
+      "stage": "correctness",
+      "status": "pass",
+      "wall_s": 20.09171187505126
+    },
+    {
+      "actual_head": "f7ce82fd228a41c594c7bab3bda4ea4c35bbb97f",
+      "attempt": "attempt-0006",
+      "record_path": "analysis/dw_sampling/20261031T120154Z-reopened/correctness/attempt-0006/record.json",
+      "record_sha256": "6ba1a566aad9976a7a7a86607a213c54847c52cfb3f53ee57a308c52d059d583",
+      "run": "20261031T120154Z-reopened",
+      "source_manifest_sha256": "a910b54c38508710fad96e6a4074dcc74432381e4a067ff9c65972587355fd48",
+      "stage": "correctness",
+      "status": "pass",
+      "wall_s": 16.268521582940593
+    },
+    {
+      "actual_head": "802e1f5b16ac915fcce5204aa96c3a64bacd6154",
+      "attempt": "attempt-0001",
+      "record_path": "analysis/dw_sampling/20261031T120154Z-reopened/cost/attempt-0001/record.json",
+      "record_sha256": "d52f2062995810f4541022d02ed21e8f33ad72257675f66f8bed773c34fa9b18",
+      "run": "20261031T120154Z-reopened",
+      "source_manifest_sha256": "eedf92ec06deb3789882cb13d4a49352b94ea1ad96342dc3cf0e87ef46767b2e",
+      "stage": "cost",
+      "status": "pass",
+      "wall_s": 4733.915391249931
+    },
+    {
+      "actual_head": "d7782862c025da6ee27dc9f7692b75fe926cb070",
+      "attempt": "attempt-0001",
+      "record_path": "analysis/dw_sampling/20261031T120154Z-reopened/feasibility/attempt-0001/record.json",
+      "record_sha256": "716ec10cfe1827b8e85f03deb5229484ff7c20b80d2c7178b1395c4b5acda506",
+      "run": "20261031T120154Z-reopened",
+      "source_manifest_sha256": "e02b46a5dfbc8900c6b0432d4bc2dab58abcb476ce3f31dffb34010e26fb2cfa",
+      "stage": "feasibility",
+      "status": "pass",
+      "wall_s": 1465.270360375056
+    },
+    {
+      "actual_head": "b7506e537e1bb5e118745caf135e3200d8623d3a",
+      "attempt": "attempt-0001",
+      "record_path": "analysis/dw_sampling/20261031T120154Z-reopened/pilot/attempt-0001/record.json",
+      "record_sha256": "5cf30c43d64f3cb52100537299d0aba909c70007635dd5b10fbf0635b84eeb00",
+      "run": "20261031T120154Z-reopened",
+      "source_manifest_sha256": "53619f691149cb4523b5ed2ee3429449dee47f140821d1b92d84af7034851652",
+      "stage": "pilot",
+      "status": "INCONCLUSIVE_MEASUREMENT",
+      "wall_s": 70.98984620801639
+    },
+    {
+      "actual_head": "110be7739067eec0aaddef40e21763818691fea8",
+      "attempt": "attempt-0002",
+      "record_path": "analysis/dw_sampling/20261031T120154Z-reopened/pilot/attempt-0002/record.json",
+      "record_sha256": "d01c854daf8eb7f7fbc8505b0879b40bc869bfc469a141fa727ae086757c4209",
+      "run": "20261031T120154Z-reopened",
+      "source_manifest_sha256": "9b6c136a8da76e19ddffef57874ad9063fa0e7231e5628754fa258be6ff586e8",
+      "stage": "pilot",
+      "status": "not_run",
+      "wall_s": 1014.1026140000904
+    },
+    {
+      "actual_head": "fafbcfeeef67c40c4da2a4d7d1de73f7dc104ce1",
+      "attempt": "attempt-0003",
+      "record_path": "analysis/dw_sampling/20261031T120154Z-reopened/pilot/attempt-0003/record.json",
+      "record_sha256": "5e2718ebcdaea047a92d58a3a6271f733ab49ba85c471c9fd0e18fa29093f8f7",
+      "run": "20261031T120154Z-reopened",
+      "source_manifest_sha256": "e70ed8da2e7e0738e507bf76e8d33609223aabbee0454d3b2e204179b5b7008b",
+      "stage": "pilot",
+      "status": "STOP_QUALITY",
+      "wall_s": 44.16540000005625
+    },
+    {
+      "actual_head": "43c2cec0b3d2fb2593966c1a497de92b810a36d7",
+      "attempt": "attempt-0004",
+      "record_path": "analysis/dw_sampling/20261031T120154Z-reopened/pilot/attempt-0004/record.json",
+      "record_sha256": "3e15fe5e4526ae001b5112a896b69d43669a2044aa60f4febc7c5ee05125f7bd",
+      "run": "20261031T120154Z-reopened",
+      "source_manifest_sha256": "dca2ab2acbf5a07ee4392001a93eb46a41bb305802a572f9a6c19c1c57201e11",
+      "stage": "pilot",
+      "status": "STOP_QUALITY",
+      "wall_s": 39871.41611858306
+    },
+    {
+      "actual_head": "40fd56fa71ec80bb0d28aa2e49ab8e5b2a13fef4",
+      "attempt": "attempt-0001",
+      "record_path": "analysis/dw_sampling/20261031T120154Z-reopened/prepare/attempt-0001/record.json",
+      "record_sha256": "7a099bfcf5127795e1e20db8095f3519e7cfa55deb9e4edfd95a930e831d3093",
+      "run": "20261031T120154Z-reopened",
+      "source_manifest_sha256": "e4c05264408a840435cb1fd3e49f4393a89574162edc56f0a58d28023cae00b4",
+      "stage": "prepare",
+      "status": "not_run",
+      "wall_s": 0.020038999966345727
+    },
+    {
+      "actual_head": "d7782862c025da6ee27dc9f7692b75fe926cb070",
+      "attempt": "attempt-0002",
+      "record_path": "analysis/dw_sampling/20261031T120154Z-reopened/prepare/attempt-0002/record.json",
+      "record_sha256": "15ce3e2a98ab2a4275cc6a251539b76c3ff274f51d2d5cf3166600438d2cf961",
+      "run": "20261031T120154Z-reopened",
+      "source_manifest_sha256": "84f8dfcd0a40e62c1ca7a9a4a100a2c547e99b9d5ff329a1f4a9fc9bb3e38240",
+      "stage": "prepare",
+      "status": "pass",
+      "wall_s": 31.68863925000187
+    },
+    {
+      "actual_head": "b7506e537e1bb5e118745caf135e3200d8623d3a",
+      "attempt": "attempt-0003",
+      "record_path": "analysis/dw_sampling/20261031T120154Z-reopened/prepare/attempt-0003/record.json",
+      "record_sha256": "1224a0aaee9f41a65c4b0eb48a941c972a5500f55c8ffd31b8f85625b13768ff",
+      "run": "20261031T120154Z-reopened",
+      "source_manifest_sha256": "6c36ab565c447200e8cf278f1b9851d577700f6de87212d8ef883ab8b217c3f6",
+      "stage": "prepare",
+      "status": "pass",
+      "wall_s": 51.96344029100146
+    },
+    {
+      "actual_head": "110be7739067eec0aaddef40e21763818691fea8",
+      "attempt": "attempt-0004",
+      "record_path": "analysis/dw_sampling/20261031T120154Z-reopened/prepare/attempt-0004/record.json",
+      "record_sha256": "6c204d9f92328ab9b70787966b986993fb8c3737ea6cbe350d8e857f923b44d3",
+      "run": "20261031T120154Z-reopened",
+      "source_manifest_sha256": "be3284f2b1e5f6203ec38dab7f8e033463e25d2d759bab3f3dbce65d3be167df",
+      "stage": "prepare",
+      "status": "pass",
+      "wall_s": 50.781585375079885
+    },
+    {
+      "actual_head": "9ad9f80a116dca96e87c89311c72f898ffe02910",
+      "attempt": "attempt-0005",
+      "record_path": "analysis/dw_sampling/20261031T120154Z-reopened/prepare/attempt-0005/record.json",
+      "record_sha256": "38e1bcb43a7e5a690e7a1ef0aad926f06395828950f40ea9ca039b1e12946e78",
+      "run": "20261031T120154Z-reopened",
+      "source_manifest_sha256": "cc7d75648558ecf424c2c27da3425ec74578630e6fe1f841b02c9e1552c10623",
+      "stage": "prepare",
+      "status": "pass",
+      "wall_s": 54.85199937503785
+    },
+    {
+      "actual_head": "a20c929ac2c92f103f8d860c12786221b6ea44ef",
+      "attempt": "attempt-0006",
+      "record_path": "analysis/dw_sampling/20261031T120154Z-reopened/prepare/attempt-0006/record.json",
+      "record_sha256": "7c2e15bebcc324ef653e522f44c9fe87e3760fd523c6bf5f68afe839244777a4",
+      "run": "20261031T120154Z-reopened",
+      "source_manifest_sha256": "5b370ce0110b14e4606ed931a9886eb960f19b37f644ddbe0888542aaafcf6b2",
+      "stage": "prepare",
+      "status": "pass",
+      "wall_s": 62.05798487493303
+    },
+    {
+      "actual_head": "f7ce82fd228a41c594c7bab3bda4ea4c35bbb97f",
+      "attempt": "attempt-0007",
+      "record_path": "analysis/dw_sampling/20261031T120154Z-reopened/prepare/attempt-0007/record.json",
+      "record_sha256": "57343a2342a6e8384a1483dcf69117ecd0b031964904ab6cc8d12bf1ede3f8a1",
+      "run": "20261031T120154Z-reopened",
+      "source_manifest_sha256": "8e0907b4d162bd2e3aabbd9547c687e259a4c520d1233345256e325964740ae2",
+      "stage": "prepare",
+      "status": "pass",
+      "wall_s": 54.808510125032626
+    },
+    {
+      "actual_head": "f7ce82fd228a41c594c7bab3bda4ea4c35bbb97f",
+      "attempt": "attempt-0001",
+      "record_path": "analysis/dw_sampling/20261031T120154Z-reopened/summarize/attempt-0001/record.json",
+      "record_sha256": "76bb978b2c1ecb322b200ef88b594ad8929cb4bbc0ee3c649d9bb8b11ad1738b",
+      "run": "20261031T120154Z-reopened",
+      "source_manifest_sha256": "c19a003749c83f006e86cdab44f58f35f2f44983c5dc7fde23eb596b2c5d0057",
+      "stage": "summarize",
+      "status": "pass",
+      "wall_s": 1.1681370829464868
+    }
+  ],
+  "schema_version": 1,
+  "subtotals_s": {
+    "20261031T105213Z": 83.5866690838011,
+    "20261031T120154Z-reopened": 47590.06143712404
+  },
+  "total_known_outer_s": 47673.64810620784
+}

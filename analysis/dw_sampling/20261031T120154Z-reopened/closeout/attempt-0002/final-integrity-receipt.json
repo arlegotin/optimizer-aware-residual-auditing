@@ -1,0 +1,16 @@
+{
+  "all_three_final_report_reviews_approved": true,
+  "current_source_bindings_validated": 359,
+  "historical_files_unchanged": 184,
+  "manifest_path": "analysis/dw_sampling/20261031T120154Z-reopened/final_evidence_manifest-v1.json",
+  "manifest_sha256": "297f719b99b758744e3936610d95d059e8d8ec17e87b881c3ce9980bfe55ea26",
+  "no_tests_repeated_for_report_only_changes": true,
+  "public_files_hashed": 1385,
+  "report_sha256": "f73627316aa6d60e12e0e00cccb2c78ebee0311f6b24603a51b03533815ab690",
+  "schema_version": 1,
+  "source_matches_qualified_checks": true,
+  "source_or_test_changes_since_checks": false,
+  "status": "pass",
+  "utc": "2026-11-01T07:07:50.331323+00:00",
+  "wall_s": 0.9203627499518916
+}

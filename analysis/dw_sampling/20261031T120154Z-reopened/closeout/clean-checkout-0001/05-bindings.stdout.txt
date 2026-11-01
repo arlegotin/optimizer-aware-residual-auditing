@@ -1,0 +1,34 @@
+{
+  "status": "pass",
+  "head": "6d85a26dafe3e3351979577d09ea90d6949d05cc",
+  "source_head": "5361bb59aedccf12af66314f15391c5af60ad595",
+  "reviewed_head": "9d8ad069c51b4d0e6c13e9c6e465579e9b44a339",
+  "full_history": true,
+  "no_hardlinks": true,
+  "git_status": "",
+  "historical_files_count": 184,
+  "bound_files_count": 359,
+  "sealed_public_artifact_count": 329,
+  "sealed_record_sha256": "3e15fe5e4526ae001b5112a896b69d43669a2044aa60f4febc7c5ee05125f7bd",
+  "report_sha256": {
+    "scientific_report-draft-v1.md": "9b83aaaabd3a80f118dcb187f0e9bcba9dd93a1bf1e768660859f4b76c8716c4",
+    "prospective/version10-recovery-review.md": "c8b14c717912868e7ba723299650ab452bc8a4f34bfc57df082ef0c2d138e419",
+    "prospective/version10-math-sealed-outcome-review.md": "d12921b3cf0fb555ea5a4a07860057e52ddf62e382fe19a59e9db298747ab69e",
+    "closeout/attempt-0001/reproduce-recorded-grid.py": "242d9b92a57fba57bb3ccacb67fcaa3b24bfbe46d593ac8156d28a2473d5fd78"
+  },
+  "shared_environment": {
+    "python_executable": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python",
+    "python_version": "3.13.5",
+    "dependency_versions": {
+      "torch": "2.15.0",
+      "numpy": "2.5.4",
+      "PyYAML": "6.0.3",
+      "psutil": "7.2.2",
+      "pytest": "9.2.0",
+      "pyarrow": "26.0.0"
+    },
+    "package_origin": "/private/tmp/dw-sampling-final-review-5fvh08cu/checkout/src/oar/__init__.py"
+  },
+  "clone_has_private_data_cache": false,
+  "training_repeated": false
+}

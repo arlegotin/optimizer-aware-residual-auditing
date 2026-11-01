@@ -1,0 +1,29 @@
+{
+  "status": "pass",
+  "reviewed_head": "6d85a26dafe3e3351979577d09ea90d6949d05cc",
+  "clone_git_status": "",
+  "source_hashes_unchanged": true,
+  "body_cache_created": false,
+  "tests": {
+    "passed": 842,
+    "failed": 0,
+    "deselected": 16,
+    "pytest_seconds": 24.54
+  },
+  "scientific_state": "STOP_QUALITY",
+  "all_scientific_json_fields_identical": true,
+  "analysis_wall_s_before_publication": {
+    "replayed": 0.9585672079119831,
+    "original": 0.9080604159971699
+  },
+  "csv_sha256": {
+    "all-grid-outcomes.csv": "95fa3f1cd732b945d0543a0407bab02d5463a27220c3c0b1c4672e621a1181b9",
+    "development-monitor-curves.csv": "70b487f8d2f4fc5e66f7d97b224a99def38f473caf24af6b99506cd180fad80f"
+  },
+  "report_sha256": "35bf0d33bc645d0f530ead266539e8fc36b7a7ad486c78a1729c4c44e6b21b67",
+  "report_path": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.superpowers/dw_sampling_reopening/clean-checkout-final-review.md",
+  "replay_receipt_sha256": "752bcd91a78a31673d133a6d30dedcc30ec0b6bcdbc0d16fc900978c70b87843",
+  "dry_run_sentinel_sha256": "5a2c2df5c16941d227d3cc230028a3afa553fbc83c7dabc716dd7646d1542152",
+  "reviewer_wrapper_failure_retained": true,
+  "final_report_diff_check_pending": true
+}

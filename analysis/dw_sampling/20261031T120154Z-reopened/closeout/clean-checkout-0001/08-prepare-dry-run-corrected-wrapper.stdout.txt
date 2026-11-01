@@ -1,0 +1,39 @@
+{"stage": "prepare", "status": "not_run", "attempt": "/private/tmp/dw-sampling-final-review-5fvh08cu/prepare-only-2/prepare/attempt-0001", "reason": "prepare-only dry run: validated immutable config/source/history; no device work/tests/training/downloads"}
+{
+  "subprocesses": [
+    [
+      "git",
+      "cat-file",
+      "-e",
+      "9d8ad069c51b4d0e6c13e9c6e465579e9b44a339^{commit}"
+    ],
+    [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    [
+      "git",
+      "status",
+      "--porcelain"
+    ]
+  ],
+  "violations": [],
+  "status": "pass",
+  "driver_argv": [
+    "analysis/run_dw_sampling.py",
+    "--stage",
+    "prepare",
+    "--config",
+    "configs/dw_sampling.yaml",
+    "--out",
+    "/private/tmp/dw-sampling-final-review-5fvh08cu/prepare-only-2",
+    "--dry-run"
+  ],
+  "exit_code": 0,
+  "torch_imported": false,
+  "corpus_or_checkpoint_opened": false,
+  "network_accessed": false,
+  "original_source_or_cache_used": false,
+  "training_launched": false
+}

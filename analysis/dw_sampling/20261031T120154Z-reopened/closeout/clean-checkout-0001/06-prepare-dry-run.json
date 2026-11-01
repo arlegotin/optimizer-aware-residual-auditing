@@ -1,0 +1,27 @@
+{
+  "command": [
+    "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python",
+    "/private/tmp/dw-sampling-final-review-5fvh08cu/guard-dry-run.py",
+    "--stage",
+    "prepare",
+    "--config",
+    "configs/dw_sampling.yaml",
+    "--out",
+    "/private/tmp/dw-sampling-final-review-5fvh08cu/prepare-only",
+    "--dry-run"
+  ],
+  "shell_command": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python /private/tmp/dw-sampling-final-review-5fvh08cu/guard-dry-run.py --stage prepare --config configs/dw_sampling.yaml --out /private/tmp/dw-sampling-final-review-5fvh08cu/prepare-only --dry-run",
+  "cwd": "/private/tmp/dw-sampling-final-review-5fvh08cu/checkout",
+  "environment_overrides": {
+    "PYTHONPATH": "src",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "HF_HUB_OFFLINE": "1",
+    "HF_DATASETS_OFFLINE": "1",
+    "TRANSFORMERS_OFFLINE": "1",
+    "HF_HOME": "/private/tmp/dw-sampling-final-review-5fvh08cu/empty-hf-cache",
+    "XDG_CACHE_HOME": "/private/tmp/dw-sampling-final-review-5fvh08cu/empty-xdg-cache"
+  },
+  "started_at_utc": "2026-11-01T06:53:15.677198+00:00",
+  "wall_seconds": 0.25296054198406637,
+  "exit_code": 1
+}

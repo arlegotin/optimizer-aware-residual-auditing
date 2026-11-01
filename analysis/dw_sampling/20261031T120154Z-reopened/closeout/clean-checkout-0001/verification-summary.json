@@ -1,0 +1,29 @@
+{
+  "all_scientific_json_fields_identical": true,
+  "analysis_wall_s_before_publication": {
+    "original": 0.9080604159971699,
+    "replayed": 0.9585672079119831
+  },
+  "body_cache_created": false,
+  "clone_git_status": "",
+  "csv_sha256": {
+    "all-grid-outcomes.csv": "95fa3f1cd732b945d0543a0407bab02d5463a27220c3c0b1c4672e621a1181b9",
+    "development-monitor-curves.csv": "70b487f8d2f4fc5e66f7d97b224a99def38f473caf24af6b99506cd180fad80f"
+  },
+  "dry_run_sentinel_sha256": "5a2c2df5c16941d227d3cc230028a3afa553fbc83c7dabc716dd7646d1542152",
+  "final_report_diff_check_pending": true,
+  "replay_receipt_sha256": "752bcd91a78a31673d133a6d30dedcc30ec0b6bcdbc0d16fc900978c70b87843",
+  "report_path": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.superpowers/dw_sampling_reopening/clean-checkout-final-review.md",
+  "report_sha256": "35bf0d33bc645d0f530ead266539e8fc36b7a7ad486c78a1729c4c44e6b21b67",
+  "reviewed_head": "6d85a26dafe3e3351979577d09ea90d6949d05cc",
+  "reviewer_wrapper_failure_retained": true,
+  "scientific_state": "STOP_QUALITY",
+  "source_hashes_unchanged": true,
+  "status": "pass",
+  "tests": {
+    "deselected": 16,
+    "failed": 0,
+    "passed": 842,
+    "pytest_seconds": 24.54
+  }
+}

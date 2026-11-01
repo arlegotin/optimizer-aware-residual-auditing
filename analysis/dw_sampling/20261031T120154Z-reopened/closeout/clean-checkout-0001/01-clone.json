@@ -1,0 +1,23 @@
+{
+  "command": [
+    "git",
+    "clone",
+    "--no-hardlinks",
+    "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing",
+    "/private/tmp/dw-sampling-final-review-5fvh08cu/checkout"
+  ],
+  "shell_command": "git clone --no-hardlinks /Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing /private/tmp/dw-sampling-final-review-5fvh08cu/checkout",
+  "cwd": "/private/tmp/dw-sampling-final-review-5fvh08cu",
+  "environment_overrides": {
+    "PYTHONPATH": "src",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "HF_HUB_OFFLINE": "1",
+    "HF_DATASETS_OFFLINE": "1",
+    "TRANSFORMERS_OFFLINE": "1",
+    "HF_HOME": "/private/tmp/dw-sampling-final-review-5fvh08cu/empty-hf-cache",
+    "XDG_CACHE_HOME": "/private/tmp/dw-sampling-final-review-5fvh08cu/empty-xdg-cache"
+  },
+  "started_at_utc": "2026-11-01T06:51:47.345223+00:00",
+  "wall_seconds": 1.3851301670074463,
+  "exit_code": 0
+}

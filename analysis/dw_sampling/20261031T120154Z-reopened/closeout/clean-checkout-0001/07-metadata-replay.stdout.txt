@@ -1,0 +1,25 @@
+{
+  "status": "STOP_QUALITY",
+  "trials": 27,
+  "q_star": 1.3082633545763616,
+  "endpoint_quality_limit": 1.241502616051292,
+  "families": {
+    "dense": {
+      "trials": 12,
+      "best_nll": 1.231552285198124,
+      "censored": 7
+    },
+    "importance": {
+      "trials": 6,
+      "best_nll": 1.344515038433276,
+      "censored": 6
+    },
+    "uniform": {
+      "trials": 9,
+      "best_nll": 1.3195705678332976,
+      "censored": 9
+    }
+  },
+  "analysis_wall_s": 0.9636037079617381
+}
+{"replay_status": "pass", "out": "/private/tmp/dw-sampling-final-review-5fvh08cu/metadata-replay", "training_repeated": false}

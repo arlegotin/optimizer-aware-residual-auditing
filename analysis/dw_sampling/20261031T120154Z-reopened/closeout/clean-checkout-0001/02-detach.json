@@ -1,0 +1,22 @@
+{
+  "command": [
+    "git",
+    "checkout",
+    "--detach",
+    "6d85a26dafe3e3351979577d09ea90d6949d05cc"
+  ],
+  "shell_command": "git checkout --detach 6d85a26dafe3e3351979577d09ea90d6949d05cc",
+  "cwd": "/private/tmp/dw-sampling-final-review-5fvh08cu/checkout",
+  "environment_overrides": {
+    "PYTHONPATH": "src",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "HF_HUB_OFFLINE": "1",
+    "HF_DATASETS_OFFLINE": "1",
+    "TRANSFORMERS_OFFLINE": "1",
+    "HF_HOME": "/private/tmp/dw-sampling-final-review-5fvh08cu/empty-hf-cache",
+    "XDG_CACHE_HOME": "/private/tmp/dw-sampling-final-review-5fvh08cu/empty-xdg-cache"
+  },
+  "started_at_utc": "2026-11-01T06:51:53.821253+00:00",
+  "wall_seconds": 0.5613488749368116,
+  "exit_code": 0
+}

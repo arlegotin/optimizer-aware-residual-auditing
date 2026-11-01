@@ -1,0 +1,20 @@
+usage: run_dw_sampling.py [-h]
+                          --stage {prepare,feasibility,correctness,cost,pilot,confirm,summarize}
+                          --config CONFIG --out OUT [--dry-run]
+                          [--learning-resume LEARNING_RESUME]
+
+Append-only dW sampling and gated full-model qualification. Language
+qualification requires the frozen native cost and asset prerequisites. The
+Stage E pilot is manifest-gated; protected confirmation is a separate freeze.
+Importing starts no work, and no historical oracle is invoked.
+
+options:
+  -h, --help            show this help message and exit
+  --stage {prepare,feasibility,correctness,cost,pilot,confirm,summarize}
+  --config CONFIG
+  --out OUT
+  --dry-run             prepare inventory only; no tests, training, bodies or
+                        device operations
+  --learning-resume LEARNING_RESUME
+                        explicit trial-ID to retained checkpoint path/SHA
+                        selections; no automatic retries

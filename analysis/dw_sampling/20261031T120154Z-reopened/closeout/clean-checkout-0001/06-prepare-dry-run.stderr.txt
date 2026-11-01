@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/private/tmp/dw-sampling-final-review-5fvh08cu/guard-dry-run.py", line 36, in <module>
+    with (Path(state['public'])/'dry-run-sentinel.json').open('x') as f:json.dump(observed,f,indent=2);f.write('\n')
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/dw-sampling-final-review-5fvh08cu/guard-dry-run.py", line 21, in audit
+    if p.is_relative_to(original) and not p.is_relative_to(original/'.venv'):deny('original source/cache fallback: '+str(p))
+                                                                             ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/dw-sampling-final-review-5fvh08cu/guard-dry-run.py", line 11, in deny
+    raise RuntimeError(message)
+RuntimeError: original source/cache fallback: /Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/analysis/dw_sampling/20261031T120154Z-reopened/closeout/clean-checkout-0001/dry-run-sentinel.json
