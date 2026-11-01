@@ -1,0 +1,21 @@
+{
+  "amendment_sha256": "07952e03a6483eca2e6c3c5f386a06c3eabe0d129a99e2cc6c152c26a1271883",
+  "command": [
+    "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q"
+  ],
+  "cwd": "/private/tmp/oar-release-v0.2.0-20261101",
+  "env_overrides": {
+    "PYTHONPATH": "src",
+    "PYTORCH_ENABLE_MPS_FALLBACK": "0",
+    "PYTORCH_MPS_FAST_MATH": "0",
+    "PYTORCH_MPS_PREFER_METAL": "0"
+  },
+  "exit_code": 0,
+  "source_head": "771712828d593756558910c16491f07128c17ac7",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_sha256": "6c0daf4d3b3da2f9724095ba69a23994f45d99bfb754efd6155aa0d7a0a2ee5d",
+  "wall_s": 24.64145900006406
+}
