@@ -645,7 +645,7 @@ def prepare(cfg, config, out, attempt):
                'thermal': 'unavailable unless exposed by host; no fabricated temperature', 'start_utc': utc(),
                'pin_differences': differences, 'clock': vars(time.get_clock_info('perf_counter'))})
     for args in ([sys.executable, '-m', 'pytest', '-q', '-m', 'not mps'],
-                 [sys.executable, '-m', 'oar.cli', 'report', '--gates', 'decisions/gates.jsonl', '--run-index', 'analysis/evidence_index.json', '--out', str(attempt/'historical-report-check.md')]):
+                 [sys.executable, '-m', 'oar.cli', 'report', '--gates', 'decisions/gates.jsonl', '--run-index', 'analysis/releases/v0.2.0/legacy_evidence_index.json', '--out', str(attempt/'historical-report-check.md')]):
         code, _, _ = command(attempt, args, env=env, timeout=remaining_timeout(deadline))
         check_command_deadline(code, deadline)
         if code:

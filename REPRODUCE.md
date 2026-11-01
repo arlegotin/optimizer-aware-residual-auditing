@@ -1,77 +1,127 @@
-# Reproducing optimizer-aware residual auditing
+# Reproduce and inspect OAR
 
-A stopped exploratory research implementation on an Apple M3 Max, native arm64 CPython 3.13 and PyTorch MPS. **No training speedup was established.** Candidate weight-gradient reconstruction was faster at some isolated residual-block shapes; complete audited attempts were slower even at conditional zero rejection. The bounded synthetic oracle found no accepting past-only exact-margin region in its declared tau grid. It retains descriptive information, not a competitive training result.
+Version0.2.0 includes two completed research paths: the original low-rank OAR
+audit and fixed-budget weight-gradient sampling. Neither established a training
+speedup. The [sampling report](analysis/dw_sampling/20261031T120154Z-reopened/final_report-v3.md)
+records all27 development configurations; the [original findings](analysis/report.md)
+retain the earlier audited-block and synthetic results.
 
-Read the [findings and execution outcome](analysis/report.md), [original blueprint](docs/blueprint.md), [complete synthetic-oracle report](decisions/reports/structural_oracle.md), [rulings](decisions/rulings.md), [pre-final review snapshot](decisions/review_summary.md) and [final review and rulings addendum](decisions/reports/final_review.md). WP02 stops normal online work; ordinary WP03 remains unfulfilled and WP04 inconclusive. Tasks 1–6, the narrow Task 11 amendment, and Task 17 synthesis were reached. NumericalPolicy remains unresolved. No corpus, full trainer/controller, protected evaluation or confirmatory result exists.
+Use a **full Git clone** or the release Git bundle. Historical validation reads
+exact committed blobs; a source ZIP alone lacks the required Git objects.
+No command below trains a model or downloads a corpus.
 
-## Source and history
+## Check the published language-study results
 
-Use a full Git clone or the release Git bundle. Historical artifact verification reads exact committed blobs with `git show`; a source ZIP alone lacks those Git objects. Report regeneration needs no corpus, pretrained weights or local tensor checkpoints. See [release notes](docs/releases/v0.1.0.md) for the publication scope.
+With Python3.13, no third-party packages or accelerator needed:
 
-## Local environment
+```sh
+python3.13 analysis/verify_dw_sampling.py --out /tmp/oar-public-replay
+```
 
-The measured environment is pinned in [requirements.lock.txt](requirements.lock.txt), [environment discovery](manifests/environment.json) and [wheel hashes](manifests/wheels.sha256). Use a native arm64 CPython 3.13 interpreter with its compatible macOS wheels; these pins describe the measured runtime, not a portability promise. From the repository root:
+Use a new output directory each time. The check verifies the sealed public
+artifacts, replays all27 outcomes/monitor curves, and compares every scientific
+JSON field and both CSV byte hashes. Only the separately recorded analysis wall
+time may differ. It reproduces the analysis, not the original training runs.
+
+The frozen cutoff was H=1461.458501s, with a29.399480s endpoint reserve. Native
+B8/LR0.0003 reached the monitor target in907.104540s. Every sampled arm was
+censored and failed the endpoint guard. A censored time is not H, infinity or a
+measured speed ratio. Independent development, protected confirmation, official
+validation loss and official-test bodies/losses were not reached.
+
+## Install and run tests
+
+The recorded stack is native arm64 CPython3.13.5 on macOS, Torch2.15.0 and
+NumPy2.5.4. Existing dependency pins and hashes remain unchanged. On that stack:
 
 ```sh
 python3.13 -m venv .venv
 .venv/bin/python -m pip install --require-hashes -r requirements.lock.txt
 .venv/bin/python -m pip install --no-deps --no-build-isolation -e .
-PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python -m oar.cli doctor --config configs/discovery.yaml --out /tmp/oar-environment.json
 ```
 
-`doctor` is a capability/provenance query. A sandbox may hide MPS: run hardware checks with actual device access. CPU checks and sandbox skips do not establish MPS eligibility. Disable silent fallback before importing Torch.
-
-## Supported commands and verification
+The sampling data tests also use the permitted PyArrow26.0.0 reader. Its measured
+macOS CPython3.13 wheel has SHA256
+`a6ca849f90cf73fe361f08a5762c783ead9671e4548c1f558cc637b54c9103f2`.
+[Installed files, wheel inventory and dependency hashes](analysis/dw_sampling/20261031T120154Z-reopened/prepare/attempt-0007/dependencies.json)
+record that addition. Install a compatible reader for another platform rather
+than forcing macOS wheels. Corpus loaders/tokenizers are not dependencies.
 
 ```sh
-.venv/bin/python -m oar.cli --help
-.venv/bin/python -m pytest -q -m 'not mps'
-PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python -m pytest -q -m mps
-PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python -m pytest -q
-.venv/bin/python -m oar.cli report --gates decisions/gates.jsonl --run-index analysis/evidence_index.json --out analysis/report.md
+PYTHONPATH=src .venv/bin/python -m pytest -q -m 'not mps'
+PYTORCH_ENABLE_MPS_FALLBACK=0 PYTORCH_MPS_FAST_MATH=0 PYTORCH_MPS_PREFER_METAL=0 PYTHONPATH=src .venv/bin/python -m pytest -q -m mps
+PYTORCH_ENABLE_MPS_FALLBACK=0 PYTORCH_MPS_FAST_MATH=0 PYTORCH_MPS_PREFER_METAL=0 PYTHONPATH=src .venv/bin/python -m pytest -q
 ```
 
-The MPS commands require real hardware access. Run hardware work sequentially with no overlapping benchmarks, collectors or tests. Hardware skips are explicit missing evidence. The report also accepts an early stop without an index:
+On the recorded host, the checked implementation passed858 tests including16MPS;
+an independent source checkout passed842 CPU tests/16deselected. The source and
+exact command outputs are retained in the [final evidence manifest](analysis/dw_sampling/20261031T120154Z-reopened/final_evidence_manifest-v1.json).
+Release packaging checks have separate [v0.2.0 records](docs/releases/v0.2.0.md).
+CPU checks and MPS skips are not accelerator performance evidence. A sandbox can
+hide MPS; verify real device access. Run actual hardware work sequentially, with
+fallback and fast math disabled before Torch imports. Thermal values that the
+host did not expose remain unavailable.
+
+## Reuse an operator
+
+The sampled operator has its own state and API; it does not retrofit the older
+projected-linear interface:
+
+```python
+import torch
+from oar.sampled_linear import SamplingState, sampled_linear
+
+x = torch.randn(32, 8, requires_grad=True)
+w = torch.randn(16, 8, requires_grad=True)
+state = SamplingState(61001, "example.ffn_in", "importance", 0.25)
+y = sampled_linear(x, w, None, state)
+y.square().mean().backward()
+```
+
+Forward and raw input/bias gradients are exact at the same current parameters;
+only dW is sampled. Native clipping and AdamW then act on that estimate. Sampling
+is with replacement; duplicate rows and inverse-probability weights matter.
+FP32 is the model path; CPU FP64 is a reference/probability path. Unsupported
+AMP/higher-order/shared-sampled-weight use fails explicitly. This is not an
+activation-memory optimization or certified finite-step descent mechanism.
+See [operator tests](tests/test_sampled_linear.py) and [model/protocol tests](tests/test_dw_sampling_protocol.py).
+
+## Regenerate the original OAR report
+
+The original scientific index remains unchanged. This release's copy explicitly
+resolves edited publication documents through their actual historical Git bytes:
 
 ```sh
-.venv/bin/python -m oar.cli report --gates decisions/gates.jsonl --out /tmp/oar-gates-only.md
+PYTHONPATH=src .venv/bin/python -m oar.cli report --gates decisions/gates.jsonl --run-index analysis/releases/v0.2.0/legacy_evidence_index.json --out /tmp/oar-original-report.md
 ```
 
-The gates-only report supplies gate reasons and marks measurements unavailable. The indexed report verifies the frozen scientific gate prefix and all current/historical artifact hashes before rendering; later WP09 synthesis records are excluded from that prefix to avoid self-hashing. New scientific gate records require a deliberately updated index. Schema 1 is an annotated stopped-study index; confirmation claims are classified unresolved. See [schema and generation instructions](decisions/reports/synthesis_schema.md).
+Use a fresh report path. No old observation, gate, raw report or scientific index
+is overwritten. The [v0.1.0 reproduction guide](https://github.com/arlegotin/optimizer-aware-residual-auditing/blob/v0.1.0/REPRODUCE.md)
+retains the original synthetic-repeat commands and permissions. Same-seed numeric
+agreement is not independent training confirmation. Normal online OAR remains
+stopped; NumericalPolicy remains unresolved.
 
-For explicit operator-cost regeneration only, the supported benchmark commands are:
+## Training replay and data boundaries
 
-```sh
-PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python -m oar.cli bench --config configs/operator.yaml
-PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python -m oar.cli bench --config configs/operator_wide.yaml
-.venv/bin/python analysis/summarize_headroom.py
-```
+The released study is closed at STOP_QUALITY. Current code checks and public
+metadata replay do not authorize another learning grid or protected evaluation.
+The [prospective sampling scope](decisions/dw_sampling_scope.md),
+[reopening history](decisions/dw_sampling_reopening.md) and
+[publication authority](decisions/releases/v0.2.0-publication.md) keep those
+permissions separate.
 
-These overwrite the named timing artifacts. Preserve original bytes and source attribution before regeneration and update evidence bindings before using new measurements. Task 17 did not repeat this benchmark because no measured kernel or cost implementation changed. The [analysis instructions](analysis/README.md) list component collectors, complete accounting boundaries, timing exclusions, failed/superseded trials and provenance.
+Training used pinned WikiText revisionb08601e04326c79dfdd32d625aee71d232d685c3
+under a new [local-only permission decision](analysis/dw_sampling/20261031T120154Z-reopened/prospective/asset_local_use_decision.json).
+The original card's license-version discrepancy is preserved, not erased.
+Corpus bodies, processed token tensors and checkpoints are not distributed.
+Official validation was prepared but no protected loss was observed; test bodies
+remain unopened. All reported learning losses are development byte/EOS NLL,
+not standard word perplexity.
 
-## Small bounded research reproduction
-
-The guarded public research command is:
-
-```sh
-PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python -m oar.cli audit-checkpoints --config configs/structural_oracle.yaml
-.venv/bin/python analysis/summarize_structural_oracle.py
-```
-
-It regenerates the original artifact paths and roughly 485 MB of ignored local tensor checkpoints. It requires the latest exact hash-bound synthetic amendment, passed component gates, and the actual WP02 stop. This permission never authorizes normal WP03/WP04, online acceptance, data ingestion or a general training command. Source archives do not redistribute corpus bodies or pretrained weights; neither is needed here.
-
-To preserve original results, use a fresh directory for an independent full same-seed repeat:
-
-```sh
-.venv/bin/python analysis/reproduce_structural_oracle.py --prepare analysis/reproduction/local-repeat
-# Review and commit the generated plan.json, config.yaml and amendment.json before execution.
-PYTORCH_ENABLE_MPS_FALLBACK=0 .venv/bin/python analysis/reproduce_structural_oracle.py --run analysis/reproduction/local-repeat/plan.json
-```
-
-Preparation refuses existing output/checkpoint paths and preserves every scientific config field. The plan predeclares 28 numeric fields, 23 categorical fields, exact sign/acceptance decisions and 30 curve observations, with absolute tolerance 2e-6 / relative tolerance 2e-4. Execution validates reference/source/config hashes, temporarily appends only the declared output-path amendment, invokes the ordinary guarded fresh-MPS command, and restores the preceding amendment by append. Preserve the resulting amendment ledger. A changed code hash requires a new preparation; do not loosen tolerances after outcomes. Interrupted execution may leave the temporary amendment latest: inspect retained artifacts and explicitly restore the preceding permission before another command.
-
-The committed [Task 17 plan](analysis/reproduction/wp09/plan.json), [initial failed comparison](analysis/reproduction/wp09/comparison.json) and [recovered comparison](analysis/reproduction/wp09/comparison_recovered.json) and separate raw outputs preserve the actual local reproduction. Same-seed agreement is numerical reproducibility, not independent replication or confirmation. Times and endpoint resources are accounting observations, not a benchmark replication. All failed comparisons remain failures; large tensors remain local and ignored.
-
-The first comparison helper failed after the row checks because the curve schema names the logical step `committed_updates`. The separately retained recovery maps that field without changing observations or tolerances, using `.venv/bin/python analysis/reproduce_structural_oracle.py --recover-comparison analysis/reproduction/wp09/plan.json`. That command preserves an existing recovered result by refusing to overwrite it. A 1.27s report-only CPU test may have overlapped the original repeat; those wall times support resource accounting only.
-
-Final review maintenance at `7628be7` rejects unsupported internally overlapping parameter layouts before publication/commit, shares one oracle deadline through native histories and completion, and shares normal/recovery checkpoint identity validation. Its component verification is separate from the original research and timing sources. No benchmark or research study was repeated; existing timings do not measure these later validation changes. The [final addendum](decisions/reports/final_review.md) retains the complete review, disposition and subsequent rulings; the scoped independent re-review was accepted on 2026-10-31 and its durable acceptance was committed at `f001b2b`. The hash-bound review/outcome files retain their earlier snapshot status.
+Historical qualification/cache/checkpoint receipts contain original absolute
+paths. Future training elsewhere needs declared, byte-verified private-asset
+hydration and a new prospective source/config/asset/path/resource freeze. Do not
+silently rewrite sealed receipts or rely on an original cache. Source/config or
+numerical/timing changes invalidate affected downstream evidence; unchanged old
+measurements keep their original source identity. The current sampled-learning
+manifest is archival and does not authorize changed-source training.

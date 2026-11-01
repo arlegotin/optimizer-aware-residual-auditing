@@ -1,0 +1,51 @@
+{
+  "authorization": "decisions/releases/v0.2.0-publication.md",
+  "frozen_sampling_artifacts_unchanged": 1385,
+  "legacy_evidence_and_audit_summaries_unchanged": true,
+  "new_experiments_run": false,
+  "pre_publication_commit": "4487588c0ea6ba02767ee0333148735057ed751f",
+  "protected_data_accessed": false,
+  "schema_version": 1,
+  "source_changes": [
+    {
+      "after_sha256": "2e46994fb3d1e083771f98855d26e4fd07c402afba0b2318656c3f9268c1d290",
+      "before_sha256": "981aaa19db4a093bd3d607039281eadcf0fa84e09c57727299abd4a5ccc43544",
+      "change": "publication metadata/docs",
+      "path": "README.md"
+    },
+    {
+      "after_sha256": "3aabaabca0268966c83ac2ae17558a4743c2da37014ebf6aa033a821b997d46f",
+      "before_sha256": "50b85511a02c17f184fda76c163e48beffc6360735ca5f18880620654178ef3c",
+      "change": "publication metadata/docs",
+      "path": "CITATION.cff"
+    },
+    {
+      "after_sha256": "b8e2faa73d600dfde93fb8f7f2c0f8e160f4d759443910bedfe48f97f9f29e30",
+      "before_sha256": "5b159cad2c5b93e4c768d73120edffe4ac327ad3b2ddb22667f299aba32c9ba8",
+      "change": "publication metadata/docs",
+      "path": "REPRODUCE.md"
+    },
+    {
+      "after_sha256": "8ab8a1d3f4b821daae22d2db99abd3b9f749fe2da87044f26f60bb1798e1bc66",
+      "before_sha256": "560068932adb815b2712287d7de8008c463eebfe1b6e21e35e26d8f1f983ed64",
+      "change": "publication metadata/docs",
+      "path": "THIRD_PARTY_NOTICES.md"
+    },
+    {
+      "after_sha256": "a2703b2000ddbdf598a9a1f011cd07b88ea003b0bfdd28f9ca40023b8453bcac",
+      "before_sha256": "abf0b04cf2cc7a304199f939829b70d875842f9e0441dc8c55a3b9a52136b3e8",
+      "change": "publication metadata/docs",
+      "path": "pyproject.toml"
+    },
+    {
+      "after_sha256": "b33f7eed8e88712eb7a6ed50b316f9ed6f34da360112083c3459848d3b44c574",
+      "before_sha256": "543123cfdb5068fa875b0ba7a0fff74fd07f6c7af9b949a78edeef559696015a",
+      "change": "historical renderer index argument only",
+      "path": "analysis/run_dw_sampling.py"
+    }
+  ],
+  "standard_license_texts_unchanged": true,
+  "utc": "2026-11-01T09:17:29.606286+00:00",
+  "version": "0.2.0",
+  "write_like_me_revision": "b7a28e64fed749406a2fd8406d5ebd3eedd584c0"
+}

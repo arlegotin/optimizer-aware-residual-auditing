@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "oar"
-version = "0.1.0"
-description = "Optimizer-aware residual auditing research and reproducible component evidence"
+version = "0.2.0"
+description = "Research on projected and sampled weight gradients with exact input adjoints"
 readme = "README.md"
 authors = [{name = "Artem Legotin"}]
 license = "AGPL-3.0-only AND CC-BY-4.0"

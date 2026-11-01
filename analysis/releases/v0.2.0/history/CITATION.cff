@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use this software or its reported results, please cite this repository and record the commit used."
+type: software
+title: "Optimizer-aware residual auditing"
+authors:
+  - family-names: Legotin
+    given-names: Artem
+version: 0.1.0
+date-released: "2026-10-31"
+repository-code: "https://github.com/arlegotin/optimizer-aware-residual-auditing"
+url: "https://github.com/arlegotin/optimizer-aware-residual-auditing"
+license:
+  - AGPL-3.0-only
+  - CC-BY-4.0
+abstract: >-
+  Research software for projected weight gradients with exact incoming adjoints,
+  transactional AdamW update previews and fresh residual-probe alignment audits.
+  Includes synchronized Apple MPS component accounting, a durable confidence
+  journal and a bounded synthetic oracle with source-bound report regeneration.
+  Candidate reconstruction saves time at some isolated residual-block shapes,
+  but complete audited attempts are slower even at conditional zero rejection.
+  The declared past-only synthetic exact-margin grid accepts no evaluation
+  proposals. NumericalPolicy remains unresolved. No training speedup,
+  language-model result or independent learning confirmation is established.
+keywords:
+  - optimizer-aware auditing
+  - projected gradients
+  - AdamW
+  - Apple MPS
+  - reproducible research

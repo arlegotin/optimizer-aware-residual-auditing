@@ -5,26 +5,55 @@ title: "Optimizer-aware residual auditing"
 authors:
   - family-names: Legotin
     given-names: Artem
-version: 0.1.0
-date-released: "2026-10-31"
+version: 0.2.0
+date-released: "2026-11-01"
 repository-code: "https://github.com/arlegotin/optimizer-aware-residual-auditing"
 url: "https://github.com/arlegotin/optimizer-aware-residual-auditing"
 license:
   - AGPL-3.0-only
   - CC-BY-4.0
 abstract: >-
-  Research software for projected weight gradients with exact incoming adjoints,
-  transactional AdamW update previews and fresh residual-probe alignment audits.
-  Includes synchronized Apple MPS component accounting, a durable confidence
-  journal and a bounded synthetic oracle with source-bound report regeneration.
-  Candidate reconstruction saves time at some isolated residual-block shapes,
-  but complete audited attempts are slower even at conditional zero rejection.
-  The declared past-only synthetic exact-margin grid accepts no evaluation
-  proposals. NumericalPolicy remains unresolved. No training speedup,
-  language-model result or independent learning confirmation is established.
+  Research software for cheaper neural-network weight gradients with native
+  forward computation and exact raw input and bias adjoints. Includes low-rank
+  optimizer-aware residual audits, fixed-budget norm-importance and uniform
+  row samplers, native AdamW, a byte Transformer, recovery checks and public
+  source-bound evidence replay. On one FP32 MPS WikiText-2 task, 27 development
+  configurations completed; all 15 sampled arms were target-censored and failed
+  the endpoint-quality guard. Earlier complete audited OAR attempts were slower
+  than native training and accepted no past-only synthetic evaluation proposals.
+  Controlled step-cost savings do not establish a training benefit. Protected
+  confirmation and official-test evaluation were not reached. The release
+  preserves the complete negative findings, failed attempts and original sources.
 keywords:
+  - weight gradients
+  - importance sampling
   - optimizer-aware auditing
-  - projected gradients
   - AdamW
   - Apple MPS
   - reproducible research
+  - negative results
+references:
+  - type: conference-paper
+    title: "Faster Neural Network Training with Approximate Tensor Operations"
+    authors:
+      - family-names: Adelman
+        given-names: Menachem
+      - family-names: Levy
+        given-names: Kfir Y.
+      - family-names: Hakimi
+        given-names: Ido
+      - family-names: Silberstein
+        given-names: Mark
+    year: 2021
+    url: "https://arxiv.org/abs/1805.08079"
+  - type: conference-paper
+    title: "Efficient Backpropagation with Variance-Controlled Adaptive Sampling"
+    authors:
+      - family-names: Wang
+        given-names: Ziteng
+      - family-names: Chen
+        given-names: Jianfei
+      - family-names: Zhu
+        given-names: Jun
+    year: 2024
+    url: "https://arxiv.org/abs/2402.17227"
