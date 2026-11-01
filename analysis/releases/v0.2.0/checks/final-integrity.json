@@ -1,0 +1,12 @@
+{
+  "all_final_relative_links": 37,
+  "all_fresh_test_measurement_hashes_unchanged": true,
+  "historical_licenses_and_evidence_bytes_unchanged": true,
+  "missing": [],
+  "preliminary_integrity_script_failure": {
+    "exit_code": 1,
+    "reason": "Overbroad verifier replaced every occurrence of historical index filename, including unmodified historical constants. The corrected check scopes replacement to the single --run-index argument. Product code unchanged."
+  },
+  "research_driver_only_renderer_path_changed": true,
+  "status": "pass"
+}
