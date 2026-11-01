@@ -1,0 +1,17 @@
+{
+  "all_arms_same_assertion": true,
+  "authorization": "prospective v9 scope and amendment allowed_commands",
+  "command": [
+    "caffeinate",
+    "-i",
+    "-w",
+    "93181"
+  ],
+  "external_app_control": false,
+  "memory_safeguard_change": false,
+  "owned_driver_pid": 93181,
+  "permanent_power_preference_change": false,
+  "recorded_utc": "2026-10-31T18:56:25.387213+00:00",
+  "scope": "temporary idle-sleep assertion only while this authorized stage driver exists; automatic release on driver exit",
+  "shared_operational_setup": true
+}
