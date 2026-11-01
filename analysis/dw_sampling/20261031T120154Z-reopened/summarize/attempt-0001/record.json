@@ -1,0 +1,27 @@
+{
+  "artifacts": {
+    "report.md": "a499ff9d5b52ae79bb004d0759d8a712defbd079c78a5b8158e14c227a745b0e",
+    "source_manifest.json": "c19a003749c83f006e86cdab44f58f35f2f44983c5dc7fde23eb596b2c5d0057",
+    "summary.json": "83627d9cbd0de75065e835cb4adb0cd0006149f61231864e90ba338165d440fd"
+  },
+  "invocation_wall_s": 1.1681370829464868,
+  "learning_action": null,
+  "measurement_hashes": {
+    "analysis/run_dw_sampling.py": "543123cfdb5068fa875b0ba7a0fff74fd07f6c7af9b949a78edeef559696015a",
+    "configs/dw_sampling.yaml": "1bd8b99be2ddb27bbf1a0555287137733a4496cda8e0dad66e0274f302dde101",
+    "decisions/dw_sampling_reopening.md": "d0717569e963aaf7fa1925dd820bc48277878b279a734a6dfd0f6615712d2562",
+    "decisions/dw_sampling_scope.md": "d91d9350dc117f83e39c648e48d435de75ab9ea5a3b6bc197b216c4b73c11181",
+    "src/oar/hardware.py": "4ba118d816eec9d255cfb3d7925416373119fe181f82529fb58a96347d8e5048",
+    "src/oar/sampled_linear.py": "11398f9340a48b0dcabdc733c74dfa52b53663ea2005989f2ad7b53079827ca3",
+    "src/oar/timing.py": "25351cd20abc14385dd1cb3e482c67f73619b1ead30900ca0150fe57072458e5",
+    "tests/test_dw_sampling_protocol.py": "98c329ec42072299cc03a5ad8c5dfd876589021810359a0ca3d0ceba153014e7",
+    "tests/test_sampled_linear.py": "3ed4adbf6f62599172b0322374e84c7552f7fc4b46761f80057053469822eaa9"
+  },
+  "reason": "incomplete/blocked summary rendered without upgrading scientific evidence",
+  "recorded_utc": "2026-11-01T06:48:54.918688+00:00",
+  "schema_version": 1,
+  "source_manifest_sha256": "c19a003749c83f006e86cdab44f58f35f2f44983c5dc7fde23eb596b2c5d0057",
+  "stage": "summarize",
+  "status": "pass",
+  "terminal_state": "STOP_QUALITY"
+}
