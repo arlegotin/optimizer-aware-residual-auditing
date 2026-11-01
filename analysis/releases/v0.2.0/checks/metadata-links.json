@@ -1,0 +1,156 @@
+{
+  "cff_schema_blob": "4d467315e1c8eee9d5a9948aef0fa99b0352bc3d",
+  "cff_schema_sha256": "e121a2844dd09233abbc9198ca26c5321316ca2b3ef2f0c57a2ad780d60169a4",
+  "cff_schema_source": "https://github.com/citation-file-format/citation-file-format/blob/main/schema.json",
+  "citation_package_version": "0.2.0",
+  "pending_materialization": "analysis/releases/v0.2.0/verification.json; final link check required",
+  "relative_links_checked": [
+    {
+      "document": "README.md",
+      "target": "analysis/dw_sampling/20261031T120154Z-reopened/final_report-v3.md"
+    },
+    {
+      "document": "README.md",
+      "target": "analysis/report.md"
+    },
+    {
+      "document": "README.md",
+      "target": "src/oar/sampled_linear.py"
+    },
+    {
+      "document": "README.md",
+      "target": "src/oar/sampling_lm.py"
+    },
+    {
+      "document": "README.md",
+      "target": "REPRODUCE.md"
+    },
+    {
+      "document": "README.md",
+      "target": "LICENSING.md"
+    },
+    {
+      "document": "README.md",
+      "target": "THIRD_PARTY_NOTICES.md"
+    },
+    {
+      "document": "README.md",
+      "target": "CITATION.cff"
+    },
+    {
+      "document": "REPRODUCE.md",
+      "target": "analysis/dw_sampling/20261031T120154Z-reopened/final_report-v3.md"
+    },
+    {
+      "document": "REPRODUCE.md",
+      "target": "analysis/report.md"
+    },
+    {
+      "document": "REPRODUCE.md",
+      "target": "analysis/dw_sampling/20261031T120154Z-reopened/prepare/attempt-0007/dependencies.json"
+    },
+    {
+      "document": "REPRODUCE.md",
+      "target": "analysis/dw_sampling/20261031T120154Z-reopened/final_evidence_manifest-v1.json"
+    },
+    {
+      "document": "REPRODUCE.md",
+      "target": "docs/releases/v0.2.0.md"
+    },
+    {
+      "document": "REPRODUCE.md",
+      "target": "tests/test_sampled_linear.py"
+    },
+    {
+      "document": "REPRODUCE.md",
+      "target": "tests/test_dw_sampling_protocol.py"
+    },
+    {
+      "document": "REPRODUCE.md",
+      "target": "decisions/dw_sampling_scope.md"
+    },
+    {
+      "document": "REPRODUCE.md",
+      "target": "decisions/dw_sampling_reopening.md"
+    },
+    {
+      "document": "REPRODUCE.md",
+      "target": "decisions/releases/v0.2.0-publication.md"
+    },
+    {
+      "document": "REPRODUCE.md",
+      "target": "analysis/dw_sampling/20261031T120154Z-reopened/prospective/asset_local_use_decision.json"
+    },
+    {
+      "document": "THIRD_PARTY_NOTICES.md",
+      "target": "manifests/upstream_sources.json"
+    },
+    {
+      "document": "THIRD_PARTY_NOTICES.md",
+      "target": "third_party/discovery/instant/LICENSE"
+    },
+    {
+      "document": "THIRD_PARTY_NOTICES.md",
+      "target": "third_party/discovery/dropbp/LICENSE"
+    },
+    {
+      "document": "THIRD_PARTY_NOTICES.md",
+      "target": "third_party/discovery/vcas/LICENSE"
+    },
+    {
+      "document": "THIRD_PARTY_NOTICES.md",
+      "target": "third_party/discovery/fashion_mnist/LICENSE"
+    },
+    {
+      "document": "THIRD_PARTY_NOTICES.md",
+      "target": "third_party/discovery/pytorch/LICENSE"
+    },
+    {
+      "document": "THIRD_PARTY_NOTICES.md",
+      "target": "manifests/wheels.sha256"
+    },
+    {
+      "document": "THIRD_PARTY_NOTICES.md",
+      "target": "manifests/environment.json"
+    },
+    {
+      "document": "THIRD_PARTY_NOTICES.md",
+      "target": "third_party/discovery/wheels"
+    },
+    {
+      "document": "THIRD_PARTY_NOTICES.md",
+      "target": "analysis/dw_sampling/20261031T120154Z-reopened/prospective/asset_local_use_decision.json"
+    },
+    {
+      "document": "THIRD_PARTY_NOTICES.md",
+      "target": "analysis/dw_sampling/20261031T120154Z-reopened/prepare/attempt-0007/dependencies.json"
+    },
+    {
+      "document": "THIRD_PARTY_NOTICES.md",
+      "target": "analysis/dw_sampling/20261031T120154Z-reopened/RESULTS-NOTICE.md"
+    },
+    {
+      "document": "docs/releases/v0.2.0.md",
+      "target": "../../README.md"
+    },
+    {
+      "document": "docs/releases/v0.2.0.md",
+      "target": "../../analysis/dw_sampling/20261031T120154Z-reopened/final_report-v3.md"
+    },
+    {
+      "document": "docs/releases/v0.2.0.md",
+      "target": "../../analysis/report.md"
+    },
+    {
+      "document": "docs/releases/v0.2.0.md",
+      "target": "../../REPRODUCE.md"
+    },
+    {
+      "document": "docs/releases/v0.2.0.md",
+      "target": "../../decisions/releases/v0.2.0-publication.md"
+    }
+  ],
+  "status": "pass",
+  "utc": "2026-11-01T09:28:03.878372+00:00",
+  "validator": "jsonschema 4.26.0, Python 3.14.6; metadata only, not numerical stack"
+}

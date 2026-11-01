@@ -26,7 +26,7 @@ Development, experiments and reporting used AI assistance under Artem Legotin's 
 The table above describes what Git redistributes. The later study acquired the
 pinned WikiText train and validation bodies privately under the
 [local-use decision](analysis/dw_sampling/20261031T120154Z-reopened/prospective/asset_local_use_decision.json),
-SHA256c08a9d0689c51733a585151ecb7197a0df449d20a0daac589ed14a9b94a2f064.
+SHA256 c08a9d0689c51733a585151ecb7197a0df449d20a0daac589ed14a9b94a2f064.
 That narrow determination does not settle the card's license-version discrepancy
 or authorize external redistribution. Corpus bytes, derived token tensors and
 model/optimizer checkpoints are not release assets. No official-validation loss
@@ -36,17 +36,17 @@ The independently implemented fixed-budget norm-importance dW sampler uses
 native Torch primitives and elementary column-row sampling. Prior art:
 
 - Menachem Adelman, Kfir Y. Levy, Ido Hakimi and Mark Silberstein,
-  *Faster Neural Network Training with Approximate Tensor Operations*, NeurIPS2021:
+  *Faster Neural Network Training with Approximate Tensor Operations*, NeurIPS 2021:
   https://arxiv.org/abs/1805.08079.
 - Ziteng Wang, Jianfei Chen and Jun Zhu,
-  *Efficient Backpropagation with Variance-Controlled Adaptive Sampling*, ICLR2024:
+  *Efficient Backpropagation with Variance-Controlled Adaptive Sampling*, ICLR 2024:
   https://arxiv.org/abs/2402.17227.
 
 The implementation keeps fixed sampling fractions and exact input gradients. It
 is not a faithful VCAS port; that work also adapts ratios and samples activation
 gradients. Its reported CUDA results are not MPS measurements of this code.
 
-PyArrow26.0.0 was the sole added corpus reader, installed separately under its
+PyArrow 26.0.0 was the sole added corpus reader, installed separately under its
 Apache-2.0 and bundled upstream terms. The [recorded dependency inventory](analysis/dw_sampling/20261031T120154Z-reopened/prepare/attempt-0007/dependencies.json)
 retains the wheel and installed-file hashes; its wheel is not redistributed.
 The package's own release wheel contains original project code and its scoped

@@ -1,5 +1,5 @@
 {
-  "actual_head_at_freeze": "757b7ed7bb6ff8a47771f0df31be6b85cd9240d8",
+  "actual_head_at_freeze": "1bff9bc3f35f004491c0f899d4a73e5c4a136357",
   "allowed_commands": [
     "PYTHONPATH=src python analysis/run_dw_sampling.py --stage prepare --config configs/dw_sampling.yaml --out analysis/releases/v0.2.0/checks",
     "PYTHONPATH=src python analysis/run_dw_sampling.py --stage correctness --config configs/dw_sampling.yaml --out analysis/releases/v0.2.0/checks",
@@ -7,7 +7,12 @@
     "python3.13 analysis/verify_dw_sampling.py --out <fresh-output-directory>",
     "python -m pytest -q",
     "git push origin main",
-    "gh release create v0.2.0 --repo arlegotin/optimizer-aware-residual-auditing"
+    "gh release create v0.2.0 --repo arlegotin/optimizer-aware-residual-auditing",
+    "python -m pip wheel --no-deps --no-build-isolation . --wheel-dir <fresh-directory>",
+    "python -m pip install --no-deps --target <fresh-directory> <project-wheel>",
+    "git bundle create <release-bundle> v0.2.0",
+    "git bundle verify <release-bundle>",
+    "git push origin refs/tags/v0.2.0"
   ],
   "asset_scope": {
     "allowed_body_splits": [
@@ -30,8 +35,8 @@
     "LICENSING.md": "1978932693122396b386f3f10beacba838da8dcb19e9b95cc9a7fb35e47939eb",
     "NOTICE": "607e70a1d5190a926360e62f004eeeb7754fc58c1752aa124b1e4081aea0095f",
     "README.md": "2e46994fb3d1e083771f98855d26e4fd07c402afba0b2318656c3f9268c1d290",
-    "REPRODUCE.md": "b8e2faa73d600dfde93fb8f7f2c0f8e160f4d759443910bedfe48f97f9f29e30",
-    "THIRD_PARTY_NOTICES.md": "8ab8a1d3f4b821daae22d2db99abd3b9f749fe2da87044f26f60bb1798e1bc66",
+    "REPRODUCE.md": "f4ab779eac266ba0d1d45a13e44964b0d2ff9859d061b7613498c1fc1548023c",
+    "THIRD_PARTY_NOTICES.md": "263b7916aaea67f55cc48fbe2c9f284439bff179872e8d5ad624f36b55dd7457",
     "analysis/README.md": "130eae9c807339feaf0ab121c3aad5e92bba07df259491711adb0b2311ef2b5f",
     "analysis/audit_confidence.json": "fa96b975a2d0128067fb9a623c31191033124a5cc6b6d2e48b1739a72aa84a95",
     "analysis/collect_audit_confidence.py": "95e83e9cee959f3c18036f55a8d4cc830cd92f1c9159db20fdac5879b418f3e5",
@@ -244,14 +249,19 @@
     "analysis/history/wp09-initial-wp09_verification-677d37a41f09.json": "677d37a41f09da512947c7df6a40ab596103dee8cc74a2400ae1b608a1e8f791",
     "analysis/operator_correctness.json": "ae092c3e4c66ca168f8e5e29b2982ee9c489565443c7142238a5087f30f7f044",
     "analysis/optimizer_correctness.json": "2f378ad2355b64f380e385ef6641df17bc01234862dff6ced9167b5da69c56f4",
+    "analysis/releases/v0.2.0/account_conventions.json": "84fc96982462a73c3abeec9adfc0a9cf2bd5b32ed9ffa54bad105be5275368ee",
     "analysis/releases/v0.2.0/history/CITATION.cff": "50b85511a02c17f184fda76c163e48beffc6360735ca5f18880620654178ef3c",
     "analysis/releases/v0.2.0/history/README.md": "981aaa19db4a093bd3d607039281eadcf0fa84e09c57727299abd4a5ccc43544",
     "analysis/releases/v0.2.0/history/REPRODUCE.md": "5b159cad2c5b93e4c768d73120edffe4ac327ad3b2ddb22667f299aba32c9ba8",
     "analysis/releases/v0.2.0/history/THIRD_PARTY_NOTICES.md": "560068932adb815b2712287d7de8008c463eebfe1b6e21e35e26d8f1f983ed64",
     "analysis/releases/v0.2.0/history/legacy-index-before-audit-archives.json": "7c75144faf7462befdb97d949069edf68db11d82015a23fed69e0f95a05d64c3",
     "analysis/releases/v0.2.0/history/pyproject.toml": "abf0b04cf2cc7a304199f939829b70d875842f9e0441dc8c55a3b9a52136b3e8",
+    "analysis/releases/v0.2.0/history_scan.json": "fcbc89a3acfce26df792f65e3a8b8281e334d566f31a4bab4e8ff2a3e0e8870a",
     "analysis/releases/v0.2.0/legacy_evidence_index.json": "e880e035739aa39f9d08d78ff3fd3a2df987e25c631ee07c0ba493dde905f14f",
+    "analysis/releases/v0.2.0/review.md": "85fec070604c8b7bb8bcbe9f11c1f631fceda98729b5375a3c3c8b288b5b86d7",
     "analysis/releases/v0.2.0/source_freeze-v11.json": "95cd9751ba10d7c753f4e08d22e8779df2fc701f48cb99beaed29ab3dcb6b4ec",
+    "analysis/releases/v0.2.0/source_freeze-v12.json": "fb332edfdb91d94e54442a609283ffb12c98794a39ec8a83bd0c760651c152d2",
+    "analysis/releases/v0.2.0/source_mapping-v2.json": "21c0d9709b756e37c3d132253312b1f6dd39465791a0e640ed47a5039ba6e44e",
     "analysis/releases/v0.2.0/source_mapping.json": "264b9bd8677c8913065d0ec9b9e8f6c818e787fcfc9b8b8d09f05c4eb149583d",
     "analysis/report.md": "6668c5ce25a7ada9e9f211aaba666c6bf3766f968bbd94f686965e3ee00e0570",
     "analysis/reproduce_structural_oracle.py": "961d7dcd81f2a81abff72aa385d9962af733d82cf84a8970ed38ec79248f83fa",
@@ -304,7 +314,7 @@
     "docs/blueprint.md": "cea178cc359653f80f460b53809f5ff912639d57392a44adbe0ab16d56b18ae1",
     "docs/releases/v0.1.0-review.md": "332135b8c45cf3dbc21e25e18e93f05d3dee0dba4a728e10f2c316372b802f67",
     "docs/releases/v0.1.0.md": "94fe295df26ca3b8de2fb7a7d5758d177ddb60bdacf390ed684f9aaf1ff8af63",
-    "docs/releases/v0.2.0.md": "1a4f2703ff57ee2e884fed3c465576d1cf56e9f05ba524fbe9b5169d7957e6a5",
+    "docs/releases/v0.2.0.md": "ce5dd3b39147a7db22813bb87d6d345d5f462f218adf6519dd7539ead19dfe1c",
     "docs/superpowers/plans/2026-10-30-oar-implementation.md": "89570fafb60c047032e564b6913184c666a2a01b733ef4f0ebd0355693841e00",
     "docs/superpowers/plans/2026-10-31-release-v0.1.0.md": "1ad771c48c4c48334e562fad64fa15abd9d583e2677e89f34e2161cf31ff6745",
     "docs/superpowers/plans/2026-11-01-release-v0.2.0.md": "a03d9f47778ec58afca443e7ab7daa7f0abf4f2e365d80132dfc4efaeb0b5fff",
@@ -397,7 +407,7 @@
     "third_party/discovery/wikitext/dataset-info.json": "4c98023b4f6310cd01da2116d73d9877c6e5df580e7db77d8c84304074ec47c1",
     "third_party/discovery/wikitext/files.json": "9c9602642269af6515e5d7cd452be5e74778f3b94472b31b3cb4559f2d9981f4"
   },
-  "branch": "research/dw-sampling",
+  "branch": "release/v0.2.0",
   "carryover_review_sha256": "c8b14c717912868e7ba723299650ab452bc8a4f34bfc57df082ef0c2d138e419",
   "carryover_scope": "Exact unchanged B/D and v7 model/native qualification paths; old observations retain original source identities. Current freeze authorizes code-only checks, never upgrades failed E or grants changed-source learning.",
   "closeout": {
@@ -416,7 +426,7 @@
   "config_sha256": "1bd8b99be2ddb27bbf1a0555287137733a4496cda8e0dad66e0274f302dde101",
   "device": "mps",
   "dtype": "float32",
-  "frozen_utc": "2026-11-01T09:19:01.465731+00:00",
+  "frozen_utc": "2026-11-01T09:27:30.591387+00:00",
   "historical_amendment_file_sha256": "78ae5c0c6d1daa0e819e77da889553efa72547693451b8cfbf9627c6f2e23bda",
   "historical_gate_file_sha256": "7afc234d1e978292d65da6bc961455480f63418c4a6c5fb5b14b8afcacd779dc",
   "kind": "owner_reopened_fixed_budget_dw_sampling",
@@ -605,7 +615,7 @@
     "prepare": "Frozen release documents/index/source map; current correctness/backend/package/report checks only, no corpus bodies or real learning.",
     "summarize": "any retained prefix"
   },
-  "previous_authorization_sha256": "d1b424e13a60140d8a03d4fec1c0cf12cd9844999cfd431cbf616bedbd32a6a2",
+  "previous_authorization_sha256": "94e9b1d55ae9d98a790ec8031ea2bdeb26271264ced4a4d21854ef6a4ef3599a",
   "prior_startup_failure": {
     "charged_as": "retained development/failure cost; all affected E must repeat fixed version",
     "child_active_sum_s": 41.98803141526878,
@@ -615,6 +625,7 @@
     "record_sha256": "5e2718ebcdaea047a92d58a3a6271f733ab49ba85c471c9fd0e18fa29093f8f7"
   },
   "publication": {
+    "historical_checks": "v11 complete; final documentation fixes only, measured implementation unchanged",
     "legacy_index_path": "analysis/releases/v0.2.0/legacy_evidence_index.json",
     "legacy_index_sha256": "e880e035739aa39f9d08d78ff3fd3a2df987e25c631ee07c0ba493dde905f14f",
     "new_scientific_runs_authorized": false,
@@ -622,7 +633,8 @@
     "previous_maps_retained_as_historical": true,
     "raw_science_unchanged": true,
     "scope_sha256": "7ad8fdce738888411411010cfde1ef6d53c486852a0ea5a87bdecd6ff5fbc494",
-    "source_freeze_sha256": "95cd9751ba10d7c753f4e08d22e8779df2fc701f48cb99beaed29ab3dcb6b4ec",
+    "source_freeze_path": "analysis/releases/v0.2.0/source_freeze-v12.json",
+    "source_freeze_sha256": "fb332edfdb91d94e54442a609283ffb12c98794a39ec8a83bd0c760651c152d2",
     "version": "0.2.0"
   },
   "reopening_scope_sha256": "d0717569e963aaf7fa1925dd820bc48277878b279a734a6dfd0f6615712d2562",
@@ -636,7 +648,7 @@
   "run_root": "analysis/dw_sampling/20261031T120154Z-reopened",
   "schema_version": 1,
   "scope_sha256": "d91d9350dc117f83e39c648e48d435de75ab9ea5a3b6bc197b216c4b73c11181",
-  "source_commit_mapping": "Release source757b7ed7 changes only publication material, a public replay entry point and one preparation-renderer path. Existing numerical/operator/model code and old measured identities are retained. This does not extend old qualification maps to changed-source learning.",
-  "version": 11,
+  "source_commit_mapping": "Release source 1bff9bc3 plus directly hashed final editorial fixes. v11 actual source/check records retained. Only final prose/reader-install instructions and new release records changed afterward; implementation/tests/config remain identical.",
+  "version": 12,
   "wp02_record_sha256": "e0e18a81aa55be06273890cb1dd3b6fd31dc8dfb237061d2e181f23a9fc82f22"
 }

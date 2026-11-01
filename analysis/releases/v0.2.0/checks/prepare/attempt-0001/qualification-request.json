@@ -1,0 +1,6 @@
+{
+  "attempt": "/private/tmp/oar-release-v0.2.0-20261101/analysis/releases/v0.2.0/checks/prepare/attempt-0001",
+  "config": "/private/tmp/oar-release-v0.2.0-20261101/configs/dw_sampling.yaml",
+  "kind": "qualification",
+  "out": "/private/tmp/oar-release-v0.2.0-20261101/analysis/releases/v0.2.0/checks"
+}

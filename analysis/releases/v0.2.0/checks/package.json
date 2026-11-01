@@ -1,0 +1,58 @@
+{
+  "build_command": "<recorded-venv>/bin/python -m pip wheel --no-cache-dir --no-deps --no-build-isolation . --wheel-dir /private/tmp/oar-v020-release-final-assets",
+  "build_exit_code": 0,
+  "contents_checked": [
+    "all package Python bytes match src",
+    "all scoped license files match checkout",
+    "no checkpoints/parquet/dependency distributions"
+  ],
+  "discarded_provisional_wheel": {
+    "reason": "Built before final upstream-notice edits; retained locally, not published",
+    "sha256": "95a1628ef085b6f17cb20316da6774c1cfe4beffbb51dc5154cf4cefdca24509"
+  },
+  "install_command": "<recorded-venv>/bin/python -m pip install --no-cache-dir --no-deps --target /private/tmp/oar-v020-wheel-install /private/tmp/oar-v020-release-final-assets/oar-0.2.0-py3-none-any.whl",
+  "install_exit_code": 0,
+  "recorded_utc": "2026-11-01T09:28:51.661294+00:00",
+  "smoke_execution": {
+    "PYTHONPATH": "/private/tmp/oar-v020-wheel-install",
+    "checks": [
+      "import resolves inside isolated wheel target",
+      "installed metadata version 0.2.0",
+      "forward torch.equal to native F.linear",
+      "dX/db assert_close rtol1e-4/atol1e-6",
+      "finite sampled dW and native AdamW update",
+      "exact REPRODUCE.md no-bias example executes"
+    ],
+    "cwd": "/private/tmp",
+    "exit_code": 0,
+    "operands": {
+      "W": [
+        16,
+        8
+      ],
+      "X": [
+        32,
+        8
+      ],
+      "b": [
+        16
+      ],
+      "device": "cpu",
+      "dtype": "torch.float32"
+    },
+    "python": "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python",
+    "rho": 0.25,
+    "samplers": [
+      "importance",
+      "uniform"
+    ],
+    "seed": 61001
+  },
+  "status": "pass",
+  "wheel": {
+    "bytes": 113458,
+    "members": 30,
+    "name": "oar-0.2.0-py3-none-any.whl",
+    "sha256": "c5648419db2c1af8c9446c602f40e4329bcf25c50a273b90a69d343fccbbf218"
+  }
+}

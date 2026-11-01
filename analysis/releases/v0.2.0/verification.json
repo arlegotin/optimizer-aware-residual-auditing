@@ -1,0 +1,245 @@
+{
+  "account_comparison": "analysis/releases/v0.2.0/account_conventions.json",
+  "actual_hardware": "Apple M3 Max / macOS, native FP32 MPS; actual operation qualification retained",
+  "after_test_changes": "Editorial whitespace, executable hash-pinned reader setup, release verification records only; tested numerical/timing/model/optimizer/test/config bytes unchanged. No new performance carryover.",
+  "analyzed_completed_study_head": "4487588c0ea6ba02767ee0333148735057ed751f",
+  "checks": {
+    "correctness": {
+      "commands": [
+        {
+          "argv": [
+            "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python",
+            "-m",
+            "pytest",
+            "-q",
+            "tests/test_sampled_linear.py",
+            "tests/test_dw_sampling_protocol.py"
+          ],
+          "environment_overrides": {
+            "PYTHONPATH": "/private/tmp/oar-release-v0.2.0-20261101/src",
+            "PYTORCH_ENABLE_MPS_FALLBACK": "0",
+            "PYTORCH_MPS_FAST_MATH": "0",
+            "PYTORCH_MPS_PREFER_METAL": "0"
+          },
+          "exit_code": 0,
+          "path": "analysis/releases/v0.2.0/checks/correctness/attempt-0001/command-001.json",
+          "utc": "2026-11-01T09:23:37.299729+00:00",
+          "wall_s": 16.853877916932106
+        }
+      ],
+      "record": "analysis/releases/v0.2.0/checks/correctness/attempt-0001/record.json",
+      "sha256": "9346a28dfa6cde6c98243f0d32ed2c637f0000d63d255a6a3f2430ae132ae2f0",
+      "status": "pass",
+      "test_counts": {
+        "failed": 0,
+        "passed": 494,
+        "skipped": 0
+      },
+      "wall_s": 16.946659042034298
+    },
+    "prepare": {
+      "commands": [
+        {
+          "argv": [
+            "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python",
+            "-m",
+            "oar.cli",
+            "doctor",
+            "--config",
+            "configs/discovery.yaml",
+            "--out",
+            "/private/tmp/oar-release-v0.2.0-20261101/analysis/releases/v0.2.0/checks/prepare/attempt-0001/doctor.json"
+          ],
+          "environment_overrides": {
+            "PYTHONPATH": "/private/tmp/oar-release-v0.2.0-20261101/src",
+            "PYTORCH_ENABLE_MPS_FALLBACK": "0",
+            "PYTORCH_MPS_FAST_MATH": "0",
+            "PYTORCH_MPS_PREFER_METAL": "0"
+          },
+          "exit_code": 0,
+          "path": "analysis/releases/v0.2.0/checks/prepare/attempt-0001/command-001.json",
+          "utc": "2026-11-01T09:20:11.963933+00:00",
+          "wall_s": 3.0478430410148576
+        },
+        {
+          "argv": [
+            "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python",
+            "-m",
+            "pytest",
+            "-q",
+            "-m",
+            "not mps"
+          ],
+          "environment_overrides": {
+            "PYTHONPATH": "/private/tmp/oar-release-v0.2.0-20261101/src",
+            "PYTORCH_ENABLE_MPS_FALLBACK": "0",
+            "PYTORCH_MPS_FAST_MATH": "0",
+            "PYTORCH_MPS_PREFER_METAL": "0"
+          },
+          "exit_code": 0,
+          "path": "analysis/releases/v0.2.0/checks/prepare/attempt-0001/command-002.json",
+          "utc": "2026-11-01T09:20:32.222395+00:00",
+          "wall_s": 20.24507312499918
+        },
+        {
+          "argv": [
+            "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python",
+            "-m",
+            "oar.cli",
+            "report",
+            "--gates",
+            "decisions/gates.jsonl",
+            "--run-index",
+            "analysis/releases/v0.2.0/legacy_evidence_index.json",
+            "--out",
+            "/private/tmp/oar-release-v0.2.0-20261101/analysis/releases/v0.2.0/checks/prepare/attempt-0001/historical-report-check.md"
+          ],
+          "environment_overrides": {
+            "PYTHONPATH": "/private/tmp/oar-release-v0.2.0-20261101/src",
+            "PYTORCH_ENABLE_MPS_FALLBACK": "0",
+            "PYTORCH_MPS_FAST_MATH": "0",
+            "PYTORCH_MPS_PREFER_METAL": "0"
+          },
+          "exit_code": 0,
+          "path": "analysis/releases/v0.2.0/checks/prepare/attempt-0001/command-003.json",
+          "utc": "2026-11-01T09:20:33.063929+00:00",
+          "wall_s": 0.8411737499991432
+        },
+        {
+          "argv": [
+            "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python",
+            "-m",
+            "pytest",
+            "-q",
+            "-m",
+            "mps"
+          ],
+          "environment_overrides": {
+            "PYTHONPATH": "/private/tmp/oar-release-v0.2.0-20261101/src",
+            "PYTORCH_ENABLE_MPS_FALLBACK": "0",
+            "PYTORCH_MPS_FAST_MATH": "0",
+            "PYTORCH_MPS_PREFER_METAL": "0"
+          },
+          "exit_code": 0,
+          "path": "analysis/releases/v0.2.0/checks/prepare/attempt-0001/command-004.json",
+          "utc": "2026-11-01T09:20:36.595404+00:00",
+          "wall_s": 3.5311995419906452
+        },
+        {
+          "argv": [
+            "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python",
+            "-m",
+            "pytest",
+            "-q"
+          ],
+          "environment_overrides": {
+            "PYTHONPATH": "/private/tmp/oar-release-v0.2.0-20261101/src",
+            "PYTORCH_ENABLE_MPS_FALLBACK": "0",
+            "PYTORCH_MPS_FAST_MATH": "0",
+            "PYTORCH_MPS_PREFER_METAL": "0"
+          },
+          "exit_code": 0,
+          "path": "analysis/releases/v0.2.0/checks/prepare/attempt-0001/command-005.json",
+          "utc": "2026-11-01T09:20:58.338889+00:00",
+          "wall_s": 21.743420290993527
+        },
+        {
+          "argv": [
+            "/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python",
+            "/private/tmp/oar-release-v0.2.0-20261101/analysis/run_dw_sampling.py",
+            "--stage",
+            "prepare",
+            "--config",
+            "/private/tmp/oar-release-v0.2.0-20261101/configs/dw_sampling.yaml",
+            "--out",
+            "/private/tmp/oar-release-v0.2.0-20261101/analysis/releases/v0.2.0/checks",
+            "--session-worker",
+            "/private/tmp/oar-release-v0.2.0-20261101/analysis/releases/v0.2.0/checks/prepare/attempt-0001/qualification-request.json"
+          ],
+          "environment_overrides": {
+            "PYTHONPATH": "/private/tmp/oar-release-v0.2.0-20261101/src",
+            "PYTORCH_ENABLE_MPS_FALLBACK": "0",
+            "PYTORCH_MPS_FAST_MATH": "0",
+            "PYTORCH_MPS_PREFER_METAL": "0"
+          },
+          "exit_code": 0,
+          "path": "analysis/releases/v0.2.0/checks/prepare/attempt-0001/command-006.json",
+          "utc": "2026-11-01T09:21:01.286781+00:00",
+          "wall_s": 2.9473810410127044
+        }
+      ],
+      "record": "analysis/releases/v0.2.0/checks/prepare/attempt-0001/record.json",
+      "sha256": "cbf59ddf43c68811205d5f3e82d5a5788cdd6185df51f73bdc72a4bcaa6c0759",
+      "status": "pass",
+      "test_counts": {
+        "cpu_deselected": 16,
+        "cpu_passed": 842,
+        "full_failed": 0,
+        "full_passed": 858,
+        "full_skipped": 0,
+        "mps_deselected": 842,
+        "mps_passed": 16
+      },
+      "wall_s": 55.63164845795836
+    }
+  },
+  "citation_and_links": "analysis/releases/v0.2.0/checks/metadata-links.json",
+  "environment": "analysis/releases/v0.2.0/checks/prepare/attempt-0001/environment.json",
+  "final_amendment_bound_files": 378,
+  "final_amendment_sha256": "07952e03a6483eca2e6c3c5f386a06c3eabe0d129a99e2cc6c152c26a1271883",
+  "final_amendment_version": 12,
+  "final_binding_validation": "pass",
+  "fresh_tests_amendment_sha256": "94e9b1d55ae9d98a790ec8031ea2bdeb26271264ced4a4d21854ef6a4ef3599a",
+  "fresh_tests_amendment_version": 11,
+  "fresh_tests_head": "1bff9bc3f35f004491c0f899d4a73e5c4a136357",
+  "full_history_required": true,
+  "history_scan": "analysis/releases/v0.2.0/history_scan.json",
+  "independent_review": "analysis/releases/v0.2.0/review.md",
+  "legacy_report": {
+    "first_attempt": {
+      "correction": "Existing validator requires current verified audit paths. Exact old Git document bytes archived and only the separate release index references mapped; original scientific index/validator unchanged.",
+      "error": "audit requires verified artifact references",
+      "exit_code": 2,
+      "preserved_index": "analysis/releases/v0.2.0/history/legacy-index-before-audit-archives.json",
+      "status": "failed"
+    },
+    "new_index": "analysis/releases/v0.2.0/legacy_evidence_index.json",
+    "status": "pass"
+  },
+  "package_check": "analysis/releases/v0.2.0/checks/package.json",
+  "protected_losses_accessed": false,
+  "public_replay": {
+    "command": "PYTHONPATH=src <recorded-venv>/bin/python analysis/verify_dw_sampling.py --out /private/tmp/oar-v020-public-replay-20261101",
+    "exit_code": 0,
+    "receipt": "analysis/releases/v0.2.0/checks/public-replay-receipt.json",
+    "status": "pass"
+  },
+  "publication_assets": {
+    "excluded": [
+      "corpus bodies",
+      "derived token tensors",
+      "checkpoints",
+      "dependency wheels",
+      "credentials",
+      "private skill content"
+    ],
+    "expected": [
+      "oar-0.2.0-py3-none-any.whl",
+      "oar-v0.2.0.bundle",
+      "SHA256SUMS",
+      "publication-verification.json"
+    ],
+    "final_identity": "v0.2.0 tag and external publication-verification.json; bundle/checksum self-hashes deliberately outside committed files"
+  },
+  "purpose": "Public software/docs release validation, not a new learning result",
+  "recorded_utc": "2026-11-01T09:28:51.661294+00:00",
+  "release": "v0.2.0",
+  "review_outcome": "No unresolved critical/important/minor release-source issues; missing executable PyArrow setup fixed",
+  "schema_version": 1,
+  "scientific_artifacts_sha256_rechecked_unchanged": 1385,
+  "scientific_state": "STOP_QUALITY",
+  "source_freeze": "analysis/releases/v0.2.0/source_freeze-v12.json",
+  "source_mapping": "analysis/releases/v0.2.0/source_mapping-v2.json",
+  "standard_license_texts_unchanged": true,
+  "training_repeated": false
+}

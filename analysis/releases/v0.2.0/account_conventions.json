@@ -1,0 +1,47 @@
+{
+  "license_convention": {
+    "external_material": "Retains own terms; no change of license texts",
+    "software": "AGPL-3.0-only",
+    "writing_and_original_results": "CC-BY-4.0"
+  },
+  "method": "Current authenticated GitHub repository list, file and release reads; no external mutations",
+  "observations": [
+    {
+      "citation_blob": "6bab277f6e35d6b20a1ac0e4eefb3e7aee328c43",
+      "licensing_blob": "1006cfb510fa2dad24537405f3ada072677e1d8e",
+      "pattern": "Direct mechanism, logistic baseline beats SignedMax disclosed, concise results/replay; scoped licenses",
+      "readme_blob": "e89a4a4ce34b48f686be3f3188ed34f3edc16a96",
+      "repository": "arlegotin/signed-multi-interest-recommender",
+      "version": "v0.2.0"
+    },
+    {
+      "citation_blob": "9dfdd19f4cd89c61d7f8d284ccf3d4fdc12610a7",
+      "licensing_blob": "1bc85288d11603be59d3d623c9d2784646c231f1",
+      "pattern": "Mechanism, limited/negative findings, reproducible evidence; scoped licenses",
+      "readme_blob": "a78169200b6726088db3c2b223b96e8ba02226dd",
+      "repository": "arlegotin/counterexample-guided-operator-coalescing",
+      "version": "v0.2.0"
+    },
+    {
+      "citation_blob": "70e3bc3ab7f699c98e9d467449f51a8a58e94153",
+      "pattern": "Mechanism works but no overall advantage disclosed; scoped licenses",
+      "readme_blob": "5206617ec53fa9fb1eb137a24ee8afe75976c112",
+      "repository": "arlegotin/FAM-Jet",
+      "version": "v0.1.0"
+    },
+    {
+      "repository": "arlegotin/repair-aware-library-admission",
+      "status": "empty at inspection; no reference files"
+    }
+  ],
+  "recorded_utc": "2026-11-01T09:27:30.591387+00:00",
+  "schema_version": 1,
+  "write_like_me": {
+    "local_remote_four_files_identical": true,
+    "private_skill_contents_redistributed": false,
+    "repository": "arlegotin/write-like-me",
+    "revision": "b7a28e64fed749406a2fd8406d5ebd3eedd584c0",
+    "scope": "Human README prose only",
+    "visibility": "private"
+  }
+}

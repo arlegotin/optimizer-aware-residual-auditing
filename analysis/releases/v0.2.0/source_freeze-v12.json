@@ -1,0 +1,38 @@
+{
+  "document_hashes": {
+    "CITATION.cff": "3aabaabca0268966c83ac2ae17558a4743c2da37014ebf6aa033a821b997d46f",
+    "README.md": "2e46994fb3d1e083771f98855d26e4fd07c402afba0b2318656c3f9268c1d290",
+    "REPRODUCE.md": "f4ab779eac266ba0d1d45a13e44964b0d2ff9859d061b7613498c1fc1548023c",
+    "THIRD_PARTY_NOTICES.md": "263b7916aaea67f55cc48fbe2c9f284439bff179872e8d5ad624f36b55dd7457",
+    "docs/releases/v0.2.0.md": "ce5dd3b39147a7db22813bb87d6d345d5f462f218adf6519dd7539ead19dfe1c",
+    "pyproject.toml": "a2703b2000ddbdf598a9a1f011cd07b88ea003b0bfdd28f9ca40023b8453bcac"
+  },
+  "mapping_path": "analysis/releases/v0.2.0/source_mapping-v2.json",
+  "mapping_sha256": "21c0d9709b756e37c3d132253312b1f6dd39465791a0e640ed47a5039ba6e44e",
+  "new_learning_authorized": false,
+  "previous_authorization_sha256": "94e9b1d55ae9d98a790ec8031ea2bdeb26271264ced4a4d21854ef6a4ef3599a",
+  "publication_scope_path": "decisions/releases/v0.2.0-publication.md",
+  "publication_scope_sha256": "7ad8fdce738888411411010cfde1ef6d53c486852a0ea5a87bdecd6ff5fbc494",
+  "review_sha256": "85fec070604c8b7bb8bcbe9f11c1f631fceda98729b5375a3c3c8b288b5b86d7",
+  "schema_version": 1,
+  "scientific_observations_changed": false,
+  "scope": "Final editorial/package closure after independent review; no renewed performance carryover or new learning admission.",
+  "source_hashes": {
+    "analysis/run_dw_sampling.py": "b33f7eed8e88712eb7a6ed50b316f9ed6f34da360112083c3459848d3b44c574",
+    "configs/dw_sampling.yaml": "1bd8b99be2ddb27bbf1a0555287137733a4496cda8e0dad66e0274f302dde101",
+    "decisions/dw_sampling_reopening.md": "d0717569e963aaf7fa1925dd820bc48277878b279a734a6dfd0f6615712d2562",
+    "decisions/dw_sampling_scope.md": "d91d9350dc117f83e39c648e48d435de75ab9ea5a3b6bc197b216c4b73c11181",
+    "src/oar/hardware.py": "4ba118d816eec9d255cfb3d7925416373119fe181f82529fb58a96347d8e5048",
+    "src/oar/sampled_linear.py": "11398f9340a48b0dcabdc733c74dfa52b53663ea2005989f2ad7b53079827ca3",
+    "src/oar/sampling_data.py": "cfcf4b782eb9a444ce70f29df72e063518f794108020e51a5d12238118f06583",
+    "src/oar/sampling_lm.py": "ccf487079280d385a9fed1b3eb7069921a34a15fd78cb6b33f7778644a405d3c",
+    "src/oar/timing.py": "25351cd20abc14385dd1cb3e482c67f73619b1ead30900ca0150fe57072458e5",
+    "tests/test_dw_sampling_protocol.py": "98c329ec42072299cc03a5ad8c5dfd876589021810359a0ca3d0ceba153014e7",
+    "tests/test_sampled_linear.py": "3ed4adbf6f62599172b0322374e84c7552f7fc4b46761f80057053469822eaa9"
+  },
+  "source_head": "1bff9bc3f35f004491c0f899d4a73e5c4a136357",
+  "unchanged_tested_implementation": true,
+  "utc": "2026-11-01T09:27:30.591387+00:00",
+  "v11_checks_retained_at_actual_frozen_identity": true,
+  "version": 12
+}

@@ -1,9 +1,9 @@
 # Reproduce and inspect OAR
 
-Version0.2.0 includes two completed research paths: the original low-rank OAR
+Version 0.2.0 includes two completed research paths: the original low-rank OAR
 audit and fixed-budget weight-gradient sampling. Neither established a training
 speedup. The [sampling report](analysis/dw_sampling/20261031T120154Z-reopened/final_report-v3.md)
-records all27 development configurations; the [original findings](analysis/report.md)
+records all 27 development configurations; the [original findings](analysis/report.md)
 retain the earlier audited-block and synthetic results.
 
 Use a **full Git clone** or the release Git bundle. Historical validation reads
@@ -12,27 +12,27 @@ No command below trains a model or downloads a corpus.
 
 ## Check the published language-study results
 
-With Python3.13, no third-party packages or accelerator needed:
+With Python 3.13, no third-party packages or accelerator needed:
 
 ```sh
 python3.13 analysis/verify_dw_sampling.py --out /tmp/oar-public-replay
 ```
 
 Use a new output directory each time. The check verifies the sealed public
-artifacts, replays all27 outcomes/monitor curves, and compares every scientific
+artifacts, replays all 27 outcomes/monitor curves, and compares every scientific
 JSON field and both CSV byte hashes. Only the separately recorded analysis wall
 time may differ. It reproduces the analysis, not the original training runs.
 
-The frozen cutoff was H=1461.458501s, with a29.399480s endpoint reserve. Native
-B8/LR0.0003 reached the monitor target in907.104540s. Every sampled arm was
+The frozen cutoff was H = 1461.458501 s, with a 29.399480 s endpoint reserve. Native
+batch 8 / LR 0.0003 reached the monitor target in 907.104540 s. Every sampled arm was
 censored and failed the endpoint guard. A censored time is not H, infinity or a
 measured speed ratio. Independent development, protected confirmation, official
 validation loss and official-test bodies/losses were not reached.
 
 ## Install and run tests
 
-The recorded stack is native arm64 CPython3.13.5 on macOS, Torch2.15.0 and
-NumPy2.5.4. Existing dependency pins and hashes remain unchanged. On that stack:
+The recorded stack is native arm64 CPython 3.13.5 on macOS, Torch 2.15.0 and
+NumPy 2.5.4. Existing dependency pins and hashes remain unchanged. On that stack:
 
 ```sh
 python3.13 -m venv .venv
@@ -40,9 +40,17 @@ python3.13 -m venv .venv
 .venv/bin/python -m pip install --no-deps --no-build-isolation -e .
 ```
 
-The sampling data tests also use the permitted PyArrow26.0.0 reader. Its measured
-macOS CPython3.13 wheel has SHA256
+The sampling data tests also use the permitted PyArrow 26.0.0 reader. Its measured
+macOS CPython 3.13 wheel has SHA256
 `a6ca849f90cf73fe361f08a5762c783ead9671e4548c1f558cc637b54c9103f2`.
+Install that reader on the recorded platform with its hash pin:
+
+```sh
+.venv/bin/python -m pip install --only-binary=:all: --no-deps --require-hashes -r /dev/stdin <<'EOF'
+pyarrow==26.0.0 --hash=sha256:a6ca849f90cf73fe361f08a5762c783ead9671e4548c1f558cc637b54c9103f2
+EOF
+```
+
 [Installed files, wheel inventory and dependency hashes](analysis/dw_sampling/20261031T120154Z-reopened/prepare/attempt-0007/dependencies.json)
 record that addition. Install a compatible reader for another platform rather
 than forcing macOS wheels. Corpus loaders/tokenizers are not dependencies.
@@ -53,8 +61,8 @@ PYTORCH_ENABLE_MPS_FALLBACK=0 PYTORCH_MPS_FAST_MATH=0 PYTORCH_MPS_PREFER_METAL=0
 PYTORCH_ENABLE_MPS_FALLBACK=0 PYTORCH_MPS_FAST_MATH=0 PYTORCH_MPS_PREFER_METAL=0 PYTHONPATH=src .venv/bin/python -m pytest -q
 ```
 
-On the recorded host, the checked implementation passed858 tests including16MPS;
-an independent source checkout passed842 CPU tests/16deselected. The source and
+On the recorded host, the checked implementation passed 858 tests including 16 MPS tests;
+an independent source checkout passed 842 CPU tests / 16 deselected. The source and
 exact command outputs are retained in the [final evidence manifest](analysis/dw_sampling/20261031T120154Z-reopened/final_evidence_manifest-v1.json).
 Release packaging checks have separate [v0.2.0 records](docs/releases/v0.2.0.md).
 CPU checks and MPS skips are not accelerator performance evidence. A sandbox can
@@ -110,7 +118,7 @@ The [prospective sampling scope](decisions/dw_sampling_scope.md),
 [publication authority](decisions/releases/v0.2.0-publication.md) keep those
 permissions separate.
 
-Training used pinned WikiText revisionb08601e04326c79dfdd32d625aee71d232d685c3
+Training used pinned WikiText revision b08601e04326c79dfdd32d625aee71d232d685c3
 under a new [local-only permission decision](analysis/dw_sampling/20261031T120154Z-reopened/prospective/asset_local_use_decision.json).
 The original card's license-version discrepancy is preserved, not erased.
 Corpus bodies, processed token tensors and checkpoints are not distributed.

@@ -1,0 +1,7 @@
+{
+  "scope": "all reachable Git blobs; fixed credential patterns and prohibited asset filename extensions, not exhaustive security or legal audit",
+  "blobs_scanned": 1496,
+  "total_bytes_scanned": 319387182,
+  "credential_pattern_hits": [],
+  "prohibited_asset_path_hits": []
+}
