@@ -6,6 +6,7 @@ import hashlib
 import json
 import math
 from pathlib import Path
+from types import SimpleNamespace
 import subprocess
 import sys
 
@@ -3851,3 +3852,593 @@ def test_qualification_continuity_historical_sealed_learning_uses_own_committed_
         assert d.require_model_qualification(out,path,d.digest(path),current)['record']['status']=='not_run'
     else:
         with pytest.raises(ValueError):d.require_model_qualification(out,path,d.digest(path),current)
+
+
+def _recovery_preflight_case(tmp_path, monkeypatch, *, fresh=False):
+    import oar.sampling_lm as lm
+
+    d, cfg, q = _dispatch_fixture()
+    # Every owned path is invented and isolated, including checkpoint storage.
+    root = tmp_path / 'root'
+    root.mkdir()
+    monkeypatch.setattr(d, 'ROOT', root)
+    out = root / 'out'
+    attempt = d.allocate_attempt(out, 'pilot')
+    freeze = d.build_learning_manifest(
+        cfg, q, qualification_reference={}, measurement_hashes={}, config_sha256='a')
+    trial = next(row for row in freeze['grid']
+                 if row['arm']['sampler'] is None and row['arm']['batch'] == 16
+                 and row['arm']['precision'] == 'fp32')
+    bindings = d.learning_bindings(freeze, trial)
+    d.durable_json(attempt / 'source_manifest.json',
+                   {'measurement_hashes': {}, 'config_sha256': 'a'})
+    case = SimpleNamespace(d=d, cfg=cfg, root=root, out=out, attempt=attempt,
+                           freeze=freeze, trial=trial, bindings=bindings,
+                           cp=None, selection=None, initial_charge=0.)
+    if fresh:
+        return case
+    first = attempt / 'trials' / trial['id'] / 'attempt-0001'
+    (first / 'worker').mkdir(parents=True)
+    prototype = d.make_learning_request(
+        cfg, ROOT / 'configs/dw_sampling.yaml', out, attempt, trial, freeze, first,
+        prior_elapsed_s=0., checkpoint_history=[], resume=None, launch_perf_s=10.)
+    cp = Path(prototype['checkpoint_dir']) / 'invented-initial.pt'
+    cp.parent.mkdir(parents=True)
+    state = _byte_recovery_fixture(sampler=None, seed=3101, batch_size=16)
+    payload = _byte_recovery_payload(state)
+    payload.update(bindings=bindings, optimization_frozen=False)
+    receipt = {'path': str(cp), **lm.save_checkpoint(cp, payload),
+               'kind': 'initial', 'logical_updates': 0, 'completed_s': 2.}
+    (first / 'worker/checkpoint_receipts.jsonl').write_text(json.dumps(receipt) + '\n')
+    d.durable_json(first / 'launch.json', {
+        'bindings': bindings, 'attempt_id': first.name,
+        'launch_perf_s': 10., 'prior_elapsed_s': 0.,
+        'previous_exit_sha256': None, 'checkpoint_dir': str(cp.parent)})
+    d.durable_json(first / 'exit.json', {
+        'launch_sha256': d.digest(first / 'launch.json'),
+        'ended_perf_s': 15., 'active_s': 5., 'cumulative_elapsed_s': 5.,
+        'classification': 'environmental_interruption', 'exit_code': -15})
+    case.cp = cp
+    case.selection = {'path': str(cp), 'sha256': receipt['sha256']}
+    case.initial_charge = 5.
+    return case
+
+
+class _RecoveryPreflightCosts:
+    """Clock costs attach below real verification; no ledger/launcher fake."""
+
+    def __init__(self, case, monkeypatch):
+        import oar.sampling_lm as lm
+
+        self.case = case
+        self.now = 1000.  # The initial launch's external gap must not be charged.
+        self.armed = False
+        self.events = []
+        self.admissions = []
+        self.fail_decode = False
+        self.child_code = 0
+        d = case.d
+        original_digest = d.digest
+        original_hash = lm._file_sha256
+        original_load = lm.torch.load
+        original_request = d.make_learning_request
+        original_popen = subprocess.Popen
+
+        def selected_file(value):
+            if case.cp is None:
+                return False
+            name = value if isinstance(value, (str, Path)) else getattr(value, 'name', None)
+            return isinstance(name, (str, Path)) and Path(name).resolve() == case.cp.resolve()
+
+        def digest(path):
+            if selected_file(path):
+                self.pay('parent-checkpoint-digest', 1.)
+            return original_digest(path)
+
+        def checkpoint_hash(stream):
+            if selected_file(stream):
+                self.pay('checkpoint-load-integrity', 2.)
+            return original_hash(stream)
+
+        def decode(*args, **kwargs):
+            if selected_file(args[0]):
+                self.pay('checkpoint-cpu-decode', 4.)
+                if self.armed and self.fail_decode:
+                    self.fail_decode = False
+                    raise OSError('injected environmental parent checkpoint decode failure')
+            return original_load(*args, **kwargs)
+
+        def make_request(*args, **kwargs):
+            self.pay('request-construction', 1.)
+            return original_request(*args, **kwargs)
+
+        def worker_args(stage, config, out, request_path):
+            request = json.loads(Path(request_path).read_text())
+            # Read the real serialized request with the real worker clock model.
+            clock = lm.ChargedClock(request['launch_perf_s'],
+                                    prior_elapsed_s=request['prior_elapsed_s'],
+                                    clock=lambda: self.now)
+            self.admissions.append({
+                'request': request, 'elapsed_s': clock.elapsed(),
+                'expected_s': case.initial_charge + self.active_s})
+            script = r'''
+import json,os,pathlib,signal,sys
+request=json.loads(pathlib.Path(sys.argv[1]).read_text())
+result=pathlib.Path(request['result']);result.parent.mkdir(parents=True)
+result.write_text(json.dumps({'status':'pass','completion_s':1.,'reason':'invented stdlib worker'}))
+code=int(sys.argv[2])
+if code<0:os.kill(os.getpid(),-code)
+sys.exit(code)
+'''
+            return [sys.executable, '-c', script, str(request_path), str(self.child_code)]
+
+        def popen(*args, **kwargs):
+            process = original_popen(*args, **kwargs)
+            real_wait = process.wait
+            paid = False
+
+            def wait(*args, **kwargs):
+                nonlocal paid
+                code = real_wait(*args, **kwargs)
+                if not paid:
+                    self.pay('child-startup-work-exit', 8.)
+                    paid = True
+                return code
+
+            process.wait = wait
+            return process
+
+        monkeypatch.setattr(d.time, 'perf_counter', lambda: self.now)
+        monkeypatch.setattr(d, 'digest', digest)
+        monkeypatch.setattr(lm, '_file_sha256', checkpoint_hash)
+        monkeypatch.setattr(lm.torch, 'load', decode)
+        monkeypatch.setattr(d, 'make_learning_request', make_request)
+        monkeypatch.setattr(d, 'worker_args', worker_args)
+        # Keep actual Popen/wait/exit, without modifying subprocess globally.
+        monkeypatch.setattr(d, 'subprocess', SimpleNamespace(
+            Popen=popen, TimeoutExpired=subprocess.TimeoutExpired))
+
+    @property
+    def active_s(self):
+        return sum(duration for _, duration in self.events)
+
+    def pay(self, name, duration):
+        if self.armed:
+            self.events.append((name, duration))
+            self.now += duration
+
+    def execute(self, *, explicit=True):
+        c = self.case
+        selection = {c.trial['id']: c.selection} if explicit and c.selection else None
+        self.armed = True
+        try:
+            return c.d.execute_learning_trial(
+                c.cfg, ROOT / 'configs/dw_sampling.yaml', c.out,
+                c.attempt, c.trial, c.freeze, selection)
+        finally:
+            self.armed = False
+
+    def ledger(self):
+        c = self.case
+        return c.d.read_trial_ledger(c.attempt / 'trials' / c.trial['id'], c.bindings)
+
+
+def test_recovery_preflight_parent_work_is_paid_once_across_explicit_resumes(tmp_path, monkeypatch):
+    # Break caught: either execute's early ledger work or launcher's hash/decode
+    # starts before the paid interval; adding it twice also violates equality.
+    c = _recovery_preflight_case(tmp_path, monkeypatch)
+    costs = _RecoveryPreflightCosts(c, monkeypatch)
+    costs.child_code = -15
+    first = costs.execute()
+    first_charge = first['canonical_completion_s']
+    assert first['status'] == 'INCOMPLETE_RESOURCE'
+    assert first_charge == c.initial_charge + costs.active_s
+    assert costs.ledger()['prior_elapsed_s'] == first_charge
+    assert any(name == 'parent-checkpoint-digest' for name, _ in costs.events)
+    assert any(name == 'checkpoint-cpu-decode' for name, _ in costs.events)
+    costs.now += 10000.  # Explicit external downtime: never in active_s.
+    costs.child_code = 0
+    second = costs.execute()  # A second explicit eligible recovery, not a retry.
+    assert second['status'] == 'pass'
+    assert second['canonical_completion_s'] == c.initial_charge + costs.active_s
+    assert second['canonical_completion_s'] > first_charge
+    ledger = costs.ledger()
+    assert ledger['prior_elapsed_s'] == second['canonical_completion_s']
+    elapsed = [row['exit']['cumulative_elapsed_s'] for row in ledger['attempts']]
+    assert elapsed == sorted(elapsed)
+    for admission in costs.admissions:
+        assert admission['elapsed_s'] == admission['expected_s']
+        request = admission['request']
+        assert request['resume'] == c.selection
+        assert (request['H'], request['T_budget']) == (100., 120.)
+    # Authenticating/continuing a trajectory must not rewrite its original t0.
+    import oar.sampling_lm as lm
+    saved = lm.load_checkpoint(c.cp, c.selection['sha256'], expected_bindings=c.bindings)
+    assert saved['t0_s'] == 1.25
+    # Read-only post-terminal reconstruction is not a new active attempt.
+    assert costs.ledger()['prior_elapsed_s'] == second['canonical_completion_s']
+
+
+def test_recovery_preflight_failed_environmental_decode_keeps_paid_work(tmp_path, monkeypatch):
+    # Break caught: an OSError before child launch disappears from the next
+    # explicit recovery's prior charge or is automatically retried.
+    c = _recovery_preflight_case(tmp_path, monkeypatch)
+    costs = _RecoveryPreflightCosts(c, monkeypatch)
+    costs.fail_decode = True
+    try:
+        failed = costs.execute()
+    except (OSError, c.d.MeasurementInvalid):
+        failed = None  # Either raising or a non-pass result may report failure.
+    if failed is not None:
+        assert failed['status'] != 'pass'
+    assert costs.admissions == []
+    failed_charge = c.initial_charge + costs.active_s
+    assert failed_charge > c.initial_charge
+    ledger = costs.ledger()
+    assert ledger['prior_elapsed_s'] == failed_charge
+    assert ledger['last_classification'] == 'environmental_interruption'
+    costs.now += 20000.
+    # This call alone authorizes another eligible recovery after the failure.
+    result = costs.execute()
+    assert result['status'] == 'pass'
+    assert result['canonical_completion_s'] == c.initial_charge + costs.active_s
+    assert result['canonical_completion_s'] > failed_charge
+    assert costs.ledger()['prior_elapsed_s'] == result['canonical_completion_s']
+    assert costs.admissions[-1]['elapsed_s'] == costs.admissions[-1]['expected_s']
+
+
+@pytest.mark.parametrize('death_point', ['hash', 'allocation'])
+def test_recovery_preflight_abrupt_parent_death_blocks_favorable_continuation(tmp_path, monkeypatch, death_point):
+    # Break caught: death in execute's first checkpoint verification leaves no
+    # durable unknown interval and a subsequent invocation launches favorably.
+    c = _recovery_preflight_case(tmp_path, monkeypatch)
+    fixture = c.root / 'parent-death-fixture.json'
+    c.d.durable_json(fixture, {
+        'root': str(c.root), 'out': str(c.out), 'attempt': str(c.attempt),
+        'cfg': c.cfg, 'trial': c.trial, 'freeze': c.freeze, 'selection': c.selection})
+    code = r'''
+import importlib.util,json,os,pathlib,sys
+spec=importlib.util.spec_from_file_location('dw',sys.argv[1])
+d=importlib.util.module_from_spec(spec);spec.loader.exec_module(d)
+f=json.loads(pathlib.Path(sys.argv[2]).read_text());d.ROOT=pathlib.Path(f['root'])
+now=[1000.];d.time.perf_counter=lambda:now[0]
+original=d.digest
+def digest(path):
+    if sys.argv[4]=='hash' and pathlib.Path(path).resolve()==pathlib.Path(f['selection']['path']).resolve():
+        now[0]+=3.
+        os._exit(77) # No Python finally, cleanup, or invented death timestamp.
+    return original(path)
+d.digest=digest
+if sys.argv[4]=='allocation':
+    original_mkdir=pathlib.Path.mkdir
+    def mkdir(path,*args,**kwargs):
+        if path.name=='attempt-0002' and path.parent.name==f['trial']['id']:
+            now[0]+=3.
+            os._exit(77)
+        return original_mkdir(path,*args,**kwargs)
+    pathlib.Path.mkdir=mkdir
+# Defensive fallback: this subprocess must never start real training.
+d.worker_args=lambda *args:[sys.executable,'-c','raise AssertionError("unexpected child dispatch")']
+d.execute_learning_trial(f['cfg'],sys.argv[3],f['out'],f['attempt'],f['trial'],f['freeze'],
+                         {f['trial']['id']:f['selection']})
+raise AssertionError('parent did not die in selected-checkpoint preflight')
+'''
+    dead = subprocess.run(
+        [sys.executable, '-c', code, str(ROOT / 'analysis/run_dw_sampling.py'),
+         str(fixture), str(ROOT / 'configs/dw_sampling.yaml'), death_point],
+        cwd=ROOT, capture_output=True, text=True)
+    assert dead.returncode == 77, dead.stderr
+    costs = _RecoveryPreflightCosts(c, monkeypatch)
+    costs.now += 30000.
+    with pytest.raises(c.d.MeasurementInvalid) as caught:
+        costs.execute()
+    assert caught.value.condition == 'unknown_active_interval'
+    assert costs.admissions == []
+
+
+@pytest.mark.parametrize('damage', ['bytes', 'selected_sha'])
+def test_recovery_preflight_still_rejects_checkpoint_integrity_before_child(tmp_path, monkeypatch, damage):
+    # Existing guard: cost repair must not turn rejected bytes/authority into a
+    # child launch. This is not expected to be the new R1 RED test.
+    c = _recovery_preflight_case(tmp_path, monkeypatch)
+    if damage == 'bytes':
+        c.cp.write_bytes(b'invented corrupted checkpoint')
+    else:
+        c.selection = {**c.selection, 'sha256': '0' * 64}
+    costs = _RecoveryPreflightCosts(c, monkeypatch)
+    with pytest.raises((ValueError, c.d.MeasurementInvalid), match='checkpoint|hash|receipt|integrity'):
+        costs.execute()
+    assert costs.admissions == []
+    assert not any(name == 'checkpoint-cpu-decode' for name, _ in costs.events)
+
+
+def test_recovery_preflight_fresh_launch_preserves_request_clock_boundary(tmp_path, monkeypatch):
+    # Existing guard: broadening recovery accounting must not move a fresh
+    # worker start after request construction or invent prior recovery charge.
+    c = _recovery_preflight_case(tmp_path, monkeypatch, fresh=True)
+    costs = _RecoveryPreflightCosts(c, monkeypatch)
+    start = costs.now
+    result = costs.execute(explicit=False)
+    assert result['status'] == 'pass'
+    assert result['canonical_completion_s'] == costs.active_s
+    assert costs.ledger()['prior_elapsed_s'] == costs.active_s
+    request = costs.admissions[0]['request']
+    assert request['launch_perf_s'] == start
+    assert request['prior_elapsed_s'] == 0. and request['resume'] is None
+    assert costs.admissions[0]['elapsed_s'] == costs.admissions[0]['expected_s']
+    assert not any('checkpoint' in name for name, _ in costs.events)
+
+
+def test_recovery_preflight_paid_setup_does_not_restart_controller_t0(tmp_path, monkeypatch):
+    # Existing controller guard strengthened with an explicit paid setup
+    # interval in the worker's cumulative prior charge. No parent-path mock.
+    lm, state, data, request, clock, source, calls = _budget_case(
+        tmp_path / 'first', monkeypatch, horizon=100.)
+    real_step = state.step
+
+    def interrupt(lr):
+        if state.logical_updates == 25:
+            raise KeyboardInterrupt('invented environmental interruption')
+        return real_step(lr)
+
+    state.step = interrupt
+    with pytest.raises(KeyboardInterrupt):
+        lm.train_budget(state, data, request, clock)
+    receipts = [json.loads(line) for line in
+                (Path(request['run_dir']) / 'checkpoint_receipts.jsonl').read_text().splitlines()]
+    selected = receipts[-1]
+    prior = clock.elapsed()
+    lm, restored, data2, request2, _, source2, _ = _budget_case(
+        tmp_path / 'second', monkeypatch, horizon=100.)
+    paid_prior = prior + 7.  # Invented fully measured active parent preparation.
+    clock2 = lm.ChargedClock(0., prior_elapsed_s=paid_prior, clock=source2)
+    request2['resume'] = {'path': selected['path'], 'sha256': selected['sha256']}
+    result = lm.train_budget(restored, data2, request2, clock2)
+    assert result['t0_s'] == 2.
+    assert result['initial_full']['completed_s'] == 1.
+    assert result['initial_monitor']['completed_s'] == 2.
+    assert result['restart']['prior_charged_s'] == paid_prior
+    first_step = result['steps'][0]
+    assert first_step['block_start_s'] >= paid_prior
+    assert first_step['lr'] == lm.time_budget_lr(
+        first_step['block_start_s'], t0=2., cutoff=100., peak=request2['peak_lr'])
+
+
+# Integration must retain/run the existing fresh-process tests below. They
+# exercise real d.main -> configure_torch -> deep load -> worker boundaries,
+# and cannot be replaced by an in-process sys.modules assertion:
+# test_learning_worker_preflight_torch_free_in_fresh_process[normal/development/resume]
+# test_learning_resume_deep_checkpoint_proof_follows_policy_before_worker[resume/resume_invalid]
+# test_learning_resume_prepolicy_rejects_unreceipted_hash_without_torch
+# Retain numerical failure precedence/no implicit retry coverage as well.
+
+
+@pytest.mark.parametrize('failure_point', ['ledger_hash', 'decode_memory', 'request'])
+def test_recovery_preflight_environmental_failures_before_child_are_charged(tmp_path, monkeypatch, failure_point):
+    # Break caught: a pre-child environmental failure at an earlier/later
+    # boundary loses its active cost or manufactures a trusted zero prior.
+    c = _recovery_preflight_case(tmp_path, monkeypatch)
+    costs = _RecoveryPreflightCosts(c, monkeypatch)
+    once = True
+    if failure_point == 'ledger_hash':
+        original = c.d.digest
+
+        def failing_hash(path):
+            nonlocal once
+            result = original(path)
+            if Path(path).resolve() == c.cp.resolve() and once:
+                once = False
+                costs.pay('interrupted-parent-hash', 3.)
+                raise OSError('invented parent checkpoint hash interruption')
+            return result
+
+        monkeypatch.setattr(c.d, 'digest', failing_hash)
+    elif failure_point == 'decode_memory':
+        import oar.sampling_lm as lm
+        original = lm.torch.load
+
+        def failing_decode(*args, **kwargs):
+            nonlocal once
+            if once:
+                once = False
+                costs.pay('interrupted-parent-decode', 3.)
+                raise MemoryError('invented parent decode allocation failure')
+            return original(*args, **kwargs)
+
+        monkeypatch.setattr(lm.torch, 'load', failing_decode)
+    else:
+        original = c.d.make_learning_request
+
+        def failing_request(*args, **kwargs):
+            nonlocal once
+            if once:
+                once = False
+                costs.pay('interrupted-request-preparation', 3.)
+                raise KeyboardInterrupt('invented request interruption')
+            return original(*args, **kwargs)
+
+        monkeypatch.setattr(c.d, 'make_learning_request', failing_request)
+    with pytest.raises((OSError, MemoryError, KeyboardInterrupt)):
+        costs.execute()
+    assert costs.admissions == []
+    failed_charge = c.initial_charge + costs.active_s
+    failed_run = c.attempt / 'trials' / c.trial['id'] / 'attempt-0002'
+    terminal = json.loads((failed_run.with_suffix('.preparation-exit.json')).read_text())
+    assert terminal['active_s'] == costs.active_s
+    assert terminal['prior_elapsed_s'] == (None if failure_point == 'ledger_hash' else 5.)
+    ledger = costs.ledger()
+    assert ledger['prior_elapsed_s'] == failed_charge
+    assert ledger['last_classification'] == 'environmental_interruption'
+    assert costs.ledger()['prior_elapsed_s'] == failed_charge
+    costs.now += 40000.
+    result = costs.execute()
+    assert result['status'] == 'pass'
+    assert result['canonical_completion_s'] == c.initial_charge + costs.active_s
+    assert costs.admissions[-1]['elapsed_s'] == costs.admissions[-1]['expected_s']
+
+
+@pytest.mark.parametrize('damage', ['bytes', 'selected_sha', 'frozen_payload'])
+def test_recovery_preflight_rejection_retains_evidence_without_authorizing_retry(tmp_path, monkeypatch, damage):
+    # Break caught: later environmental recovery promotes a rejected integrity,
+    # selection or frozen-optimizer state into a retryable trajectory.
+    import oar.sampling_lm as lm
+
+    c = _recovery_preflight_case(tmp_path, monkeypatch)
+    if damage == 'bytes':
+        original = c.cp.read_bytes()
+        c.cp.write_bytes(b'invented checkpoint corruption')
+    elif damage == 'selected_sha':
+        original = c.selection.copy()
+        c.selection = {**c.selection, 'sha256': '0' * 64}
+    else:
+        payload = lm.load_checkpoint(c.cp, c.selection['sha256'], expected_bindings=c.bindings)
+        payload['optimization_frozen'] = True
+        c.cp.unlink()
+        receipt = lm.save_checkpoint(c.cp, payload)
+        c.selection['sha256'] = receipt['sha256']
+        path = c.attempt / 'trials' / c.trial['id'] / 'attempt-0001/worker/checkpoint_receipts.jsonl'
+        row = json.loads(path.read_text())
+        row.update(receipt)
+        path.write_text(json.dumps(row) + '\n')
+    costs = _RecoveryPreflightCosts(c, monkeypatch)
+    with pytest.raises((ValueError, c.d.MeasurementInvalid)):
+        costs.execute()
+    assert costs.admissions == []
+    failed_run = c.attempt / 'trials' / c.trial['id'] / 'attempt-0002'
+    end = json.loads((failed_run.with_suffix('.preparation-exit.json')).read_text())
+    assert end['active_s'] == costs.active_s
+    assert end['classification'] == 'numerical_failure'
+    if damage == 'bytes':
+        assert end['prior_elapsed_s'] is None
+        c.cp.write_bytes(original)  # Repairing bytes cannot erase the rejection.
+    elif damage == 'selected_sha':
+        c.selection = original
+    with pytest.raises(ValueError, match='environmental'):
+        costs.execute()
+    assert costs.admissions == []
+
+
+@pytest.mark.parametrize('damage', ['start', 'terminal', 'missing_terminal'])
+def test_recovery_preflight_failure_receipts_are_authenticated(tmp_path, monkeypatch, damage):
+    # Break caught: edited/deleted preparation evidence yields favorable time.
+    c = _recovery_preflight_case(tmp_path, monkeypatch)
+    costs = _RecoveryPreflightCosts(c, monkeypatch)
+    costs.fail_decode = True
+    with pytest.raises(OSError):
+        costs.execute()
+    run = c.attempt / 'trials' / c.trial['id'] / 'attempt-0002'
+    if damage == 'missing_terminal':
+        (run.with_suffix('.preparation-exit.json')).unlink()
+        with pytest.raises(c.d.MeasurementInvalid) as caught:
+            costs.execute()
+        assert caught.value.condition == 'unknown_active_interval'
+    else:
+        path = run.with_suffix('.preparation.json' if damage == 'start' else '.preparation-exit.json')
+        receipt = json.loads(path.read_text())
+        receipt['launch_perf_s' if damage == 'start' else 'active_s'] += 1.
+        path.write_text(json.dumps(receipt))
+        with pytest.raises(ValueError, match='preparation'):
+            costs.execute()
+    assert costs.admissions == []
+
+
+def test_recovery_preflight_failed_setup_survives_a_new_parent_invocation(tmp_path, monkeypatch):
+    # Break caught: reopening a new stage omits a prep-only previous-stage run.
+    c = _recovery_preflight_case(tmp_path, monkeypatch)
+    costs = _RecoveryPreflightCosts(c, monkeypatch)
+    costs.fail_decode = True
+    with pytest.raises(OSError):
+        costs.execute()
+    old_charge = c.initial_charge + costs.active_s
+    c.attempt = c.d.allocate_attempt(c.out, 'pilot')
+    c.d.durable_json(c.attempt / 'source_manifest.json', {'measurement_hashes': {}, 'config_sha256': 'a'})
+    costs.now += 50000.
+    result = costs.execute()
+    assert result['status'] == 'pass'
+    assert result['canonical_completion_s'] == c.initial_charge + costs.active_s
+    request = costs.admissions[-1]['request']
+    assert request['prior_elapsed_s'] == old_charge
+    assert request['attempt_id'] == 'attempt-0003'
+
+
+def test_recovery_preflight_failed_preparation_reconstruction_is_torch_free(tmp_path, monkeypatch):
+    # Break caught: the new receipt schema imports Torch during the fresh
+    # child's ledger/shallow-selection proof, before configure_torch.
+    c = _recovery_preflight_case(tmp_path, monkeypatch)
+    costs = _RecoveryPreflightCosts(c, monkeypatch)
+    costs.fail_decode = True
+    with pytest.raises(OSError):
+        costs.execute()
+    fixture = c.root / 'torch-free-ledger.json'
+    c.d.durable_json(fixture, {'trial_dir': str(c.attempt / 'trials' / c.trial['id']),
+                              'bindings': c.bindings, 'selection': c.selection,
+                              'expected_elapsed_s': c.initial_charge + costs.active_s})
+    code = r'''
+import importlib.util,json,pathlib,sys
+assert 'torch' not in sys.modules
+spec=importlib.util.spec_from_file_location('dw',sys.argv[1])
+d=importlib.util.module_from_spec(spec);spec.loader.exec_module(d)
+f=json.loads(pathlib.Path(sys.argv[2]).read_text())
+ledger=d.read_trial_ledger(f['trial_dir'],f['bindings'])
+assert ledger['prior_elapsed_s']==f['expected_elapsed_s']
+assert d.validate_resume_selection(f['selection'],ledger,f['bindings'],deep=False)==f['selection']
+assert 'torch' not in sys.modules,'recovery receipt reconstruction imported Torch before policy'
+'''
+    result = subprocess.run([sys.executable, '-c', code, str(ROOT / 'analysis/run_dw_sampling.py'), str(fixture)],
+                            cwd=ROOT, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+
+
+@pytest.mark.parametrize('receipt_name', ['preparation.json', 'request.json'])
+def test_recovery_preflight_parent_receipt_publication_interruption_retains_cost(tmp_path, monkeypatch, receipt_name):
+    # Break caught: an environmental exception after publishing the start or
+    # request escapes before a known pre-child terminal can be retained.
+    c = _recovery_preflight_case(tmp_path, monkeypatch)
+    costs = _RecoveryPreflightCosts(c, monkeypatch)
+    original = c.d.durable_json
+    once = True
+
+    def publish(path, value):
+        nonlocal once
+        original(path, value)
+        if Path(path).name.endswith(receipt_name) and once:
+            once = False
+            costs.pay('interrupted-parent-receipt-publication', 3.)
+            raise OSError('invented publication-boundary interruption')
+
+    monkeypatch.setattr(c.d, 'durable_json', publish)
+    with pytest.raises(OSError):
+        costs.execute()
+    assert costs.admissions == []
+    failed_charge = c.initial_charge + costs.active_s
+    assert costs.ledger()['prior_elapsed_s'] == failed_charge
+    costs.now += 60000.
+    result = costs.execute()
+    assert result['status'] == 'pass'
+    assert result['canonical_completion_s'] == c.initial_charge + costs.active_s
+
+
+def test_recovery_preflight_failed_run_allocation_cannot_disappear(tmp_path, monkeypatch):
+    # Break caught: mkdir raises without creating the run directory, so a later
+    # explicit recovery can otherwise omit the ended active allocation work.
+    c = _recovery_preflight_case(tmp_path, monkeypatch)
+    costs = _RecoveryPreflightCosts(c, monkeypatch)
+    original = Path.mkdir
+    once = True
+
+    def mkdir(path, *args, **kwargs):
+        nonlocal once
+        if once and path.name == 'attempt-0002' and path.parent.name == c.trial['id']:
+            once = False
+            costs.pay('failed-parent-run-allocation', 3.)
+            raise OSError('invented run allocation failed before creating directory')
+        return original(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, 'mkdir', mkdir)
+    with pytest.raises(OSError):
+        costs.execute()
+    assert costs.admissions == []
+    assert costs.ledger()['prior_elapsed_s'] == c.initial_charge + costs.active_s
+    costs.now += 70000.
+    result = costs.execute()
+    assert result['canonical_completion_s'] == c.initial_charge + costs.active_s

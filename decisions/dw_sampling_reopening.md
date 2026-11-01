@@ -426,3 +426,80 @@ no permanent power preference, memory safeguard, model computation or unrelated
 application, and releases automatically when the owned driver exits. Use the same
 assertion throughout all arms; this is shared operational setup, not an extra
 benchmark or collector. The required Python driver invocation remains unchanged.
+
+## Version 10: negative-result closeout and recovery accounting repair
+
+Recorded after the completed v9 grid on 2026-11-01, before any v10 hardware
+checks. The owner-authorized study reached STOP_QUALITY: all27 declared seed3101
+trajectories completed, but all15 sampled arms were target-censored and failed
+the endpoint guard. The immutable E4 record is
+analysis/dw_sampling/20261031T120154Z-reopened/pilot/attempt-0004/record.json,
+SHA256 3e15fe5e4526ae001b5112a896b69d43669a2044aa60f4febc7c5ee05125f7bd.
+Its measured implementation89c5bd8 and launchHEAD43c2cec retain their full
+identities and direct hashes; public evidence was committed at
+a3e3229768dd7186f628419917ed746d9e0dcf7b. This closeout does not retune the
+model, sampler, grid, clipping, target, horizon, quality/timing thresholds or
+protected split. It authorizes software correction, applicable verification,
+independent review and reporting, not another learning grid or confirmation.
+
+Independent backend review found R1: selected environmental recovery performed
+parent checkpoint/ledger hashing and deep CPU decoding before its trajectory
+clock, including an earlier read in execute_learning_trial. None of the actual
+v9 learning trajectories interrupted or resumed, so that path did not affect
+their measurements. The scoped v10 correction begins and durably identifies
+admitted recovery before its run-directory allocation, prior authentication,
+checkpoint decoding and request/child work. Failed admitted preparation retains
+its observed active interval exactly once; a start without a proved terminal
+remains unknown and cannot support favorable continuation. A null prior base
+means prior history has not yet authenticated, never a manufactured zero. The
+next separately explicit eligible recovery must authenticate that history and
+retained bytes before using the charge. Integrity, selection, frozen-state and
+numerical rejection remain nonretryable; a later signal cannot erase numerical
+evidence. Checkpoint/data/sampler state, original t0, wasted uncommitted work and
+external-downtime exclusion retain their original semantics.
+
+The common static admission boundary is unchanged from fresh launches:
+trial-directory setup, frozen binding construction and exclusive ownership
+acquisition precede the per-worker trajectory clock and remain charged in the
+whole-stage invocation. This is shared admission bookkeeping, not uncharged
+checkpoint verification or decoding. From admitted recovery onward, allocation,
+receipt publication, checks, imports/loading, all child work and teardown are
+charged. A filesystem failure may prevent durable evidence from being written;
+no universal durable-write guarantee or inferred death interval is claimed.
+Unknown admitted preparation remains blocked. The new sibling per-attempt
+preparation receipts are a small recovery-only extension of this branch's
+ledger; old historical OAR journals, gates and amendments remain untouched.
+
+No sampler, model/data helper, native optimizer, scheduler/controller or native
+qualification computation changes. The worker's strict Torch-free preflight and
+configure_torch ordering stay intact. Deterministic injected-clock tests must
+first demonstrate the omitted parent cost, failed preparation and unknown-death
+conditions, then verify the repair, integrity/rejection persistence, exact-once
+charge, cross-invocation continuity, original t0 and unchanged fresh timing.
+Retain test failures and fixture corrections separately. Freeze direct current
+source/config/scope hashes and review the exact diff before current A/C/actual
+MPS checks; old B/D/model-cost observations keep their original measured source
+identities and are not remeasured to manufacture a new outcome.
+
+The v9 learning manifest is an archived execution binding. It does not grant
+changed-source learning admission. The current closeout amendment must not
+silently construct another27-trial authority after STOP_QUALITY. Protected
+confirmation still requires a genuinely passed full E protocol and a separate
+prospective freeze; that prerequisite failed here. Official-validation loss and
+official-test bodies/losses remain unopened. Later mandatory learning controls,
+secondary held-out scoring and independent-seed trials were not reached, and
+must be reported as such. Summarize may render the honest negative/incomplete
+history without upgrading it.
+
+For this stopped path, autonomous clean-checkout verification covers the actual
+current CPU/operator/protocol checks and replay of the public sealed metadata
+analysis. It does not claim another27 training runs or independent MPS timing.
+Private corpus/cache/checkpoint bodies stay outside Git. The original absolute
+private/qualification references are declared dependencies for any future
+training reproduction; a future relocation requires explicit byte-verified
+hydration/source continuity rather than silently rewriting sealed receipts or
+using an undeclared original-cache fallback. Public-metadata replay requires no
+such bodies and must write a fresh output directory. Final mathematical,
+backend/recovery and clean-checkout reviews and exact evidence/test/source
+identities remain required before engineering completion. No external publish,
+new corpus, optimizer, adaptive controller or kernel is authorized by closeout.

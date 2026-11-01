@@ -2371,13 +2371,61 @@ def read_trial_ledger(trial_dir, expected_bindings, *, prior_trial_dirs=(), excl
     elapsed, previous = 0., None
     checkpoints, secondaries, attempts = {}, {}, []
     classification = None
-    directories = sorted(path for root in [*map(Path,prior_trial_dirs),trial_dir] for path in root.glob('attempt-*')
-                         if path != exclude_attempt)
-    for attempt in directories:
+    directories = set()
+    for root in [*map(Path,prior_trial_dirs),trial_dir]:
+        for path in root.glob('attempt-*'):
+            # The preparation reservation precedes run-directory allocation.
+            # A marker alone must survive even mkdir failure or parent death.
+            for suffix in ('.preparation.json', '.preparation-exit.json'):
+                if path.name.endswith(suffix):
+                    path = path.with_name(path.name[:-len(suffix)])
+                    break
+            if path != exclude_attempt:
+                directories.add(path)
+    for attempt in sorted(directories):
         launch_path, exit_path = attempt/'launch.json', attempt/'exit.json'
+        preparation_path = attempt.with_suffix('.preparation.json')
+        if preparation_path.is_file():
+            preparation = json.loads(preparation_path.read_text())
+            if preparation['bindings'] != expected_bindings or preparation['attempt_id'] != attempt.name:
+                raise ValueError('recovery preparation binding/attempt mismatch')
+            if not launch_path.is_file():
+                terminal_path = attempt.with_suffix('.preparation-exit.json')
+                if not terminal_path.is_file():
+                    raise MeasurementInvalid('unknown_active_interval', 'recovery preparation has no proved terminal interval')
+                end = json.loads(terminal_path.read_text())
+                active = end['ended_perf_s']-preparation['launch_perf_s']
+                if (end['preparation_sha256'] != digest(preparation_path)
+                        or not math.isfinite(active) or active < 0 or active != end['active_s']
+                        or (end['prior_elapsed_s'] is not None and
+                            (end['prior_elapsed_s'] != elapsed or end['previous_exit_sha256'] != previous))):
+                    raise ValueError('recovery preparation terminal/chain mismatch')
+                # An environmental failure in authentication cannot promote a
+                # previously numerical/complete trajectory into a retryable one.
+                if classification != 'environmental_interruption':
+                    raise ValueError('recovery preparation requires prior environmental interruption')
+                selected = preparation['resume']
+                row = checkpoints.get(str(Path(selected.get('path','')).resolve()))
+                if (end['classification'] == 'environmental_interruption' and
+                        (set(selected) != {'path','sha256'} or row is None or row.get('pruned')
+                         or row['sha256'] != selected['sha256'] or row['kind'] == 'final'
+                         or row['completed_s'] > elapsed)):
+                    raise ValueError('recovery preparation checkpoint selection/receipt mismatch')
+                elapsed += active
+                previous = digest(terminal_path)
+                classification = end['classification']
+                attempts.append({'attempt_id':attempt.name, 'run_dir':str(attempt),
+                                 'preparation':preparation, 'exit':{**end, 'cumulative_elapsed_s':elapsed},
+                                 'exit_sha256':previous})
+                continue
         if not launch_path.is_file() or not exit_path.is_file():
             raise MeasurementInvalid('unknown_active_interval', 'missing durable terminal/death interval; concurrent or orphan worker cannot resume')
         launch, end = json.loads(launch_path.read_text()), json.loads(exit_path.read_text())
+        if preparation_path.is_file() and (launch.get('preparation_sha256') != digest(preparation_path)
+                or launch['launch_perf_s'] != preparation['launch_perf_s']):
+            raise ValueError('learning launch differs from durable recovery preparation')
+        if 'preparation_sha256' in launch and not preparation_path.is_file():
+            raise ValueError('learning recovery preparation receipt missing')
         if 'request_sha256' in launch and 'worker_artifacts' not in end:
             raise ValueError('learning terminal is missing hash-bound worker prefix artifacts')
         if 'worker_artifacts' in end:
@@ -2648,7 +2696,7 @@ def previous_learning_trial_dirs(out, attempt, trial_id, bindings):
             continue
         if (parent/'record.json').is_file():
             read_record(parent/'record.json')
-        launches=sorted(trial.glob('attempt-*/launch.json'))
+        launches=sorted([*trial.glob('attempt-*/launch.json'), *trial.glob('attempt-*.preparation.json')])
         if not launches:
             raise MeasurementInvalid('unknown_active_interval','previous trial has no durable launch/terminal proof')
         old=json.loads(launches[0].read_text())
@@ -2664,14 +2712,17 @@ def previous_learning_trial_dirs(out, attempt, trial_id, bindings):
 
 def execute_learning_trial(cfg, config, out, attempt, trial, freeze, resume_selections=None):
     """Reuse ended evidence; only an explicit environmental resume launches again."""
+    selected=(resume_selections or {}).get(trial['id'])
+    if selected is not None:
+        # Recovery owns its preparation clock before any ledger/body reads.
+        return launch_learning_worker(cfg,config,out,attempt,trial,freeze,resume=selected)
     bindings=learning_bindings(freeze,trial)
     if (Path(attempt)/'record.json').is_file():
         read_record(Path(attempt)/'record.json')
     root=Path(attempt)/'trials'/trial['id']
     ledger=read_trial_ledger(root,bindings,prior_trial_dirs=previous_learning_trial_dirs(out,attempt,trial['id'],bindings))
-    selected=(resume_selections or {}).get(trial['id'])
-    if not ledger['attempts'] or selected:
-        return launch_learning_worker(cfg,config,out,attempt,trial,freeze,resume=selected)
+    if not ledger['attempts']:
+        return launch_learning_worker(cfg,config,out,attempt,trial,freeze)
     last=ledger['attempts'][-1];run=Path(last['run_dir'])
     result=run/'aggregate-result.json'
     if not result.is_file():
@@ -2879,21 +2930,67 @@ def aggregate_learning_result(raw, trial, request, terminal, run):
     return result
 
 
+@contextmanager
+def learning_recovery_preparation(trial_dir, bindings, resume, out):
+    """Identify active recovery before authenticating its prior charged base."""
+    preparation = {}
+    if resume is None:
+        yield preparation
+        return
+    start = time.perf_counter()
+    # Allocation only inspects names. No prior receipt/checkpoint is read until
+    # the durable start exists; even os._exit during verification stays unknown.
+    number = max((int(p.name.split('.')[0][8:]) for p in (Path(out)/'pilot').glob(
+                      f'attempt-*/trials/{trial_dir.name}/attempt-*')
+                  if re.fullmatch('attempt-[0-9]{4}', p.name.split('.')[0])), default=0) + 1
+    run = trial_dir/f'attempt-{number:04d}'
+    receipt = {'bindings':bindings, 'attempt_id':run.name, 'launch_perf_s':start,
+               'resume':resume, 'clock_implementation':time.get_clock_info('perf_counter').implementation,
+               'host':os.uname().nodename, 'parent_pid':os.getpid()}
+    preparation.update(run=run, start=start)
+    try:
+        durable_json(run.with_suffix('.preparation.json'), receipt)
+        run.mkdir()
+        yield preparation
+    except BaseException as exc:
+        if not (run/'launch.json').exists():
+            end = time.perf_counter()
+            ledger = preparation.get('ledger')
+            environmental = isinstance(exc, (OSError, MemoryError, KeyboardInterrupt,
+                                              TimeoutError, subprocess.TimeoutExpired))
+            durable_json(run.with_suffix('.preparation-exit.json'), {
+                'preparation_sha256':digest(run.with_suffix('.preparation.json')),
+                'ended_perf_s':end, 'active_s':end-start,
+                # None is evidence of unauthenticated prior state, never a
+                # manufactured zero base. Reopening must authenticate it anew.
+                'prior_elapsed_s':ledger['prior_elapsed_s'] if ledger else None,
+                'previous_exit_sha256':ledger['previous_exit_sha256'] if ledger else None,
+                'classification':'environmental_interruption' if environmental else 'numerical_failure',
+                'failure':{'exception':type(exc).__name__, 'reason':str(exc)}})
+        raise
+
+
 def launch_learning_worker(cfg, config, out, attempt, trial, freeze, *, resume=None):
     """Serial fresh child with durable launch/end evidence including teardown IO."""
     trial_dir = Path(attempt)/'trials'/trial['id']
     trial_dir.mkdir(parents=True,exist_ok=True)
     bindings = learning_bindings(freeze,trial)
-    with exclusive_session(trial_dir/'owner.lock'):
-        ledger = read_trial_ledger(trial_dir,bindings,prior_trial_dirs=previous_learning_trial_dirs(out,attempt,trial['id'],bindings))
+    with exclusive_session(trial_dir/'owner.lock'), learning_recovery_preparation(trial_dir,bindings,resume,out) as preparation:
+        if preparation and (Path(attempt)/'record.json').is_file():
+            read_record(Path(attempt)/'record.json')
+        ledger = read_trial_ledger(trial_dir,bindings,prior_trial_dirs=previous_learning_trial_dirs(out,attempt,trial['id'],bindings),
+                                   exclude_attempt=preparation.get('run'))
+        if preparation:
+            preparation['ledger'] = ledger
         if ledger['attempts'] and resume is None:
             raise ValueError('already attempted trial needs explicit eligible resume; no implicit retry')
         selected = validate_resume_selection(resume,ledger,bindings) if resume else None
-        run = trial_dir/f'attempt-{len(ledger["attempts"])+1:04d}'
-        run.mkdir()
+        run = preparation.get('run') or trial_dir/f'attempt-{len(ledger["attempts"])+1:04d}'
+        if not preparation:
+            run.mkdir()
         # This timestamp precedes request serialization, process spawn and all
         # child imports. Its eventual end is observed only after child exit.
-        start = time.perf_counter()
+        start = preparation['start'] if preparation else time.perf_counter()
         request = make_learning_request(cfg,config,out,attempt,trial,freeze,run,
             prior_elapsed_s=ledger['prior_elapsed_s'],checkpoint_history=ledger['checkpoint_history'],
             resume=selected,launch_perf_s=start,secondary_history=ledger['secondary_history'])
@@ -2916,6 +3013,8 @@ def launch_learning_worker(cfg, config, out, attempt, trial, freeze, *, resume=N
                   'launch_perf_s':start,'prior_elapsed_s':ledger['prior_elapsed_s'],
                   'previous_exit_sha256':ledger['previous_exit_sha256'],'checkpoint_dir':request['checkpoint_dir'],
                   'clock_implementation':request['clock_implementation'],'host':os.uname().nodename,'parent_pid':os.getpid()}
+        if preparation:
+            launch['preparation_sha256'] = digest(run.with_suffix('.preparation.json'))
         durable_json(run/'launch.json',launch)
         child, code, failure, interrupted = None,None,None,False
         try:
