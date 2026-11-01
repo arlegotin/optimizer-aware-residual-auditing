@@ -1,0 +1,19 @@
+{
+  "all_scientific_fields_identical": true,
+  "csv_sha256": {
+    "all-grid-outcomes.csv": "95fa3f1cd732b945d0543a0407bab02d5463a27220c3c0b1c4672e621a1181b9",
+    "development-monitor-curves.csv": "70b487f8d2f4fc5e66f7d97b224a99def38f473caf24af6b99506cd180fad80f"
+  },
+  "excluded_comparison_field": "analysis_wall_s_before_publication",
+  "kind": "public_metadata_replay_only",
+  "original_analysis_code_sha256": "993a6c2d164996adb451fc2ce0a6d16a09c32cdcc43650244296e2e425603646",
+  "protected_losses_accessed": false,
+  "python": "3.13.5",
+  "record_sha256": "3e15fe5e4526ae001b5112a896b69d43669a2044aa60f4febc7c5ee05125f7bd",
+  "replay_code_sha256": "242d9b92a57fba57bb3ccacb67fcaa3b24bfbe46d593ac8156d28a2473d5fd78",
+  "replay_wall_s_before_receipt": 0.9420401660026982,
+  "schema_version": 1,
+  "scientific_state": "STOP_QUALITY",
+  "status": "pass",
+  "training_repeated": false
+}

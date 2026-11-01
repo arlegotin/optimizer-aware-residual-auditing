@@ -1,0 +1,35 @@
+................F                                                        [100%]
+=================================== FAILURES ===================================
+____ test_recovery_preflight_failed_setup_survives_a_new_parent_invocation _____
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-3114/test_recovery_preflight_failed1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1113baf30>
+
+    def test_recovery_preflight_failed_setup_survives_a_new_parent_invocation(tmp_path, monkeypatch):
+        # Break caught: reopening a new stage omits a prep-only previous-stage run.
+        c = _recovery_preflight_case(tmp_path, monkeypatch)
+        costs = _RecoveryPreflightCosts(c, monkeypatch)
+        costs.fail_decode = True
+        with pytest.raises(OSError):
+            costs.execute()
+        old_charge = c.initial_charge + costs.active_s
+        c.attempt = c.d.allocate_attempt(c.out, 'pilot')
+        c.d.durable_json(c.attempt / 'source_manifest.json', {'measurement_hashes': {}, 'config_sha256': 'a'})
+        costs.now += 50000.
+        result = costs.execute()
+        assert result['status'] == 'pass'
+        assert result['canonical_completion_s'] == c.initial_charge + costs.active_s
+        request = costs.admissions[-1]['request']
+        assert request['prior_elapsed_s'] == old_charge
+>       assert request['attempt_id'] == 'attempt-0003'
+E       AssertionError: assert 'attempt-0001' == 'attempt-0003'
+E         
+E         - attempt-0003
+E         ?            ^
+E         + attempt-0001
+E         ?            ^
+
+tests/test_dw_sampling_protocol.py:4352: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_dw_sampling_protocol.py::test_recovery_preflight_failed_setup_survives_a_new_parent_invocation
+1 failed, 16 passed, 371 deselected in 1.84s

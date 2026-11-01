@@ -1,0 +1,96 @@
+FFF....                                                                  [100%]
+=================================== FAILURES ===================================
+___ test_recovery_preflight_parent_work_is_paid_once_across_explicit_resumes ___
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-3111/test_recovery_preflight_parent0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1085b9350>
+
+    def test_recovery_preflight_parent_work_is_paid_once_across_explicit_resumes(tmp_path, monkeypatch):
+        # Break caught: either execute's early ledger work or launcher's hash/decode
+        # starts before the paid interval; adding it twice also violates equality.
+        c = _recovery_preflight_case(tmp_path, monkeypatch)
+        costs = _RecoveryPreflightCosts(c, monkeypatch)
+        costs.child_code = -15
+        first = costs.execute()
+        first_charge = first['canonical_completion_s']
+        assert first['status'] == 'INCOMPLETE_RESOURCE'
+>       assert first_charge == c.initial_charge + costs.active_s
+E       AssertionError: assert 23.0 == (5.0 + 27.0)
+E        +  where 5.0 = namespace(d=<module 'dw_sampling_driver' from '/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditi...nvented-initial.pt', 'sha256': '74f709a6044d978453b2b33505f8283b114f82543774b2acb4aa4161e500feaa'}, initial_charge=5.0).initial_charge
+E        +  and   27.0 = <test_dw_sampling_protocol._RecoveryPreflightCosts object at 0x10a0002f0>.active_s
+
+tests/test_dw_sampling_protocol.py:4035: AssertionError
+_____ test_recovery_preflight_failed_environmental_decode_keeps_paid_work ______
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-3111/test_recovery_preflight_failed0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x109f8d350>
+
+    def test_recovery_preflight_failed_environmental_decode_keeps_paid_work(tmp_path, monkeypatch):
+        # Break caught: an OSError before child launch disappears from the next
+        # explicit recovery's prior charge or is automatically retried.
+        c = _recovery_preflight_case(tmp_path, monkeypatch)
+        costs = _RecoveryPreflightCosts(c, monkeypatch)
+        costs.fail_decode = True
+        try:
+            failed = costs.execute()
+        except (OSError, c.d.MeasurementInvalid):
+            failed = None  # Either raising or a non-pass result may report failure.
+        if failed is not None:
+            assert failed['status'] != 'pass'
+        assert costs.admissions == []
+        failed_charge = c.initial_charge + costs.active_s
+        assert failed_charge > c.initial_charge
+        ledger = costs.ledger()
+>       assert ledger['prior_elapsed_s'] == failed_charge
+E       assert 5.0 == 14.0
+
+tests/test_dw_sampling_protocol.py:4078: AssertionError
+__ test_recovery_preflight_abrupt_parent_death_blocks_favorable_continuation ___
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-3111/test_recovery_preflight_abrupt0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10eee9c70>
+
+    def test_recovery_preflight_abrupt_parent_death_blocks_favorable_continuation(tmp_path, monkeypatch):
+        # Break caught: death in execute's first checkpoint verification leaves no
+        # durable unknown interval and a subsequent invocation launches favorably.
+        c = _recovery_preflight_case(tmp_path, monkeypatch)
+        fixture = c.root / 'parent-death-fixture.json'
+        c.d.durable_json(fixture, {
+            'root': str(c.root), 'out': str(c.out), 'attempt': str(c.attempt),
+            'cfg': c.cfg, 'trial': c.trial, 'freeze': c.freeze, 'selection': c.selection})
+        code = r'''
+    import importlib.util,json,os,pathlib,sys
+    spec=importlib.util.spec_from_file_location('dw',sys.argv[1])
+    d=importlib.util.module_from_spec(spec);spec.loader.exec_module(d)
+    f=json.loads(pathlib.Path(sys.argv[2]).read_text());d.ROOT=pathlib.Path(f['root'])
+    now=[1000.];d.time.perf_counter=lambda:now[0]
+    original=d.digest
+    def digest(path):
+        if pathlib.Path(path).resolve()==pathlib.Path(f['selection']['path']).resolve():
+            now[0]+=3.
+            os._exit(77) # No Python finally, cleanup, or invented death timestamp.
+        return original(path)
+    d.digest=digest
+    # Defensive fallback: this subprocess must never start real training.
+    d.worker_args=lambda *args:[sys.executable,'-c','raise AssertionError("unexpected child dispatch")']
+    d.execute_learning_trial(f['cfg'],sys.argv[3],f['out'],f['attempt'],f['trial'],f['freeze'],
+                             {f['trial']['id']:f['selection']})
+    raise AssertionError('parent did not die in selected-checkpoint preflight')
+    '''
+        dead = subprocess.run(
+            [sys.executable, '-c', code, str(ROOT / 'analysis/run_dw_sampling.py'),
+             str(fixture), str(ROOT / 'configs/dw_sampling.yaml')],
+            cwd=ROOT, capture_output=True, text=True)
+        assert dead.returncode == 77, dead.stderr
+        costs = _RecoveryPreflightCosts(c, monkeypatch)
+        costs.now += 30000.
+>       with pytest.raises(c.d.MeasurementInvalid) as caught:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE MeasurementInvalid
+
+tests/test_dw_sampling_protocol.py:4124: Failed
+=========================== short test summary info ============================
+FAILED tests/test_dw_sampling_protocol.py::test_recovery_preflight_parent_work_is_paid_once_across_explicit_resumes
+FAILED tests/test_dw_sampling_protocol.py::test_recovery_preflight_failed_environmental_decode_keeps_paid_work
+FAILED tests/test_dw_sampling_protocol.py::test_recovery_preflight_abrupt_parent_death_blocks_favorable_continuation
+3 failed, 4 passed, 371 deselected in 2.06s

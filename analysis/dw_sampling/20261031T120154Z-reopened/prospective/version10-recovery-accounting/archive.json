@@ -1,0 +1,66 @@
+{
+  "entries": [
+    {
+      "name": "recovery-preflight-policy.log",
+      "sha256": "12f0fb9046c813132dd0ba37c199e99eea88c3013d559a957abe5029c6c50e10",
+      "size_bytes": 114
+    },
+    {
+      "name": "recovery-preflight-expanded-red.log",
+      "sha256": "c8d11f15040e20a8c1615e987f632b28a1bd21f300caf56c96cebcec2ff54a60",
+      "size_bytes": 1905
+    },
+    {
+      "name": "recovery-preflight-full-cpu.log",
+      "sha256": "d66c37d178c9438176681c4c917ba7cd5924f0a7b5dea8f5b11287ba7f679bf5",
+      "size_bytes": 996
+    },
+    {
+      "name": "recovery-preflight-protocol-operator.log",
+      "sha256": "0d99702c96496b7dce6c600fef55111b1304fef1bcd4a14d696e92e5fc5ec632",
+      "size_bytes": 595
+    },
+    {
+      "name": "recovery-preflight-green.log",
+      "sha256": "14ff19f98501622fb60f73682c3e9234b80c38eb159c0d3365537ff5eb2e1545",
+      "size_bytes": 115
+    },
+    {
+      "name": "recovery-preflight-red.log",
+      "sha256": "c22362ba9a356b49276e7f13160b91321d1a04d10149b59a48143eed29ce671f",
+      "size_bytes": 5871
+    },
+    {
+      "name": "recovery-preflight-allocation-red.log",
+      "sha256": "c96e59fedb52bc6804689ac8e0a2d795433a5510796d69b534708a8e09917dc1",
+      "size_bytes": 2254
+    },
+    {
+      "name": "recovery-preflight-protocol-operator-fixture-failure.log",
+      "sha256": "de25173285ec3ba0529248bd94f93cc03196e4f3664c449c52384b47fa7ee9be",
+      "size_bytes": 3398
+    },
+    {
+      "name": "recovery-preflight-publication-red.log",
+      "sha256": "5f5d037424858a75410a473c6ec2916b1fb8420af3a8c71d5cc03f55b1451739",
+      "size_bytes": 4320
+    },
+    {
+      "name": "recovery-preflight-implementation-report.md",
+      "sha256": "16d0253afa7002594279d41e8c136f0b1e6dfa63b304e6ce967c404cecc9afd8",
+      "size_bytes": 13888
+    },
+    {
+      "name": "recovery-preflight-implementation-brief.md",
+      "sha256": "7bfafb33c73a24ff778236c6d3bfa63aae2140efb2dbca4a7ae89ca494223c17",
+      "size_bytes": 5200
+    },
+    {
+      "name": "recovery-preflight-accounting-issue.md",
+      "sha256": "79bc4eff3b5393550f9445af4bca8635be3501275a8c07db3b4135a463948140",
+      "size_bytes": 5561
+    }
+  ],
+  "kind": "development_test_evidence_not_new_learning",
+  "schema_version": 1
+}

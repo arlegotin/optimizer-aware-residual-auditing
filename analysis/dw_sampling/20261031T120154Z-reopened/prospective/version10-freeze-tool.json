@@ -1,0 +1,10 @@
+{
+  "amendment_sha256": "d1b424e13a60140d8a03d4fec1c0cf12cd9844999cfd431cbf616bedbd32a6a2",
+  "command": "PYTHONPATH=src .venv/bin/python .superpowers/dw_sampling_reopening/freeze-v10.py --review-sha c8b14c717912868e7ba723299650ab452bc8a4f34bfc57df082ef0c2d138e419",
+  "exit_code": 0,
+  "freezer_sha256": "260db0deefec401918715d392e6480fa6ef791c7a1c911d95edbe1ecc28e2fc6",
+  "schema_version": 1,
+  "scientific_data_unchanged": true,
+  "separate_freeze_tool_wall_s": null,
+  "source_head": "5361bb59aedccf12af66314f15391c5af60ad595"
+}

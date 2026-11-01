@@ -1,0 +1,51 @@
+........................................................................ [ 14%]
+........................................................................ [ 29%]
+........................................................................ [ 44%]
+........................................................................ [ 59%]
+........................................................................ [ 74%]
+......................F................................................. [ 89%]
+...................................................                      [100%]
+=================================== FAILURES ===================================
+___ test_recovery_preflight_failed_preparation_reconstruction_is_torch_free ____
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-3118/test_recovery_preflight_failed2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10670e580>
+
+    def test_recovery_preflight_failed_preparation_reconstruction_is_torch_free(tmp_path, monkeypatch):
+        # Break caught: the new receipt schema imports Torch during the fresh
+        # child's ledger/shallow-selection proof, before configure_torch.
+        c = _recovery_preflight_case(tmp_path, monkeypatch)
+        costs = _RecoveryPreflightCosts(c, monkeypatch)
+        costs.fail_decode = True
+        with pytest.raises(OSError):
+            costs.execute()
+        fixture = c.root / 'torch-free-ledger.json'
+        c.d.durable_json(fixture, {'trial_dir': str(c.attempt / 'trials' / c.trial['id']),
+                                  'bindings': c.bindings, 'selection': c.selection})
+        code = r'''
+    import importlib.util,json,pathlib,sys
+    assert 'torch' not in sys.modules
+    spec=importlib.util.spec_from_file_location('dw',sys.argv[1])
+    d=importlib.util.module_from_spec(spec);spec.loader.exec_module(d)
+    f=json.loads(pathlib.Path(sys.argv[2]).read_text())
+    ledger=d.read_trial_ledger(f['trial_dir'],f['bindings'])
+    assert ledger['prior_elapsed_s']==13.  # prior 5 + ledger 1 + selection 1 + integrity 2 + decode 4
+    assert d.validate_resume_selection(f['selection'],ledger,f['bindings'],deep=False)==f['selection']
+    assert 'torch' not in sys.modules,'recovery receipt reconstruction imported Torch before policy'
+    '''
+        result = subprocess.run([sys.executable, '-c', code, str(ROOT / 'analysis/run_dw_sampling.py'), str(fixture)],
+                                cwd=ROOT, capture_output=True, text=True)
+>       assert result.returncode == 0, result.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "<string>", line 8, in <module>
+E             assert ledger['prior_elapsed_s']==14.
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         AssertionError
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditing/.venv/bin/python', '...in <module>\n    assert ledger[\'prior_elapsed_s\']==14.\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n').returncode
+
+tests/test_dw_sampling_protocol.py:4379: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_dw_sampling_protocol.py::test_recovery_preflight_failed_preparation_reconstruction_is_torch_free
+1 failed, 482 passed, 7 deselected in 15.25s

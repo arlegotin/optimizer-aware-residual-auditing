@@ -1,0 +1,36 @@
+....................F                                                    [100%]
+=================================== FAILURES ===================================
+________ test_recovery_preflight_failed_run_allocation_cannot_disappear ________
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-3125/test_recovery_preflight_failed3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10f0af950>
+
+    def test_recovery_preflight_failed_run_allocation_cannot_disappear(tmp_path, monkeypatch):
+        # Break caught: mkdir raises without creating the run directory, so a later
+        # explicit recovery can otherwise omit the ended active allocation work.
+        c = _recovery_preflight_case(tmp_path, monkeypatch)
+        costs = _RecoveryPreflightCosts(c, monkeypatch)
+        original = Path.mkdir
+        once = True
+    
+        def mkdir(path, *args, **kwargs):
+            nonlocal once
+            if once and path.name == 'attempt-0002' and path.parent.name == c.trial['id']:
+                once = False
+                costs.pay('failed-parent-run-allocation', 3.)
+                raise OSError('invented run allocation failed before creating directory')
+            return original(path, *args, **kwargs)
+    
+        monkeypatch.setattr(Path, 'mkdir', mkdir)
+        with pytest.raises(OSError):
+            costs.execute()
+        assert costs.admissions == []
+>       assert costs.ledger()['prior_elapsed_s'] == c.initial_charge + costs.active_s
+E       AssertionError: assert 5.0 == (5.0 + 3.0)
+E        +  where 5.0 = namespace(d=<module 'dw_sampling_driver' from '/Users/artemlegotin/Documents/git_alter/optimizer-aware-residual-auditi...nvented-initial.pt', 'sha256': 'a3a20099062774d54d079e14566b3ce2e2aca14316e6c1f8e7bd03555d156cc1'}, initial_charge=5.0).initial_charge
+E        +  and   3.0 = <test_dw_sampling_protocol._RecoveryPreflightCosts object at 0x1113f4910>.active_s
+
+tests/test_dw_sampling_protocol.py:4432: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_dw_sampling_protocol.py::test_recovery_preflight_failed_run_allocation_cannot_disappear
+1 failed, 20 passed, 371 deselected in 2.26s

@@ -1,0 +1,69 @@
+..................F.                                                     [100%]
+=================================== FAILURES ===================================
+_ test_recovery_preflight_parent_receipt_publication_interruption_retains_cost[preparation.json] _
+
+tmp_path = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-3119/test_recovery_preflight_parent1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x110f66f00>
+receipt_name = 'preparation.json'
+
+    @pytest.mark.parametrize('receipt_name', ['preparation.json', 'request.json'])
+    def test_recovery_preflight_parent_receipt_publication_interruption_retains_cost(tmp_path, monkeypatch, receipt_name):
+        # Break caught: an environmental exception after publishing the start or
+        # request escapes before a known pre-child terminal can be retained.
+        c = _recovery_preflight_case(tmp_path, monkeypatch)
+        costs = _RecoveryPreflightCosts(c, monkeypatch)
+        original = c.d.durable_json
+        once = True
+    
+        def publish(path, value):
+            nonlocal once
+            original(path, value)
+            if Path(path).name == receipt_name and once:
+                once = False
+                costs.pay('interrupted-parent-receipt-publication', 3.)
+                raise OSError('invented publication-boundary interruption')
+    
+        monkeypatch.setattr(c.d, 'durable_json', publish)
+        with pytest.raises(OSError):
+            costs.execute()
+        assert costs.admissions == []
+        failed_charge = c.initial_charge + costs.active_s
+>       assert costs.ledger()['prior_elapsed_s'] == failed_charge
+               ^^^^^^^^^^^^^^
+
+tests/test_dw_sampling_protocol.py:4405: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_dw_sampling_protocol.py:4023: in ledger
+    return c.d.read_trial_ledger(c.attempt / 'trials' / c.trial['id'], c.bindings)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+trial_dir = PosixPath('/private/var/folders/q3/tm7kkng56417wgzydc4q8p8r0000gn/T/pytest-of-artemlegotin/pytest-3119/test_recovery_preflight_parent1/root/out/pilot/attempt-0001/trials/grid-017b76b98b3da493')
+expected_bindings = {'manifest_sha256': '356db859e2ded51719c750b9d9cf72e5a7ce21948a4198e8054dd10b0c02f215', 'trial_id': 'grid-017b76b98b3da493', 'seed': 3101, 'phase': 'development', ...}
+prior_trial_dirs = (), exclude_attempt = None
+
+    def read_trial_ledger(trial_dir, expected_bindings, *, prior_trial_dirs=(), exclude_attempt=None):
+        """Reconstruct only durably ended active intervals; no inferred death time."""
+        trial_dir = Path(trial_dir).resolve()
+        elapsed, previous = 0., None
+        checkpoints, secondaries, attempts = {}, {}, []
+        classification = None
+        directories = sorted(path for root in [*map(Path,prior_trial_dirs),trial_dir] for path in root.glob('attempt-*')
+                             if path != exclude_attempt)
+        for attempt in directories:
+            launch_path, exit_path = attempt/'launch.json', attempt/'exit.json'
+            preparation_path = attempt/'preparation.json'
+            if preparation_path.is_file():
+                preparation = json.loads(preparation_path.read_text())
+                if preparation['bindings'] != expected_bindings or preparation['attempt_id'] != attempt.name:
+                    raise ValueError('recovery preparation binding/attempt mismatch')
+                if not launch_path.is_file():
+                    terminal_path = attempt/'preparation-exit.json'
+                    if not terminal_path.is_file():
+>                       raise MeasurementInvalid('unknown_active_interval', 'recovery preparation has no proved terminal interval')
+E                       dw_sampling_driver.MeasurementInvalid: recovery preparation has no proved terminal interval
+
+analysis/run_dw_sampling.py:2386: MeasurementInvalid
+=========================== short test summary info ============================
+FAILED tests/test_dw_sampling_protocol.py::test_recovery_preflight_parent_receipt_publication_interruption_retains_cost[preparation.json]
+1 failed, 19 passed, 371 deselected in 2.04s
